@@ -1,0 +1,393 @@
+
+\chapter{Diversidade de Tipos de Dados e Estratégias de Sequenciamento para Reconstrução Filogenômica}
+
+Nos últimos anos, uma explosão de metodologias de sequenciamento e enriquecimento seletivo de DNA tornou possível gerar dados filogenômicos de praticamente qualquer organismo. No entanto, a escolha do tipo de dado apropriado para um determinado projeto representa uma decisão crucial que afeta a qualidade, custo e aplicabilidade dos resultados. Este capítulo revisa uma gama abrangente de estratégias de sequenciamento e aquisição de dados, comparando suas forças e limitações em contextos filogenômicos específicos.
+
+\section{Sequenciamento de Genoma Completo (Leitura Curta)}
+
+O sequenciamento de genoma completo com leituras curtas oferece representação completa do conteúdo genômico, incluindo regiões codificantes, não-codificantes, regulatórias e repetitivas. Esta abordagem é particularmente valiosa para análises filogenômicas profundas e intermediárias.
+
+\subsection{Características Gerais}
+
+\begin{description}
+\item[Categoria:] Genoma completo
+\item[Tipo de Locus:] Todos (codificantes, não-codificantes, regulatórios, repetitivos)
+\item[Número Típico de Loci:] Genoma inteiro; dezenas de milhares de regiões gênicas extraíveis
+\item[Escala Filogenética Ótima:] Todas as escalas; melhor para profunda e intermediária
+\item[Qualidade de DNA:] Alta (DNA de alto peso molecular preferido para boa montagem)
+\item[Quantidade de DNA:] Moderada a alta (\(\geq 500\) ng típico)
+\item[Tecido:] Qualquer tecido com DNA suficiente
+\item[Compatibilidade com Espécimes de Museu/Herbário:] Pobre (DNA fragmentado resultando em montagem deficiente)
+\item[Custo Relativo:] Alto (U\$50--200+ por amostra em profundidade útil)
+\item[Complexidade Bioinformática:] Muito alta (montagem, anotação, pipelines de ortologia)
+\item[Dificuldade de Avaliação de Ortologia:] Moderada a alta (parólogia de duplicações de genoma inteiro e variações no número de cópias)
+\item[Tendência de Completude da Matriz:] Alta se genomas bem montados; variável caso contrário
+\item[Combinabilidade Entre Estudos:] Moderada (depende de qualidade de montagem e consistência de predição gênica)
+\item[Amplo Leque Taxonômico de Recursos:] Amplo: procariotos, fungos, animais, plantas; Projeto Biogenoma da Terra expandindo rapidamente
+\item[Adequação a Organismos Não-Modelo:] Excelente em princípio; custo e complexidade de montagem limitam adoção em estudos com grande N
+\end{description}
+
+\subsection{Forças e Limitações}
+
+As principais vantagens desta abordagem incluem representação genômica completa, possibilidade de análises de sintenia e famílias gênicas, e valor de arquivo. As limitações incluem alto custo em profundidade adequada para montagem, genomas grandes ainda sendo desafiadores, e carga bioinformática substancial.
+
+\textcite{delsuc2005, jarvis2014, lewin2018, lozano-fernandez2022}
+
+\section{Sequenciamento de Genoma Completo (Leitura Longa: PacBio HiFi / ONT)}
+
+As tecnologias de leitura longa permitem montagens com qualidade de nível cromossômico, resolvendo estruturas variantes complexas e evolução de repetições.
+
+\subsection{Características Gerais}
+
+\begin{description}
+\item[Categoria:] Genoma completo
+\item[Tipo de Locus:] Todos (incluindo repetitivos, variantes estruturais)
+\item[Número Típico de Loci:] Genoma inteiro; montagens em nível cromossômico alcançáveis
+\item[Escala Filogenética Ótima:] Todas as escalas; possibilita análise de variação estrutural e evolução de repetições
+\item[Qualidade de DNA:] Muito alta (DNA ultra-HMW necessário, \(>20\) kb)
+\item[Quantidade de DNA:] Alta (\(>1\) $\mu$g para PacBio HiFi; \(>400\) ng para ligação ONT)
+\item[Tecido:] Tecido fresco ou congelado em nitrogênio líquido fortemente preferido
+\item[Compatibilidade com Espécimes de Museu/Herbário:] Muito pobre (leituras longas requerem DNA intacto)
+\item[Custo Relativo:] Muito alto (U\$200--1000+ por amostra)
+\item[Complexidade Bioinformática:] Muito alta (montagem + polimento + anotação)
+\item[Dificuldade de Avaliação de Ortologia:] Moderada a alta (similar a WGS curta uma vez montada)
+\item[Tendência de Completude da Matriz:] Muito alta (montagens em nível cromossômico reduzem dados faltantes)
+\item[Combinabilidade Entre Estudos:] Moderada (qualidade de montagem melhora combinabilidade)
+\item[Amplo Leque Taxonômico:] Crescendo rapidamente: Vertebrate Genomes Project, Darwin Tree of Life, i5K
+\item[Adequação a Organismos Não-Modelo:] Excelente para qualidade mas proibitivo de custo para maioria dos estudos em nível populacional
+\end{description}
+
+\subsection{Forças e Limitações}
+
+As montagens em nível cromossômico resolvem repetições, variantes estruturais e rearranjos complexos com representação superior de arquitetura genômica. As principais limitações são custo mais alto, requisitos de tecido mais exigentes, e impraticabilidade de material de museu/herbário.
+
+\textcite{rhie2021, guiglielmoni2024, formenti2022}
+
+\section{Transcriptômica (RNA-seq)}
+
+RNA-seq captura exons de genes codificantes expressos, oferecendo acesso eficiente a centenas ou milhares de loci nucleares de cópia única. No entanto, a qualidade do RNA e requisitos de tecido limitam fontes de espécimes.
+
+\subsection{Características Gerais}
+
+\begin{description}
+\item[Categoria:] Representação reduzida (dependente de expressão)
+\item[Tipo de Locus:] Exons codificantes (genes expressos somente)
+\item[Número Típico de Loci:] 1.000--20.000+ genes dependendo do tecido/condição
+\item[Escala Filogenética Ótima:] Intermediária a profunda (>50 Mya); limitada em escalas rasas
+\item[Qualidade de RNA:] Alta qualidade requerida (RIN $\geq$7 preferido)
+\item[Quantidade de RNA:] Moderada (\(\geq 100\) ng RNA total)
+\item[Tecido:] Tecido fresco ou preservado em RNAlater; tipo de tecido afeta recuperação gênica
+\item[Compatibilidade com Espécimes de Museu/Herbário:] Muito pobre (RNA degrada rapidamente)
+\item[Custo Relativo:] Moderado (U\$30--100 por amostra)
+\item[Complexidade Bioinformática:] Alta (montagem de novo, resolução de isoformas, inferência de ortologia)
+\item[Dificuldade de Avaliação de Ortologia:] Alta (parólogia, splicing alternativo, expressão tecido-específica)
+\item[Tendência de Completude da Matriz:] Variável; depende de sobreposição de tecidos entre amostras
+\item[Combinabilidade Entre Estudos:] Baixa a moderada (tecido deve corresponder entre estudos)
+\item[Amplo Leque Taxonômico:] Amplo: 1KP (plantas), i5K (insetos), muitos datasets de vertebrados
+\item[Adequação a Organismos Não-Modelo:] Excelente para descoberta gênica; limitado por requisitos de preservação de RNA
+\end{description}
+
+\subsection{Forças e Limitações}
+
+A abordagem recupera grande número de loci codificantes, não requer desenho de sondas, e possui anotação funcional integrada. As limitações incluem requisitos rigorosos de qualidade de RNA/tecido, criação de dados faltantes pela expressão tecido-específica, e ortologia complicada por parólogia e splicing alternativo.
+
+\textcite{dunn2008, misof2014, onetp2019, figuet2014}
+
+\section{Elementos Ultraconservados (UCEs)}
+
+UCEs combinam núcleos conservados (predominantemente não-codificantes) com regiões flanqueadoras variáveis, oferecendo excelente combinabilidade entre estudos.
+
+\subsection{Características Gerais}
+
+\begin{description}
+\item[Categoria:] Captura alvo (enriquecimento baseado em sonda)
+\item[Tipo de Locus:] Misto: núcleo conservado (principalmente não-codificante) + regiões flanqueadoras variáveis
+\item[Número Típico de Loci:] 500--5.000+ loci dependendo do conjunto de sondas e divergência
+\item[Escala Filogenética Ótima:] Ampla: profunda a moderadamente rasa (\(\sim 5\)--500+ Mya)
+\item[Qualidade de DNA:] Moderada (tolera degradação moderada)
+\item[Quantidade de DNA:] Baixa a moderada (tão baixa quanto 10--50 ng com protocolos otimizados)
+\item[Tecido:] Qualquer tecido; espécimes secos, preservados em etanol, silica-gel funcionam
+\item[Compatibilidade com Espécimes de Museu/Herbário:] Boa (uma das melhores abordagens para espécimes de museu/herbário com DNA degradado)
+\item[Custo Relativo:] Baixo a moderado (U\$15--50 por amostra uma vez compradas as sondas)
+\item[Complexidade Bioinformática:] Moderada (pipeline PHYLUCE bem estabelecido)
+\item[Dificuldade de Avaliação de Ortologia:] Baixa (UCEs geralmente são cópia única e altamente conservados)
+\item[Tendência de Completude da Matriz:] Alta (conjuntos de sondas padronizados recuperam loci consistentes entre táxons)
+\item[Combinabilidade Entre Estudos:] Muito alta (mesmo conjunto de sondas $\rightarrow$ diretamente combinável)
+\item[Amplo Leque Taxonômico:] Vertebrados, artrópodes, moluscos, nematódeos, cnidários, anelídeos; expandindo para muitos clados animais
+\item[Adequação a Organismos Não-Modelo:] Excelente: funciona com DNA degradado, entrada baixa, conjuntos de sondas amplos disponíveis
+\end{description}
+
+\subsection{Forças e Limitações}
+
+A combinabilidade entre estudos é excelente, funciona com DNA de museu/degradado, custo por amostra é baixo após compra de sondas, e pipeline bioinformático bem testado. As limitações incluem alinhamentos curtos por locus, predominantemente não-codificantes (limita interpretação funcional), e conjuntos de sondas devem ser desenvolvidos por clado principal.
+
+\textcite{faircloth2012, mccormack2013, zhang2019, branstetter2017}
+
+\section{Enriquecimento Híbrido Ancorado (AHE)}
+
+AHE combina regiões âncora conservadas (frequentemente exônicas) com flanqueadores variáveis (intrônicos/intergênicos), balanceando regiões conservadas e variáveis.
+
+\subsection{Características Gerais}
+
+\begin{description}
+\item[Categoria:] Captura alvo (enriquecimento baseado em sonda)
+\item[Tipo de Locus:] Misto: regiões âncora conservadas + flanqueadores variáveis
+\item[Número Típico de Loci:] 300--600+ loci (kits de vertebrados); expansível com desenhos customizados
+\item[Escala Filogenética Ótima:] Ampla: profunda a rasa (\(\sim 1\)--500+ Mya)
+\item[Qualidade de DNA:] Moderada (tolera degradação moderada)
+\item[Quantidade de DNA:] Baixa a moderada (\(\sim 50\)--250 ng)
+\item[Tecido:] Qualquer tecido com DNA extraível
+\item[Compatibilidade com Espécimes de Museu/Herbário:] Boa (DNA degradado compatível com protocolos otimizados)
+\item[Custo Relativo:] Moderado (U\$50--100 por amostra através do centro FSU; inclui prep de biblioteca)
+\item[Complexidade Bioinformática:] Moderada (pipeline estabelecido através de Center for Anchored Phylogenomics)
+\item[Dificuldade de Avaliação de Ortologia:] Baixa a moderada (loci âncora selecionados para status cópia única)
+\item[Tendência de Completude da Matriz:] Alta (enriquecimento padronizado $\rightarrow$ recuperação consistente)
+\item[Combinabilidade Entre Estudos:] Alta (conjuntos de sondas consistentes dentro de clados)
+\item[Amplo Leque Taxonômico:] Vertebrados bem desenvolvidos; artrópodes, plantas, fungos; kits para >dúzia de clados
+\item[Adequação a Organismos Não-Modelo:] Excelente: filosofia de desenho de sonda ampla
+\end{description}
+
+\subsection{Forças e Limitações}
+
+Loci mais longos que UCEs em média resultam em mais sinal por locus. Balanço bom de regiões conservadas e variáveis. Pipeline comercial disponível. As limitações incluem centralização em FSU, desenhos de sonda proprietários, e custo por amostra mais alto que UCE quando autprocessado.
+
+\textcite{lemmon2012, prum2015, hime2021, breinholt2018}
+
+\section{Angiosperms353 / Conjuntos de Sondas Universais}
+
+Este conjunto universal de 353 genes alvo foi desenvolvido especificamente para aplicação em toda a diversidade de angiospermas, com excelente compatibilidade com espécimes de herbário.
+
+\subsection{Características Gerais}
+
+\begin{description}
+\item[Categoria:] Captura alvo (conjunto de sondas universal)
+\item[Tipo de Locus:] Genes nucleares codificantes de proteína (baixa cópia)
+\item[Número Típico de Loci:] 353 genes alvo (+ regiões flanqueadoras recuperáveis)
+\item[Escala Filogenética Ótima:] Ampla: ordinal a nível populacional em angiospermas
+\item[Qualidade de DNA:] Moderada (espécimes de herbário testados com sucesso)
+\item[Quantidade de DNA:] Baixa a moderada (tão baixa quanto \(\sim 10\) ng com protocolos de DNA degradado)
+\item[Tecido:] Qualquer tecido; folhas secas em sílica, folhas de herbário funcionam bem
+\item[Compatibilidade com Espécimes de Museu/Herbário:] Excelente (especificamente testado e validado com material de herbário >100 anos)
+\item[Custo Relativo:] Baixo a moderado (U\$15--40 por amostra)
+\item[Complexidade Bioinformática:] Moderada (pipeline HybPiper bem documentado e amplamente adotado)
+\item[Dificuldade de Avaliação de Ortologia:] Moderada (genes de baixa cópia selecionados; WGD em muitos linhagens de angiospermas complica detecção de parólogia)
+\item[Tendência de Completude da Matriz:] Alta (desenho universal assegura recuperação ampla; \(\sim 200\)--350 genes tipicamente recuperados)
+\item[Combinabilidade Entre Estudos:] Muito alta (conjunto universal projetado para combinabilidade entre estudos)
+\item[Amplo Leque Taxonômico:] Angiospermas (plantas com flor) universalmente; também testado em gimnospermas e algumas briófitas
+\item[Adequação a Organismos Não-Modelo:] Excelente para plantas: nenhum desenho de sonda necessário, kit pronto para usar
+\end{description}
+
+\subsection{Forças e Limitações}
+
+Universal através de todas as plantas com flor, nenhum desenho de sonda customizado necessário, excelente compatibilidade com herbário, e padrão da comunidade botânica. As limitações incluem restrição a angiospermas, 353 loci podem ser insuficientes para resolução de escala rasa em alguns grupos, e parólogia em linhagens poliploides.
+
+\textcite{johnson2019, baker2021a, baker2021b, zuntini2024}
+
+\section{Captura de Exons Customizada / Específica de Linhagem}
+
+Permite desenho de sondas otimizado para clados específicos, capturando exons codificantes escolhidos.
+
+\subsection{Características Gerais}
+
+\begin{description}
+\item[Categoria:] Captura alvo (enriquecimento baseado em sonda)
+\item[Tipo de Locus:] Exons codificantes (selecionados por clado)
+\item[Número Típico de Loci:] 200--10.000+ exons dependendo do desenho
+\item[Escala Filogenética Ótima:] Flexível: projetado para clado e escala específicos
+\item[Qualidade de DNA:] Moderada (DNA degradado tolerado)
+\item[Quantidade de DNA:] Baixa a moderada
+\item[Tecido:] Qualquer tecido com DNA extraível
+\item[Compatibilidade com Espécimes de Museu/Herbário:] Boa (similar a UCE/AHE para DNA degradado)
+\item[Custo Relativo:] Moderado a alto (desenho de sonda + síntese adiciona custo inicial)
+\item[Complexidade Bioinformática:] Moderada a alta (requer pipeline bioinformático customizado)
+\item[Dificuldade de Avaliação de Ortologia:] Moderada (depende de critérios de seleção gênica)
+\item[Tendência de Completude da Matriz:] Moderada a alta (depende de divergência sonda-alvo)
+\item[Combinabilidade Entre Estudos:] Baixa (diferentes estudos alvo diferentes genes)
+\item[Amplo Leque Taxonômico:] Específica de linhagem por definição; disponível para muitos clados de vertebrados, insetos, plantas
+\item[Adequação a Organismos Não-Modelo:] Boa (pode ser desenhada para qualquer clado com alguns recursos genômicos)
+\end{description}
+
+\subsection{Forças e Limitações}
+
+Personalização para clado de interesse otimiza informativeness. As limitações incluem falta de padronização entre estudos (pobre combinabilidade), exigência de dados genômicos/transcriptômicos para desenho de sonda, e custo inicial de síntese de sonda.
+
+\textcite{bi2012, bragg2016, portik2016}
+
+\section{RADseq / ddRADseq / GBS}
+
+Sequenciamento baseado em enzimas de restrição captura fragmentos genômicos aleatórios, ideal para estudos em escala populacional em divergência rasa.
+
+\subsection{Características Gerais}
+
+\begin{description}
+\item[Categoria:] Representação reduzida (baseada em enzima de restrição)
+\item[Tipo de Locus:] Fragmentos genômicos anônimos (aleatórios em relação à função)
+\item[Número Típico de Loci:] Milhares--centenas de milhares de loci contendo SNPs
+\item[Escala Filogenética Ótima:] Rasa: população a nível de gênero (<10--20 Mya)
+\item[Qualidade de DNA:] Moderada a alta (DNA fresco preferido para digestão consistente)
+\item[Quantidade de DNA:] Moderada (100--500 ng típico)
+\item[Tecido:] Tecido fresco ou bem preservado preferido
+\item[Compatibilidade com Espécimes de Museu/Herbário:] Pobre (requer DNA de alta qualidade para digestão consistente)
+\item[Custo Relativo:] Baixo (U\$10--30 por amostra; nenhuma compra de sonda necessária)
+\item[Complexidade Bioinformática:] Moderada (pipelines estabelecidos: Stacks, ipyrad, dDocent)
+\item[Dificuldade de Avaliação de Ortologia:] Baixa em escalas rasas (loci anônimos tratados como independentes)
+\item[Tendência de Completude da Matriz:] Baixa a moderada (dropout de locus aumenta com divergência)
+\item[Combinabilidade Entre Estudos:] Muito baixa (sítios de enzimas de restrição não conservados entre táxons divergentes)
+\item[Amplo Leque Taxonômico:] Universal em princípio; amplamente usado em genômica populacional de peixes, pássaros, anfíbios, insetos, plantas
+\item[Adequação a Organismos Não-Modelo:] Excelente para estudos em nível populacional com tecido fresco; pobre para filogenética profunda
+\end{description}
+
+\subsection{Forças e Limitações}
+
+Custo mais baixo por amostra, nenhum desenho de sonda, recuperação massiva de SNPs, excelente para genômica populacional e filogeografia. As limitações incluem dropout de locus severo com divergência, reprodutibilidade pobre entre estudos, e muito pobre com DNA degradado/museu.
+
+\textcite{baird2008, peterson2012, eaton2020, huang2016}
+
+\section{Genome Skimming (WGS Raso)}
+
+Sequenciamento de cobertura baixa captura genomas de cópia alta: organelares (plastomas, mitogenomas) e DNA ribossomal nuclear. Deep genome skimming (DGS) pode recuperar centenas de genes nucleares.
+
+\subsection{Características Gerais}
+
+\begin{description}
+\item[Categoria:] Genoma completo (cobertura baixa)
+\item[Tipo de Locus:] Cópia alta: genomas organelares (plastomas, mitogenomas) + DNA ribossomal nuclear
+\item[Número Típico de Loci:] Genomas organelares completos + operon nrDNA; DGS profundo pode recuperar centenas de genes nucleares
+\item[Escala Filogenética Ótima:] Moderada a profunda para genomas organelares
+\item[Qualidade de DNA:] Baixa a moderada (funciona com DNA degradado para recuperação organellar)
+\item[Quantidade de DNA:] Baixa (até <1 ng pode render dados organelares)
+\item[Tecido:] Qualquer tecido; herbário, museu, até material subfóssil
+\item[Compatibilidade com Espécimes de Museu/Herbário:] Excelente (uma das melhores abordagens para espécimes degradados)
+\item[Custo Relativo:] Muito baixo (U\$5--20 por amostra em cobertura 1--5$\times$)
+\item[Complexidade Bioinformática:] Baixa a moderada (montagem de elementos de cópia alta relativamente direta)
+\item[Dificuldade de Avaliação de Ortologia:] Baixa para genomas organelares (herança uniparental, sem parólogia)
+\item[Tendência de Completude da Matriz:] Muito alta para genomas organelares; variável para genes nucleares
+\item[Combinabilidade Entre Estudos:] Alta para genomas organelares; moderada para nucleares
+\item[Amplo Leque Taxonômico:] Universal: qualquer eucarioto; plantas especialmente bem servidas (plastomas)
+\item[Adequação a Organismos Não-Modelo:] Excelente: custo e requisitos de tecido mais baixos; ideal para espécimes de herbário/museu
+\end{description}
+
+\subsection{Forças e Limitações}
+
+Custo mais baixo, requisitos de DNA mais baixos, excelente para espécimes degradados, genomas organelares facilmente montados, abordagem DGS pode recuperar genes nucleares. As limitações incluem genomas organelares representando locus único não-recombinante (sinal independente limitado), e maioria do genoma nuclear não recuperada em cobertura rasa.
+
+\textcite{straub2012, dodsworth2015, weitemier2014}
+
+\section{Filogenômica de Genoma Organellar (Plastômica / Mitogenômica)}
+
+Análise de genomas organelares completos de qualquer estratégia de sequenciamento, incluindo genes codificantes de proteína, rRNA, tRNA, e espaçadores intergênicos.
+
+\subsection{Características Gerais}
+
+\begin{description}
+\item[Categoria:] Genoma organellar (de qualquer estratégia de sequenciamento)
+\item[Tipo de Locus:] Genes codificantes + rRNA + tRNA + espaçadores intergênicos de genomas organelares
+\item[Número Típico de Loci:] \(\sim 80\) genes codificantes (plastoma); \(\sim 13\) (mitogenoma animal); \(\sim 40\)+ (mitogenoma vegetal)
+\item[Escala Filogenética Ótima:] Profunda a moderadamente rasa para plastomas; rasa para mitogenomas animais
+\item[Qualidade de DNA:] Baixa (DNA organellar cópia alta; recuperável de amostras degradadas)
+\item[Quantidade de DNA:] Muito baixa
+\item[Tecido:] Qualquer tecido
+\item[Compatibilidade com Espécimes de Museu/Herbário:] Excelente
+\item[Custo Relativo:] Muito baixo (frequentemente subproduto de outro sequenciamento)
+\item[Complexidade Bioinformática:] Baixa (ferramentas de montagem e anotação bem estabelecidas: GetOrganelle, NOVOPlasty, MITOS)
+\item[Dificuldade de Avaliação de Ortologia:] Muito baixa (nenhuma preocupação com parólogia em casos típicos)
+\item[Tendência de Completude da Matriz:] Muito alta (genomas organelares completos padrão)
+\item[Combinabilidade Entre Estudos:] Muito alta (genomas organelares universalmente comparáveis)
+\item[Amplo Leque Taxonômico:] Universal através de eucariotos; milhares de plastomas e mitogenomas em GenBank
+\item[Adequação a Organismos Não-Modelo:] Excelente: funciona para qualquer eucarioto; requisitos mínimos
+\end{description}
+
+\subsection{Forças e Limitações}
+
+Mais fácil de montar e anotar, conjuntos de dados massivos existentes para comparação, excelente para código de barras e identificação de espécime. As limitações incluem locus único não-recombinante (árvore gênica independente única), herança materna não captura história de espécie completa, discordância citonuclear (hibridação, introgressão).
+
+\textcite{jansen2007, smith2015, twyford2017, li2021}
+
+\section{Filogenômica Baseada em Gene BUSCO}
+
+Extração post hoc de genes ortólogos de cópia única a partir de genomas ou transcriptomas montados.
+
+\subsection{Características Gerais}
+
+\begin{description}
+\item[Categoria:] Extração post hoc (de genomas ou transcriptomas)
+\item[Tipo de Locus:] Genes codificantes (ortólogos de cópia única)
+\item[Número Típico de Loci:] 300--5.000+ dependendo do conjunto BUSCO específico de linhagem
+\item[Escala Filogenética Ótima:] Ampla: efetiva de escalas rasas a profundas
+\item[Qualidade de DNA:] N/A (depende de dados de origem: qualidade de genoma ou transcriptoma)
+\item[Quantidade de DNA:] N/A (depende de estratégia de sequenciamento de origem)
+\item[Tecido:] N/A (depende de dados de origem)
+\item[Compatibilidade com Espécimes de Museu/Herbário:] N/A (depende se genoma/transcriptoma pode ser gerado)
+\item[Custo Relativo:] Nenhum custo adicional (extraído de montagens existentes)
+\item[Complexidade Bioinformática:] Baixa a moderada (pipeline BUSCO automatizado; inferência de árvore downstream padrão)
+\item[Dificuldade de Avaliação de Ortologia:] Moderada (genes BUSCO nem sempre estritamente cópia única, especialmente pós-WGD)
+\item[Tendência de Completude da Matriz:] Moderada (depende de completude de genoma/transcriptoma)
+\item[Combinabilidade Entre Estudos:] Alta (conjuntos BUSCO padronizados por linhagem)
+\item[Amplo Leque Taxonômico:] Universal: conjuntos BUSCO disponíveis para 193 linhagens (eucariotos, bactérias, arquéias, vírus)
+\item[Adequação a Organismos Não-Modelo:] Excelente se dados de genoma/transcriptoma existem
+\end{description}
+
+\subsection{Forças e Limitações}
+
+Nenhum custo de sequenciamento adicional, conjuntos de ortólogos padronizados, pipeline automatizado, aplicável a qualquer genoma/transcriptoma existente. As limitações incluem dependência de qualidade de montagens de entrada, genes BUSCO nem sempre cópia única, viés funcional para genes de manutenção.
+
+\textcite{simao2015, waterhouse2018, manni2021, sahbou2022}
+
+\section{Métodos Assembly-Free / k-mer (AAF, CASTER, Read2Tree)}
+
+Abordagens que evitam montagem tradicional, usando comparações diretas de k-mer ou mapeamento relativo a sequências de referência.
+
+\subsection{Características Gerais}
+
+\begin{description}
+\item[Categoria:] Livres de alinhamento ou baseados em leitura
+\item[Tipo de Locus:] Genoma completo (todo conteúdo de sequência usado como espectra k-mer) ou mapeamento de leitura para referência
+\item[Número Típico de Loci:] N/A (baseado em distância ou mapeamento relativo; não baseado em locus de forma tradicional)
+\item[Escala Filogenética Ótima:] Emergente: demonstrado em escalas intermediária a profunda
+\item[Qualidade de DNA:] Variável (funciona com leituras brutas; tolera qualidade moderada)
+\item[Quantidade de DNA:] Variável (beneficia de cobertura moderada; >5$\times$ útil)
+\item[Tecido:] Qualquer tecido rendendo DNA sequenciável
+\item[Compatibilidade com Espécimes de Museu/Herbário:] Potencialmente boa (funciona de leituras brutas sem montagem)
+\item[Custo Relativo:] Nenhum custo adicional se dados de sequenciamento já existem
+\item[Complexidade Bioinformática:] Baixa (evita montagem, alinhamento e etapas de ortologia)
+\item[Dificuldade de Avaliação de Ortologia:] N/A (ortologia implícita em sobreposição de k-mer ou mapeamento)
+\item[Tendência de Completude da Matriz:] N/A (não baseada em matriz de forma tradicional; completude = cobertura)
+\item[Combinabilidade Entre Estudos:] Moderada (requer estratégia de sequenciamento consistente)
+\item[Amplo Leque Taxonômico:] Universal em princípio; CASTER testado através de eucariotos
+\item[Adequação a Organismos Não-Modelo:] Excelente em princípio: expertise computacional mínima; nenhum genoma de referência necessário
+\end{description}
+
+\subsection{Forças e Limitações}
+
+Pipeline mais rápido e simples: leituras brutas $\rightarrow$ árvore. Evita montagem, alinhamento e inferência de ortologia. As limitações incluem análise baseada em modelo limitada (distâncias, não padrões de sítio em maioria das implementações), e alguns métodos são recentes e menos bem testados.
+
+\textcite{fan2015, dylus2024, balaban2025}
+
+\section{Considerações Comparativas}
+
+A seleção entre estes tipos de dados envolve considerações complexas de custo-benefício. Para estudos de filogeografia em escala populacional, RADseq oferece melhor valor de custo. Para estudos filogenômicos profundos em organismos não-modelo com genomas grandes, RNA-seq oferece melhor balanço de custo e informativeness. Para estudos requerendo combinação robusta entre estudos de múltiplos grupos, UCEs ou Angiosperms353 oferecem máxima padronização. Para obtenção de montagens genômicas de referência de alta qualidade, sequenciamento de leitura longa com estratégias combinadas é necessário.
+
+Cada tipo de dado captura diferentes assinais filogenômicos e resolução de diferentes nós em árvores de espécies. Uma abordagem crescentemente adotada envolve abordagem multi-estratégia de dados, em que diferentes tipos de dados fornecem contexto complementar para reconstrução filogenética robusta.
+
+\clearpage
+\begin{destaque}
+\textbf{Roteiro de Revisão --- Capítulo 4}
+\begin{enumerate}
+    \item WGS leitura curta: genoma completo, $\geq$500\,ng DNA HMW, U\$50--200+/amostra; pobre para museu; bioinformática muito alta.
+    \item WGS leitura longa (PacBio HiFi / ONT): montagem cromossômica, DNA ultra-HMW $>$20\,kb, U\$200--1\,000+; tecido fresco obrigatório.
+    \item RNA-seq: exons expressos (1\,000--20\,000 genes), RIN$\geq$7, U\$30--100; variação tecido-específica cria dados faltantes; parólogia por WGD e splicing.
+    \item UCEs: núcleos conservados não-codificantes + flanqueadores variáveis; 500--5\,000 loci; DNA degradado tolerado; pipeline PHYLUCE; combinabilidade muito alta.
+    \item AHE (Enriquecimento Híbrido Ancorado): âncoras exônicas + flanqueadores intrônicos; 300--600+ loci; centro FSU; loci mais longos que UCEs.
+    \item Angiosperms353: 353 genes universais para angiospermas; validado com herbário $>$100 anos; pipeline HybPiper; padrão botânico.
+    \item RADseq/ddRADseq/GBS: enzimas de restrição, milhares de SNPs; U\$10--30/amostra; ideal $<$10--20\,Mya; dropout severo com divergência; combinabilidade muito baixa.
+    \item Genome skimming: cobertura rasa (1--5$\times$), U\$5--20; recupera organelares + nrDNA; DGS profundo $\to$ centenas de genes nucleares; excelente para degradados.
+    \item Filogenômica organellar: plastoma ($\sim$80 genes), mitogenoma animal ($\sim$13 genes); locus único não-recombinante; discordância citonuclear.
+    \item BUSCO: extração post hoc de ortólogos de cópia única; 300--5\,000+ genes; 193 conjuntos por linhagem; sem custo adicional de sequenciamento.
+    \item Métodos k-mer (AAF, CASTER, Read2Tree): leituras brutas $\to$ árvore sem montagem/alinhamento; emergentes mas menos bem testados.
+\end{enumerate}
+\end{destaque}
+
+\clearpage
+
+\printbibliography[heading=subbibliography,title={Referências}]
+

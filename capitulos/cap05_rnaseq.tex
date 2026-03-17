@@ -1,0 +1,206 @@
+
+\chapter{RNA-seq em Estudos Filogenômicos}
+
+\section{Introdução e Motivações}
+
+O sequenciamento de RNA (RNA-seq) emergiu como uma abordagem poderosa e amplamente acessível para coleta de dados filogenômicos em organismos diversos, particularmente aqueles que carecem de genomas de referência ou recursos genômicos estabelecidos. A aplicação de RNA-seq em estudos filogenômicos oferece múltiplas vantagens importantes: acesso eficiente a centenas ou milhares de loci nucleares codificantes de cópia única, geração simultânea de dados de expressão gênica e duplicação gênica, e capacidade de aproveitar grandes repositórios de transcriptomas publicamente disponíveis gerados para outras finalidades. Estas propriedades tornam RNA-seq especialmente valioso para organismos não-modelo e para grupos com genomas grandes que seria impraticável sequenciar em sua totalidade.
+
+No entanto, RNA-seq apresenta um conjunto distinto de desafios técnicos e analíticos que pesquisadores devem navegar. Este capítulo revisa as motivações para usar RNA-seq em filogenômica, caracteriza os principais desafios técnicos e analíticos, e descreve estratégias que pesquisadores desenvolveram para superá-los.
+
+\section{Motivações para RNA-seq em Filogenômica}
+
+\subsection{Acesso a Loci Codificantes Múltiplos}
+
+RNA-seq fornece acesso abrangente a genes expressos, capturando potencialmente milhares de loci codificantes de cópia única em uma única reação. Para organismos não-modelo, isto representa uma vantagem considerável sobre métodos que requerem desenho prévio de sondas ou conhecimento de genomas de referência. A quantidade de informação filogenômica disponível em uma única biblioteca de transcriptoma pode rivalizar ou exceder aquela obtida através de métodos de captura alvo após investimento em desenho de sonda customizado.
+
+\subsection{Economia de Custos em Organismos Não-Modelo}
+
+Para taxa que carecem de genomas de referência bem anotados, o custo de desenvolvimentode conjuntos de sondas customizadas para abordagens de captura alvo pode ser proibitivo. Em contraste, RNA-seq oferece um ponto de entrada de custo menor. Uma única biblioteca de transcriptoma com cobertura moderada (por exemplo, 50 milhões de leituras) pode custar U\$30--100 para preparação e sequenciamento, comparável ao custo de uma amostra de captura alvo sem exigir o investimento inicial em desenho de sonda.
+
+\subsection{Dados de Expressão Integrados}
+
+Uma característica distintiva de RNA-seq é que as medidas de abundância de transcritos (contagens de leitura mapeadas) são capturadas inerentemente durante o sequenciamento. Isto permite que pesquisadores extraiam simultaneamente (1) dados de sequência para inferência filogenética e (2) dados de expressão gênica que caracterizam padrões de expressão em diferentes tecidos ou estágios de desenvolvimento. Esta dualidade de dados torna mais eficiente a coleta em comparação com métodos de sequenciamento que rendimento apenas sequência.
+
+\subsection{Acesso a Repositórios Públicos}
+
+O Sequence Read Archive (SRA) NCBI e repositórios similares alojam dezenas de milhões de bibliotecas de transcriptoma do NCBI disponíveis publicamente, frequentemente submetidas para fins não filogenômicos (por exemplo, estudos de expressão gênica, caracterização de genomas de rascunho). Para pesquisadores filogenômicos, isto oferece uma oportunidade de reutilizar dados existentes---permitindo estudos filogenômicos retrospectivos que combinam dados de transcriptoma de múltiplos laboratórios e projetos. Esta reutilização de dados acelera a construção de filodenias taxonômicas e reduz custos globais do projeto.
+
+\section{Desafios Técnicos: Preservação de Tecido e Qualidade de RNA}
+
+\subsection{Degradação Rápida de RNA}
+
+O RNA é quimicamente instável em comparação com DNA, sujeito a degradação através de múltiplos mecanismos. RNases ubíquas (enzimas que clivam RNA) são especialmente prevalentes em ambientes naturais, contaminando ferramentas, água e ar. Uma vez que o tecido é coletado, a degradação de RNA começa imediatamente através da hidrólise espontânea e atividade de nuclease endógena, a menos que medidas imediatas de preservação sejam iniciadas.
+
+A qualidade de RNA é comumente medida através da razão de integridade de RNA (RIN), que varia de 10 (RNA completamente intacto) a 1 (RNA degradado). Para aplicações de filogenômica, valores de RIN $\geq 7$ são geralmente considerados aceitáveis, embora RIN mais alto (8--10) seja preferido. Degradação significativa de RNA resulta em perda de transcritos completos de comprimento total e introdução de artefatos de alinhamento que complicam a ortologia subsequente.
+
+\subsection{Métodos de Preservação de Tecido}
+
+Várias estratégias de preservação foram desenvolvidas para manter a integridade de RNA:
+
+\begin{itemize}
+\item \textbf{Silica-gel}: Tecido fresco é imediatamente colocado em silica-gel azul coberto, que absorve umidade e desidrata o tecido rapidamente. Esta abordagem é de baixo custo, portátil e eficaz para campo. RNA extraído de amostras preservadas em silica-gel frequentemente apresenta RIN razoável (7--9), embora alguns tecidos sejam mais propensos a degradação.
+
+\item \textbf{RNAlater}: Uma solução de preservação química que estabiliza RNA através de uma mistura proprietária de componentes que inibem nucleases. Tecido é imerso em RNAlater, que penetra o tecido dentro de 24 horas e protege RNA por período prolongado (meses a anos) em temperatura ambiente. RNAlater tipicamente preserva RNA de qualidade superior ao silica-gel, mas é mais caro e menos portátil em campo.
+
+\item \textbf{Nitrogênio Líquido}: Flash-congelamento de tecido fresco em nitrogênio líquido oferece preservação superior se armazenamento a -80\textdegree{}C for mantido. Esta abordagem é melhor para ambientes de pesquisa com infraestrutura de congelamento, mas menos prático para coleta de campo.
+
+\item \textbf{Secagem Desumidificada}: Secagem sob baixa umidade em solução tampão preserva RNA razoavelmente bem e pode ser implementada em campo com equipamento mínimo.
+\end{itemize}
+
+\subsection{Variação Tecido-Específica}
+
+A composição transcriptômica varia dramaticamente entre tecidos. Um transcriptoma de músculo é dominado por transcritos relacionados à contração muscular, enquanto um transcriptoma de cérebro é enriquecido em genes relacionados à neuroatividade. Para filogenômica, isto cria uma fonte potencial de dados faltantes: um gene pode estar ausente do transcriptoma de um tecido específico simplesmente porque não está sendo altamente expresso naquele contexto.
+
+Pesquisadores frequentemente mitogam esta variação através de combinação de múltiplos tecidos (por exemplo, combinando dados de músculo, cérebro e glândulas digestivas) para melhorar cobertura gênica e completude da matriz. Alternativamente, padronizar no tecido único (por exemplo, sempre usando tecido muscular) sacrifica completude em prol de comparabilidade entre estudos.
+
+\section{Desafios Analíticos: Determinação de Ortologia e Contaminhação Paráloga}
+
+\subsection{Complexidade Aumentada de Ortologia}
+
+A determinação de ortologia---a identificação de sequências homólogas verdadeiramente derivadas por especiação e não por duplicação gênica---é complicada em dados RNA-seq por múltiplas razões:
+
+\begin{itemize}
+\item \textbf{Duplicações de Genoma Inteiro (WGD)}: Muitos organismos sofreram duplicações de genoma inteiro em suas histórias evolutivas. Por exemplo, linhagens de vertebrados experimentaram duas rondas de WGD próximo à base da radiação de vertebrados. Estas duplicações amplificam todo gene no genoma, criando potencialmente centenas de pares de genes parálogos. Distinguir ortólogos verdadeiros de parálogos resultantes de WGD exige filtragem cuidadosa e análise de sintenia.
+
+\item \textbf{Variação Estrutural Intraespecífica}: Alguns genes podem estar presentes em cópia única em alguns indivíduos de uma população mas duplicados em outros, devido a variações estruturais polimórficas. Isto introduz heterogeneidade na determinação de ortologia.
+
+\item \textbf{Splicing Alternativo}: Muitos genes produzem múltiplas isoformas através de splicing alternativo. Diferentes isoformas podem ter estrutura exônica muito diferente, complicando alinhamento e ortologia. Frequentemente não é claro qual isoforma representa a mais informativa evolutivamente.
+\end{itemize}
+
+\subsection{Pipelines de Ortologia}
+
+Para superar estes desafios, pesquisadores desenvolveram pipelines automatizados sofisticados:
+
+\textbf{OrthoMCL} agrupa sequências homólogas através de busca BLAST recíproca, filtragem de best-reciprocal-hit, e agrupamento de Markov. Para dados RNA-seq, ORTHOMCL pode ser combinado com filtros adicionais removendo sequências truncadas, isoformas de baixa expressão, ou cópias aparentes baseadas em similaridade de sequência dentro de limiar predefinido.
+
+\textbf{InParanoid} identifica pares de ortólogos entre dois genomas enquanto coloca parálogos secundários em contexto. InParanoid é particularmente útil para dados RNA-seq multiespécie onde múltiplas cópias de um gene podem estar presentes em uma ou mais espécies.
+
+\textbf{HybPiper} foi originalmente desenvolvido para dados de captura alvo hibridizada mas adapta-se bem a dados RNA-seq, montando transcritos de novo a partir de leituras, identificando exons e intrões, e realizando alinhamento a sequências de referência conhecidas. Este pipeline reduz artefatos de isoforma através de seleção cuidadosa de sequências de referência e limiares de similaridade.
+
+\subsection{Contaminação Paráloga e Captura de Contaminação}
+
+Um desafio particular é a "captura de contaminação paráloga"---a situação em que um pipeline de ortologia inadvertidamente inclui um gene pará logo em uma matriz de dados filogenômicos. Isto pode ocorrer quando:
+
+\begin{itemize}
+\item Uma espécie tem uma cópia duplicada e a cópia duplicada acidentalmente é selecionada como "ortólogo" para uso em matriz
+\item Uma sequência contaminante de outra espécie é acidentalmente atribuída como ortólogo
+\item Isoformas alternativas de um mesmo gene são tratadas como genes separados
+\end{itemize}
+
+Parálogos capturados podem introduzir sinal sistemático enganoso em matrizes filogenômicas, resultando em topologias de árvore incorretas. Verificação rigorosa através de BLAST reverso, análise de árvore gênica individual, e testes de ortologia podem mitigar este risco.
+
+\section{Desafios Analíticos: Discordância de Árvore Gênica e Alinhamento}
+
+\subsection{Incompletude de Linhagem Ordenação (ILS)}
+
+ILS---a retenção de polimorfismo ancestral---ocorre quando múltiplos alelos de um gene segregam em uma população ancestral por período suficiente que eles podem ser fixados em diferentes descendentes. Isto resulta em histórias de gene que diferem de história de espécie. Em dados RNA-seq com múltiplos genes, a maioria dos genes provavelmente apresentarão algum grau de discordância devido a ILS, especialmente em radiações rápidas e linhagens com tamanho efetivo populacional grande.
+
+\subsection{Introgressão}
+
+Hibridação histórica seguida de retrocuzamento introduz segmentos de DNA de uma espécie em genoma de espécie relacionada. Se um gene foi introgredido, sua árvore de gene refletirá a história de introgressão em vez da história de especiação. Isto pode resultar em topologia de gene altamente discordante.
+
+\subsection{Duplicação Gênica e Perda}
+
+Alguns genes sofrem duplicação em uma linhagem seguida por perda em linhagem irmã. Se apenas um dos co-ortólogos é analisado, a árvore de gene resultante pode refletir a história de duplicação-perda em vez da história de especiação.
+
+\subsection{Qualidade de Alinhamento e Mascaramento}
+
+Alinhamentos de sequência são a base de toda inferência filogenética. Alinhamentos de baixa qualidade introduzem ruído sistemático que pode confundir sinais filogenômicos. Para dados RNA-seq especificamente, várias fontes de alinhamento de baixa qualidade são comuns:
+
+\begin{itemize}
+\item \textbf{Regiões de Baixa Complexidade}: Sequências de baixa complexidade (por exemplo, homopolímeros, repetições de dinucleotídeos) frequentemente alinham ambiguamente e devem ser mascaradas antes de análise filogenética.
+
+\item \textbf{Sequências Variáveis Rápido}: Sequências evoluindo rapidamente (por exemplo, regiões de superfície de proteína imunológica) podem ter posições alinhadas com confiança baixa, particularmente em distâncias filogenômicas profundas.
+
+\item \textbf{Artefatos de Splicing Alternativo}: Diferentes isoformas podem introduzir espaços e desalinhamentos se alternativas de splice site não são adequadamente resolvidas.
+\end{itemize}
+
+Estratégias de mascaramento podem remover sítios problemáticos enquanto retêm sítios informativos. Métodos incluem ALISCORE (identifica sítios ambiguamente alinhados), ZORRO (atribui pesos de confiança a alinhamentos), e filtragem manual baseada em complexidade de sequência.
+
+\section{Estratégias para Superar Desafios}
+
+\subsection{Pipelines de Processamento Automatizado}
+
+Vários pipelines de processamento automatizado foram desenvolvidos para racionalizar a trajetória de dados RNA-seq brutos em matrizes filogenômicas:
+
+\textbf{TranscriptomeTools}: Um conjunto de scripts que coordena de novo montagem de transcritos, alinhamento a referência, extração de ortólogos, e alinhamento múltiplo.
+
+\textbf{PHYLONOME}: Um pipeline web que aceita dados FASTQ brutos, realiza montagem de novo e ortologia, retornando alinhamento múltiplo de ortólogos.
+
+\textbf{SequenceMatrix}: Um programa com interface gráfica para gerenciamento de dados de sequência, permitindo rápida combinação de múltiplas regiões de genes com estratégias de particionamento automático para testes de modelo e reconstrução filogenética.
+
+\subsection{Análise Multi-Método de Discordância}
+
+Dado os múltiplos fontes de discordância de árvore gênica, uma abordagem crescentemente adotada envolve análise multi-método que trata discordância explicitamente:
+
+\begin{itemize}
+\item \textbf{Análise Concatenada}: Métodos que concatenam múltiplos genes em supermatriz e realizam reconstrução phylogenética direta (por exemplo, maximum likelihood, Bayesian inference) em matriz concatenada. Estas abordagens frequentemente empregam modelos filogenômicos que permitem heterogeneidade de taxa entre partições de genes.
+
+\item \textbf{Análise de Árvore Gênica Individual}: Métodos que reconstruem árvore gênica individual para cada gene então sintetizam árvores gênicas em espécie-tree final. Exemplos incluem ASTRAL (do "Accurate Species TRee ALgorithm"), que resolve discordância através de pesquisa de árvore que maximiza o número de trios consistentes através de árvores gênicas.
+
+\item \textbf{Modelos Explicativos}: Modelos evolutivos que explicitamente modelam processos como ILS, introgressão, e duplicação-perda podem ser ajustados aos dados de árvore gênica para estimar parâmetros demográficos e históricos.
+\end{itemize}
+
+\subsection{Enriquecimento de Captura Alvo Derivado de RNA-seq}
+
+Uma estratégia complementar envolve usar dados RNA-seq iniciais para informar desenho de sondas customizadas para captura alvo subsequente. Por exemplo, pesquisadores poderiam:
+
+\begin{enumerate}
+\item Sequenciar transcriptomas de representantes de taxa em questão
+\item Identificar genes conservados encontrados consistentemente entre taxa que seriam bons alvos para captura
+\item Desenhar sondas baseadas nestas sequências de transcriptoma
+\item Usar sondas para enriquecer bibliotecas de DNA (incluindo DNA degradado de espécimes de museu) de taxa adicional
+\end{enumerate}
+
+Esta abordagem combina vantagens de RNA-seq (baixo custo inicial, acesso a genes múltiplos sem conhecimento de genoma de referência) com vantagens de captura alvo (compatibilidade com DNA degradado, custo baixo por amostra após desenho de sonda).
+
+\section{Aplicações Empíricas e Casos de Estudo}
+
+\subsection{Invertebrados}
+
+RNA-seq foi particularmente impactante em filogenômica de invertebrados, onde genomas de referência foram historicamente escassos. \textcite{misof2014} utilizou dados transcríptomos de >100 espécies de insetos para produzir primeiro filogenoma de insetos robustamente resolvido, estabelecendo relações entre todos os grupos maiores de insetos modernos.
+
+\subsection{Plantas}
+
+Para plantas, a iniciativa One Thousand Plant Transcriptomes (1KP) gerou transcriptomas de ~1000 espécies de plantas compreendendo toda a diversidade de grupos maiores de plantas. \textcite{onetp2019} demonstrou que dados 1KP poderiam ser combinados para análise de raios-x de evolução de plantas em escalas temporais profundas.
+
+\subsection{Considerações de Qualidade em Dados Retrospectivos}
+
+Análise de conjunto de dados de transcriptomas públicos revelou variação substancial em qualidade entre estudos. Pesquisadores que reutilizam dados de transcriptoma devem avaliar cuidadosamente qualidade de RIN, profundidade de sequenciamento, e métodos de processamento de anteriores estudos antes de inclusão em análises filogenômicas.
+
+\section{Direções Futuras e Perspectivas}
+
+\subsection{Sequenciamento de RNA de Leitura Longa}
+
+Sequenciamento de RNA de leitura longa (Iso-Seq da PacBio, direct RNA sequencing da Oxford Nanopore) oferece capacidade de sequenciar transcritos de comprimento total sem necessidade de montagem de novo. Isto pode resolver algumas ambiguidades de splicing alternativo e melhorar confiança de ortologia em future.
+
+\subsection{Transcriptômica em Nível de Célula Única}
+
+Sequenciamento de RNA em nível de célula única (scRNA-seq) abre avenues inteiramente novas para filogenômica, potencialmente permitindo caracteres filogenômicos para serem atribuídos a tipos de células e funções biológicas específicos. No entanto, desafios analíticos substanciais relacionados a dropout de genes e variabilidade de captura devem ser superados.
+
+\subsection{Integração com Outros Tipos de Dados}
+
+Uma tendência crescente é integração de múltiplos tipos de dados (sequência, expressão, fenótipo) em modelagem filogenética unificada. RNA-seq fornece um ponto de entrada natural para tal integração devido à disponibilidade de dados de expressão integrados.
+
+\clearpage
+\begin{destaque}
+\textbf{Roteiro de Revisão --- Capítulo 5}
+\begin{enumerate}
+    \item RNA-seq acessa centenas--milhares de loci codificantes nucleares sem sondas; custo U\$30--100/amostra; dados de expressão integrados; repositórios públicos (SRA) reutilizáveis.
+    \item Qualidade de RNA: RIN$\geq$7 necessário; degradação por RNases é rápida. Preservação: silica-gel (campo, barato), RNAlater (penetra em 24\,h, meses à T.A.), nitrogênio líquido ($-80\,^\circ$C, superior), secagem desumidificada.
+    \item Variação tecido-específica: transcriptomas diferem drasticamente entre tecidos; combinar múltiplos tecidos melhora cobertura mas complica comparabilidade.
+    \item Ortologia complicada por: duplicações de genoma inteiro (WGD), variação estrutural intraespecífica, splicing alternativo (isoformas múltiplas).
+    \item Pipelines de ortologia: OrthoMCL (BLAST recíproco + clustering Markov), InParanoid (pares ortólogos entre genomas), HybPiper (montagem de novo + alinhamento a referência).
+    \item Contaminação paráloga: inclusão inadvertida de parálogo na matriz $\to$ sinal enganoso; mitigar com BLAST reverso, árvores gênicas individuais, testes de ortologia.
+    \item Discordância de árvore gênica: ILS (retenção de polimorfismo ancestral), introgressão (hibridação histórica), duplicação--perda.
+    \item Qualidade de alinhamento: mascarar regiões de baixa complexidade, sequências hipervariáveis e artefatos de splicing; ferramentas: ALISCORE, ZORRO.
+    \item Abordagem multi-método: concatenação (supermatriz) vs.\ árvore de espécies coalescente (ASTRAL) vs.\ modelos explícitos (ILS, introgressão).
+    \item RNA-seq $\to$ design de sondas customizadas: transcriptomas informam captura alvo subsequente para DNA degradado de museu.
+    \item Direções futuras: Iso-Seq / direct RNA (transcritos inteiros), scRNA-seq (célula única), integração multi-dados.
+\end{enumerate}
+\end{destaque}
+
+\clearpage
+
+\printbibliography[heading=subbibliography,title={Referências}]
+

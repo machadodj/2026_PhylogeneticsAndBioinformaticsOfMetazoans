@@ -1,0 +1,288 @@
+
+\chapter{Gestão de Dados Ômicos}
+
+\section*{Resumo}
+
+Análises computacionais são agora centrais em virtualmente toda pesquisa ômicas, mas o componente computacional é frequentemente o link mais fraco em reproducibilidade científica. Este capítulo examina fundações teóricas de reproducibilidade, os princípios FAIR (Encontrável, Acessível, Interoperável, Reutilizável) para gestão de dados e software de pesquisa, e implementação prática desses princípios em contexto de filogenômica e multi-ômicas. Especial atenção é dada às limitações técnicas de computação --- comportamento dependente de hardware, restrições de memória e armazenamento, o paradoxo de computação em nuvem --- que afetam reproducibilidade mesmo quando melhores práticas são seguidas. Fornecemos um checklist prático para fazer projetos filogenômicos FAIR e discutimos conexões entre design de sistema HPC e conformidade FAIR.
+
+\section{Introdução: O Problema de Reproducibilidade em Biologia Computacional}
+
+Análises computacionais são agora centrais em virtualmente toda pesquisa ômicas, porém o componente computacional é frequentemente o link mais fraco em reproducibilidade científica. O problema tem múltiplas dimensões interagindo.
+
+\subsection{Opacidade e Fragilidade de Software}
+
+Muitas ferramentas de bioinformática são pobremente documentadas, sensíveis a versão, e distribuídas sem ambientes containerizados, significando que instalar a mesma ferramenta seis meses depois em um sistema operacional diferente pode produzir resultados diferentes --- ou falhar inteiramente. \textcite{martindelico2024} avaliaram FAIRness através de software de pesquisa em ciências da vida e encontraram que reproducibilidade e verificabilidade de componentes computacionais permanecem sistemicamente deficientes. \textcite{zafeiropoulos2021} documentaram isto do lado de facility: seu sistema HPC acumulou sobre 200 pacotes de software com versionamento frequente e não-periódico e cadeias de dependência quebradas, motivando sua transição para pipelines containerizados.
+
+\subsection{Sensibilidade de Parâmetro e Configuração}
+
+\textcite{powers2022} demonstraram que algo aparentemente rotineiro quanto alocação de thread por tarefa ou a escolha de nível de compressão em GATK pode alteravelmente mudar runtime e, no caso de configurações scatter-gather, potencialmente introduzir artefatos. Essas decisões de configuração são raramente relatadas em seções de métodos.
+
+\subsection{Negligência em Gestão de Dados}
+
+Dados sequenciados bruços, arquivos intermediários, e resultados finais são frequentemente armazenados em estruturas de diretório ad hoc sem metadados, sem versionamento, e sem política de ciclo de vida de dados. Quando um estudante se gradua, seu histórico de análise pode ser efetivamente perdido.
+
+\subsection{Escala do Problema}
+
+\textcite{kim2018} realizaram estudo de caso em reproducibilidade em bioinformática e encontraram que mesmo análises bem-documentadas não podiam ser confiávelmente replicadas devido a diferenças de ambiente e dependência. Isto não é preocupação marginal --- afeta confiabilidade fundamental de resultados publicados.
+
+\section{Os Princípios FAIR: Um Framework para Intendência de Dados}
+
+\subsection{Origem e Escopo}
+
+Os Princípios Orientadores FAIR foram formalizados por \textcite{wilkinson2016} como um conjunto de diretrizes para melhorar Encontrabilidade, Acessibilidade, Interoperabilidade, e Reutilizabilidade de ativos digitais --- incluindo dados, metadados, e infraestrutura que os suporta. Uma ênfase chave do paper original é \textit{acionabilidade por máquina}: a capacidade de sistemas computacionais encontrarem, acessarem, interoperarem com, e reutilizarem dados com intervenção mínima ou nenhuma de humano, motivada pelo volume acelerador e complexidade de dados de pesquisa.
+
+\subsection{Os Quinze Sub-Princípios}
+
+\subsubsection{Encontrável (F)}
+
+Dados devem ser descobertos por ambos humanos e máquinas.
+
+\begin{itemize}
+\item F1: (Meta)dados são designados identificadores globalmente únicos e persistentes (e.g., DOIs, números de acesso).
+\item F2: Dados são descritos com metadados ricos.
+\item F3: Metadados explicitamente incluem identificador dos dados que descrevem.
+\item F4: (Meta)dados são registrados ou indexados em recurso pesquisável (e.g., NCBI, ENA, Zenodo).
+\end{itemize}
+
+\subsubsection{Acessível (A)}
+
+Uma vez encontrados, dados devem ser recuperáveis sob condições claras.
+
+\begin{itemize}
+\item A1: (Meta)dados são recuperáveis pelo seu identificador usando protocolo de comunicação padronizado (e.g., HTTP, FTP).
+\item A1.1: O protocolo é aberto, grátis, e implementável universalmente.
+\item A1.2: O protocolo permite para autenticação e autorização onde necessário.
+\item A2: Metadados permanecem acessíveis mesmo quando os dados mesmos não estão mais disponíveis. Isto é crítico para manutenção científica de longo-prazo.
+\end{itemize}
+
+\subsubsection{Interoperável (I)}
+
+Dados devem ser integráveis com outros dados e compatíveis com aplicações e workflows.
+
+\begin{itemize}
+\item I1: (Meta)dados usam linguagem formal, acessível, compartilhada, e broadly aplicável para representação de conhecimento (e.g., RDF, OWL, ontologias padronizadas).
+\item I2: (Meta)dados usam vocabulários que eles mesmos seguem os princípios FAIR.
+\item I3: (Meta)dados incluem referências qualificadas para outros (meta)dados, habilitando construção de grafos de conhecimento.
+\end{itemize}
+
+\subsubsection{Reutilizável (R)}
+
+Dados devem ser bem-descritos assim que possam ser replicados e combinados em diferentes contextos.
+
+\begin{itemize}
+\item R1: (Meta)dados são ricamente descritos com pluralidade de atributos acurados e relevantes.
+\item R1.1: (Meta)dados são lançados com licença de uso de dados clara e acessível (e.g., CC-BY, CC0).
+\item R1.2: (Meta)dados são associados com proveniência detalhada (quem gerou dados, como, quando, com que parâmetros).
+\item R1.3: (Meta)dados encontram padrões comunitários relevantes de domínio (e.g., MIGS/MIMS para genômica, ISA-Tab para multi-ômicas).
+\end{itemize}
+
+\subsection{FAIR Aplica-se a Três Entidades}
+
+Os princípios endereçam três tipos distintos de entidades: \textbf{dados} (ou qualquer objeto digital), \textbf{metadados} (informação sobre objeto digital), e \textbf{infraestrutura} (sistemas que hospedam, indexam, e servem estes objetos). Por exemplo, princípio F4 requer que ambos metadados e dados sejam registrados em recurso pesquisável --- o componente de infraestrutura. Este escopo de três-vias é importante porque muitos pesquisadores tratam FAIR como apenas exercício de etiquetação de dados, quando de fato demanda investimentos correspondentes em infraestrutura e serviços de metadados.
+
+\section{FAIR Além de Dados: Princípios para Software de Pesquisa}
+
+Os princípios FAIR originais alvo dados e metadados. Reconhecendo que software de pesquisa é igualmente crítico e igualmente frágil, \textcite{barker2022} propuseram FAIR4RS --- uma adaptação de princípios FAIR para software de pesquisa. As adaptações chave incluem:
+
+\begin{itemize}
+\item Software deveria ter identificadores persistentes (como DOIs via Zenodo ou Software Heritage).
+\item Software deveria ser descrito com metadados ricos incluindo dependências, ambiente de runtime, e histórico de versão.
+\item Software deveria usar formatos e padrões aceitos por comunidade, interoperar com outras ferramentas, e ser lançado sob licenças claras.
+\end{itemize}
+
+\textcite{martindelico2024} operacionalizaram isto com FAIRsoft, fornecendo framework de avaliação prático que avalia software de pesquisa através destas dimensões. Avaliações periódicas de ferramentas de bioinformática revelaram gaps persistentes em documentação, licensing, e disponibilidade de código-fonte.
+
+Para pesquisa ômicas, a implicação é direta: um pipeline filogenômico é apenas tão reproducível quanto seu componente menos FAIR. Se IQ-TREE é bem-versionado e depositado em Bioconda mas seu script de filtragem customizado vive sem versão em um desktop de lab, a análise geral não é reproducível.
+
+\section{Implementando FAIR em Gestão de Dados Ômicos}
+
+\subsection{Repositórios de Dados e Identificadores}
+
+Em genômica e filogenômica, repositórios primários já impõem porções dos princípios FAIR:
+
+\begin{itemize}
+\item \textbf{NCBI SRA / ENA / DDBJ} para leituras sequenciadas bruças --- números de acesso servem como identificadores persistentes (F1); campos de metadados capturam organismo, plataforma de sequenciamento, e design de estudo (F2, R1); e a Colaboração Internacional de Banco de Dados de Nucleotídeos garante indexação global (F4).
+
+\item \textbf{TreeBASE / Dryad / Zenodo} para árvores filogenéticas, alinhamentos, e dados suplementares --- DOIs fornecem persistência (F1), e integração de Zenodo com GitHub habilita arquivo de software versionado.
+
+\item \textbf{NCBI GenBank / UniProt / Ensembl} para sequências montadas e anotações.
+\end{itemize}
+
+A lacuna é tipicamente não no nível de repositório mas no nível de lab: pesquisadores frequentemente falham depositar produtos de análise intermediária (alinhamentos filtrados, esquemas de partição, outputs de seleção de modelo, árvores bootstrap) que seriam necessários para verdadeiramente reproduzir estudo filogenômico.
+
+\subsection{Metadados: O Ponto Fraco Perene}
+
+Metadados ricos são o elo crítico de FAIR, ainda assim permanece aspecto mais negligenciado em prática. Para filogenômica, metadados essenciais que frequentemente está faltando incluem:
+
+\begin{itemize}
+\item Versões exatas de software e parâmetros de linha de comando para cada passo de pipeline.
+\item Critérios de mascaramento de alinhamento ou filtragem (e.g., configurações de Gblocks, limites de trimAl).
+\item Resultados de seleção de modelo (qual modelo de substituição foi escolhido por locus, e por qual critério).
+\item Descrição de ambiente computacional (sistema operacional, versões de biblioteca, hash de imagem de container).
+\item Vínculo de proveniência entre dados brutos, produtos intermediários, e resultados finais.
+\end{itemize}
+
+\textcite{niehues2024} demonstraram abordagem prática a este problema embrulhando workflow de análise multi-ômicas como Objeto Digital FAIR, embutindo metadados, dados, e workflow computacional junto em pacote único reutilizável. Eles usaram RO-Crate como formato de empacotamento, Snakemake como motor de workflow, e Git para controle de versão --- fornecendo modelo concreto para como labs filogenômicos poderiam estruturar suas próprias análises.
+
+\subsection{Gerenciadores de Workflow como Habilitadores FAIR}
+
+Gerenciadores de workflow servem propósito dual: eles impõem reproducibilidade codificando steps de análise, e geram metadados de proveniência legível por máquina como efeito colateral de execução. As duas ferramentas dominantes em bioinformática são:
+
+\begin{itemize}
+\item \textbf{Snakemake} \parencite{molder2021}: Baseado em Python, integra com Conda e Singularity/Apptainer, gera DAGs de execução e logs.
+
+\item \textbf{Nextflow} \parencite{di2017}: Baseado em Groovy, designado para portabilidade através HPC, nuvem, e ambientes locais; comunidade nf-core \parencite{ewels2020} fornece pipelines de bioinformática curados e revisados por pares.
+\end{itemize}
+
+Ambos produzem registros do que foi executado, com que parâmetros, em que ordem, e em que dados --- diretamente endereçando princípios FAIR R1.2 (proveniência) e R1.3 (padrões comunitários).
+
+\subsection{Containers como Infraestrutura de Reproducibilidade}
+
+Containers congelam ambiente de software em imagem portável. Em contexto de FAIR:
+
+\begin{itemize}
+\item \textbf{Singularity/Apptainer} é preferido para HPC porque executa sem privilégio root e integra com SLURM. \textcite{zafeiropoulos2021} adotaram Singularity como seu formato de container padrão por sua compatibilidade com imagens Docker e adequação para ambientes HPC multi-usuário.
+
+\item \textbf{Docker} é mais comum em contextos de nuvem e desenvolvimento; pipelines nf-core enviam como imagens Docker.
+
+\item Hashes de imagem de container (digestos SHA256) servem como identificadores persistentes para exato ambiente computacional, satisfazendo F1 para ambientes de software.
+\end{itemize}
+
+\section{Limitações Técnicas de Computação e Seu Impacto em Reproducibilidade}
+
+\subsection{Comportamento Dependente de Hardware}
+
+Resultados computacionais em bioinformática não são sempre idênticos bit-a-bit através diferentes hardware, mesmo com software idêntico. Fontes de não-determinismo incluem:
+
+\begin{itemize}
+\item \textbf{Aritmética de ponto flutuante:} Diferentes arquiteturas de CPU (Intel vs. AMD, diferentes conjuntos de instruções SIMD como AVX2 vs. AVX-512) podem produzir resultados de ponto flutuante ligeiramente diferentes, que podem propagar através cálculos de verossimilhança em inferência filogenética. \textcite{powers2022} demonstraram que Genomics Kernel Library (GKL) em GATK usa instruções AVX-512 para kernels de PairHMM e Smith-Waterman, reduzindo runtime de HaplotypeCaller de 35 horas para menos de 1 hora --- mas esta aceleração é dependente de arquitetura.
+
+\item \textbf{Não-determinismo de ordem de thread:} Programas multi-threaded que reduzem resultados através threads (e.g., somando log-verossimilhanças) podem acumular valores de ponto flutuante em ordens diferentes dependendo de agendamento de thread, produzindo somas ligeiramente diferentes. IQ-TREE, RAxML-NG, e BEAST todos exibem este comportamento em graus variados.
+
+\item \textbf{Sensibilidade de seed aleatória:} Algoritmos de busca em árvore heurísticos dependem de árvores iniciais geradas de seeds aleatórias. Relatando e fixando a seed aleatória é essencial para reproducibilidade.
+\end{itemize}
+
+\subsection{Restrições de Memória e Armazenamento}
+
+Como documentado por \textcite{zafeiropoulos2021}, armazenamento é a restrição mais universal e persistente através de todos tipos de análise de bioinformática. Ferramentas de pipeline geram arquivos intermediários imprevisivelmente grandes, causando falhas de job quando quotas são alcançadas. Isto tem implicações de reproducibilidade diretas: se um job falha mid-way e é reiniciado com parâmetros diferentes ou em subset diferente de dados, resultado final pode diferir do que teria sido produzido por execução ininterrupta.
+
+\textcite{ghedira2024} ainda notaram que em ambientes com recursos limitados, falta de armazenamento adequado pode forçar pesquisadores deletar arquivos intermediários prematuramente, perdendo cadeia de proveniência necessária para reproducibilidade.
+
+\subsection{Paradoxo de Reproducibilidade em Nuvem}
+
+Computação em nuvem (AWS, GCP, Azure) oferece elasticidade e evita manutenção de hardware, mas introduz seus próprios desafios de reproducibilidade:
+
+\begin{itemize}
+\item Tipos de instância mudam ao longo tempo; configuração de VM disponível hoje pode não existir em dois anos.
+\item Instâncias spot/preemptíveis podem ser terminadas mid-computação.
+\item Custos de saída de dados podem desaconselhar compartilhamento de datasets grandes.
+\item Ambientes de software em VMs de nuvem são efêmeros a menos que containerizados.
+\end{itemize}
+
+\textcite{langmead2018} revisaram computação em nuvem para genômica e argumentaram que abordagem híbrida --- possuindo infraestrutura base e burst para nuvem durante picos --- fornece melhor balanço de custo, controle, e reproducibilidade. No entanto, isto requer uso disciplinado de containers e gerenciadores de workflow para garantir que resultados sejam consistentes através ambientes locais e de nuvem.
+
+\section{Checklist Prático: Fazendo Projeto Filogenômico FAIR}
+
+A checklist seguinte traduz princípios FAIR em ações concretas para estudo filogenômico típico:
+
+\subsection{Antes de Análise}
+
+\begin{itemize}
+\item [ ] Registre seu projeto em um repositório (e.g., OSF, Zenodo) e obtenha DOI.
+\item [ ] Deposite leituras sequenciadas brutas em NCBI SRA ou ENA antes de começar análise.
+\item [ ] Defina seu ambiente computacional em um container (Singularity/Docker) ou arquivo Conda \texttt{environment.yml}.
+\item [ ] Escreva seu pipeline em gerenciador de workflow (Snakemake ou Nextflow) ao invés de série de scripts shell ad hoc.
+\end{itemize}
+
+\subsection{Durante Análise}
+
+\begin{itemize}
+\item [ ] Registre todas versões de software, parâmetros, e seeds aleatórias em arquivos de configuração com versão controlada com Git.
+\item [ ] Use banco de dados de accounting SLURM (\texttt{sacct}) para logar uso de recurso computacional.
+\item [ ] Armazene arquivos intermediários em hierarquia de diretório estruturada com convenções de nomeação descritivas.
+\item [ ] Use checksums (MD5 ou SHA256) em arquivos de entrada e saída chave para verificar integridade de dados.
+\end{itemize}
+
+\subsection{Após Análise}
+
+\begin{itemize}
+\item [ ] Deposite alinhamentos, árvores, resultados de seleção de modelo, e esquemas de partição em repositório público (Dryad, Zenodo, TreeBASE).
+\item [ ] Inclua arquivo \texttt{README.md} ou de metadados descrevendo proveniência de cada arquivo depositado.
+\item [ ] Libere seu pipeline de análise (Snakemake/Nextflow + definição de container) sob licença open-source no GitHub/GitLab.
+\item [ ] Archive repositório em Zenodo para obter DOI para software.
+\item [ ] Aplique licença de dados clara (CC-BY ou CC0) a todos dados depositados.
+\end{itemize}
+
+\section{Conceitos Chave para Estudo Adicional}
+
+\subsection{Ontologias e Vocabulários Controlados em Ômicas}
+
+Interoperabilidade FAIR (I1, I2) requer vocabulários compartilhados. Recursos chave incluem:
+
+\begin{itemize}
+\item \textbf{Gene Ontology (GO):} Termos padronizados para função de gene através espécies.
+\item \textbf{Sequence Ontology (SO):} Termos para características de sequência e anotações.
+\item \textbf{Environment Ontology (ENVO):} Termos para contextos ambientais (relevante para metagenômica/metabarcoding).
+\item \textbf{EDAM Ontology:} Ontologia compreensiva de operações de bioinformática, tipos de dados, formatos, e tópicos --- diretamente relevante para descrever workflows computacionais.
+\end{itemize}
+
+\subsection{Planos de Gestão de Dados (DMPs)}
+
+Agências de financiamento (NIH, NSF, ERC, UKRI) cada vez mais requerem DMPs que especifiquem como dados serão manipulados, compartilhados, e preservados. Política de Gestão e Compartilhamento de Dados de 2023 de NIH explicitamente referencia princípios FAIR. Um DMP deveria endereçar: que dados serão gerados, que padrões de metadados serão usados, onde dados serão depositados, quem terá acesso, e por quanto tempo dados serão preservados.
+
+\subsection{Distinção Entre Aberto e FAIR}
+
+FAIR não requer dados serem abertos ou grátis. Princípio A1.2 explicitamente permite para autenticação e autorização. Dados sensíveis (e.g., dados genômicos humanos sob restrições de IRB/ética) podem ser FAIR --- encontráveis e descritos com metadados ricos --- enquanto permanecem access-controlados. Metadados devem ser sempre abertos (A2), mesmo se dados mesmos são restritos.
+
+\subsection{Padrões de Proveniência Computacional}
+
+\begin{itemize}
+\item \textbf{W3C PROV:} Modelo de proveniência de propósito geral.
+\item \textbf{RO-Crate:} Abordagem leve para empacotar dados de pesquisa com metadados, usada por \textcite{niehues2024} para workflows multi-ômicas.
+\item \textbf{CWLProv / WES:} Padrões para registrar proveniência de execuções de workflow no ecossistema Common Workflow Language.
+\end{itemize}
+
+\section{Conexões para Design de Sistema HPC}
+
+Os princípios FAIR e considerações de design de sistema HPC de nosso capítulo complementar (\textit{Projeto de Sistemas Computacionais de Alto Desempenho para Filogenômica}) intersectam em vários pontos:
+
+\begin{itemize}
+\item \textbf{Storage tiering} (\S{}4 do complementar) suporta diretamente gestão de ciclo de vida de dados FAIR: scratch para análise ativa, warm storage para resultados intermediários com metadados, cold storage/repositórios para depósitos FAIR-conformes e arquivados.
+
+\item \textbf{Accounting SLURM} (\S{}8 do complementar) gera proveniência computacional automaticamente --- IDs de job, uso de recurso, wall-times, e códigos de saída são logados e podem ser anexados como metadados para resultados de análise.
+
+\item \textbf{Containerização} (\S{}9 do complementar) é simultaneamente estratégia de gestão de software de HPC e mecanismo de reproducibilidade FAIR.
+
+\item \textbf{Treinamento} (\S{}10 do complementar) é essencial tanto para uso de HPC quanto para adoção de FAIR; pesquisadores que não compreendem SLURM não escreverão scripts de job reproduzíveis, e pesquisadores que não compreendem FAIR não depositarão metadados.
+
+\item \textbf{Gerenciadores de workflow} (\S{}9 do complementar) impõem utilização de recurso eficiente em HPC (permitindo SLURM agendar tarefas otimamente) e conformidade FAIR (gerando registros de proveniência legível por máquina).
+\end{itemize}
+
+\section{Conclusão}
+
+Reproducibilidade em pesquisa ômicas não é exercício puramente teórico. Tem implicações práticas diretas para confiança científica, capacidade de outros pesquisadores construírem sobre seu trabalho, e validade de descobertas a longo prazo. Os princípios FAIR fornecem framework para transformar negligência histórica em gestão de dados em prática sistemática. Implementação requer investimento em infraestrutura (repositórios, indexação, sistemas de arquivo com gerenciamento de ciclo de vida), documentação (metadados ricos, padrões comunitários), e comportamento de pesquisador (uso de workflow managers, versionamento de código, depósito de dados).
+
+Para filogenômica especificamente, adoção de práticas FAIR --- desde deposição de leituras brutas através depósito de alinhamentos e árvores finais --- transforma estudo individual em contribuição reutilizável para ciência filogenética coletiva. Cada análise cuidadosamente documentada e deposited torna-se ponto de partida para futuro pesquisa, comparação, ou validação. Este é o futuro de filogenômica --- não estudos in-vacuo, mas síntese de conhecimento acumulado, viabilizado por gestão rigorosa de dados.
+
+\clearpage
+\begin{destaque}
+\textbf{Roteiro de Revisão --- Capítulo 9}
+\begin{enumerate}\small
+    \item Problema de reproducibilidade: opacidade de software, sensibilidade de parâmetro/configuração (Powers et al., 2022), negligência em gestão de dados, perda de histórico quando estudantes se graduam.
+    \item FAIR (Wilkinson et al., 2016): Encontrável, Acessível, Interoperável, Reutilizável; ênfase em \textbf{acionabilidade por máquina}; aplica-se a dados, metadados \textit{e} infraestrutura.
+    \item 15 sub-princípios: F1 (IDs persistentes: DOIs), F2 (metadados ricos), F3 (ID nos metadados), F4 (indexado/pesquisável); A1 (protocolo padronizado), A1.1 (aberto), A1.2 (autenticação), A2 (metadados persistem sem dados); I1 (linguagem formal: RDF/OWL), I2 (vocabulários FAIR), I3 (referências qualificadas); R1 (atributos ricos), R1.1 (licença clara: CC-BY/CC0), R1.2 (proveniência), R1.3 (padrões comunitários: MIGS/MIMS).
+    \item FAIR $\neq$ aberto: A1.2 permite acesso controlado; metadados sempre abertos (A2).
+    \item FAIR4RS (Barker et al., 2022): adaptação para software de pesquisa; DOIs via Zenodo/Software Heritage; metadados de dependências e ambiente.
+    \item Repositórios: NCBI SRA/ENA/DDBJ (leituras brutas), TreeBASE/Dryad/Zenodo (árvores/alinhamentos), GenBank/UniProt/Ensembl (sequências montadas).
+    \item Gerenciadores de workflow: Snakemake (Python, Conda/Singularity, DAGs) e Nextflow (Groovy, nf-core); geram proveniência automaticamente (R1.2, R1.3).
+    \item Containers: Apptainer (sem root, integra SLURM) para HPC; Docker para nuvem; hash SHA256 = ID persistente do ambiente.
+    \item Limitações técnicas de reproducibilidade: aritmética de ponto flutuante (AVX2 vs.\ AVX-512), não-determinismo de ordem de thread, sensibilidade de seed aleatória.
+    \item Paradoxo de nuvem: elasticidade mas tipos de instância mudam, spot pode ser terminado, custos de saída, ambientes efêmeros; solução = abordagem híbrida \parencite{langmead2018}.
+    \item Ontologias chave: GO (função gênica), SO (características de sequência), ENVO (ambientes), EDAM (operações bioinformáticas). Proveniência: W3C PROV, RO-Crate, CWLProv.
+\end{enumerate}
+\end{destaque}
+
+\clearpage
+
+\printbibliography[heading=subbibliography,title={Referências}]
+

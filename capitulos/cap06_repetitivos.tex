@@ -1,0 +1,188 @@
+
+\chapter{Elementos Repetitivos, Elementos Transponíveis e Viés de Conteúdo GC}
+
+\section{Introdução}
+
+Sequências repetitivas constituem uma fração substancial e frequentemente subestimada de genomas eucarióticos. No genoma humano, aproximadamente 50\% da sequência é composta por elementos repetitivos \parencite{lander2001,dekonig2011}, com proporções consideralmente mais altas em muitos organismos de plantas e insetos. Estes elementos---incluindo elementos transponíveis, DNA satélite, e segmentações duplicadas---apresentam desafios únicos e oportunidades para estudos filogenômicos. Este capítulo sintetiza definições, origens evolutivas, obstáculos que colocam para análises genômicas, e estratégias sequenciamento e bioinformática para lidar com eles.
+
+\section{Definições de Conceitos Genômicos Chave}
+
+\subsection{Elementos Repetitivos}
+
+Elementos repetitivos (REs) são sequências de nucleotídeos que ocorrem em múltiplas cópias ao longo de um genoma. Em organismos eucarióticos, estimativas sugerem que aproximadamente 50\% do genoma humano é composto por sequências repetitivas \parencite{haubold2006}. No nível mais amplo, REs podem ser agrupadas por seus padrões de dispersão em duas classes: repetições em tandem, cujas unidades estão organizadas cabeça-a-cauda adjacente uma à outra, e repetições interspersadas, cujas unidades estão distribuídas em diferentes locais genômicos.
+
+Repetições em tandem incluem DNA satélite, minissatélites, e microssatélites (também chamados de repetições de tandem curto, ou STRs). DNA satélite é encontrado em regiões pericentroméricas, subteloméricos, e intersticiais, formando blocos constitutivos de heterocromatina essencial para estruturas como centrômeros e telômeros. Repetições interspersadas são predominantemente elementos transponíveis, que sozinhos representam aproximadamente 45\% do genoma humano \parencite{ruizruano2023}.
+
+Funcionalmente, alguns elementos repetitivos são essenciais para manutenção de genoma. Repetições teloméricas TTAGGG protegem extremidades cromossômicas, enquanto repetições de $\alpha$-satélite formam a base estrutural de centrômeros. Além de papéis estruturais, REs contribuem sequências regulatórias incluindo promotores, potenciadores, locais de splicing, e elementos insuladores que ativamente remodelam transcriptomas celulares \parencite{rebollo2012,chuong2017,lu2020}.
+
+\subsection{Elementos Transponíveis}
+
+Elementos transponíveis (TEs) são um subconjunto de elementos repetitivos definido por sua capacidade de mudar posição genômica, ou "transpor". \textcite{mcclintock1950} primeiramente identificou estes elementos em milho, e agora TEs são reconhecidos como componentes quase ubíquos de genomas eucarióticos e entre as sequências codificantes mais abundantes na natureza \parencite{hayward2022,wells2020}.
+
+A classificação mais fundamental distingue duas classes maiores baseadas em intermediários de transposição \parencite{wicker2007}. Elementos de Classe I, ou retrotransposons, replicam através de um intermediário de RNA que é reverse-transcrito de volta para DNA antes da integração---um mecanismo de "cópia-e-cola". Elementos de Classe II, ou DNA transposons, movem-se diretamente como DNA através de mecanismo de "corte-e-cola" mediado pela enzima transposase.
+
+Retrotransposons de Classe I são ainda subdivididos em retrotransposons de repetição terminal longa (LTR), que são estruturalmente relacionados a retrovírus, e elementos não-LTR, que incluem elementos nucleares interspersados longos (LINEs) e elementos nucleares interspersados curtos (SINEs). No genoma humano, a família L1 de LINEs constitui aproximadamente 17\% da sequência genômica \parencite{finnegan1989}, enquanto elementos Alu---os SINEs mais abundantes---representam aproximadamente 10--13\% \parencite{batzer2002,dewannieux2003}.
+
+TEs podem ser classificados como autônomos, codificando sua própria maquinaria de transposição, ou não-autônomos, dependentes de produtos enzimáticos de outros TEs para mobilização. SINEs, por exemplo, não codificam sua própria reverse transcriptase e são mobilizadas em trans pela maquinaria L1.
+
+\subsection{Regiões Não-Codificantes e DNA ``Lixo''}
+
+DNA não-codificante refere-se a sequências genômicas que não codificam proteínas. No genoma humano, exons codificantes de proteína constituem apenas aproximadamente 1,5--2\% da sequência total, com os 98--99\% restantes sendo não-codificantes. O termo ``DNA lixo'' foi formalizado por \textcite{ohno1972}, que argumentou que genomas grandes inevitavelmente acumulariam sequências---passivamente propagadas ao longo do tempo evolutivo---que não codificam proteínas.
+
+É importante distinguir entre ``não-codificante'' e ``não-funcional'', uma confusão que tem sido fonte persistente de debate, particularmente após o projeto ENCODE \parencite{encode2012,doolittle2013,graur2013}. DNA não-codificante engloba ampla série de elementos funcionais, incluindo genes para RNAs não-codificantes (rRNAs, tRNAs, snRNAs, snoRNAs, miRNAs, lncRNAs, piRNAs), sequências regulatórias (promotores, potenciadores, silenciadores, insuladores), origens de replicação, e elementos estruturais como centrômeros e telômeros.
+
+Verdadeiro ``DNA lixo'' no sentido evolutivo rigoroso refere-se a sequências sem função biológica demonstrada, incluindo maioria de pseudogenes e remanescentes de transposon degradados que evoluem em taxa neutra. A fração do genoma sob seleção purificadora---e portanto provavelmente funcional---é consideravelmente menor, talvez 5--15\%.
+
+\subsection{Viés de Conteúdo GC}
+
+O termo ``viés de conteúdo GC'' engloba dois fenômenos relacionados mas distintos: uma dimensão biológica concernente à distribuição não-uniforme de nucleotídeos guanina (G) e citosina (C) através de genomas, e uma dimensão técnica concernente a erros sistemáticos introduzidos durante sequenciamento de alto rendimento.
+
+\subsubsection{Variação Biológica de Conteúdo GC}
+
+Conteúdo GC---a proporção de bases guanina e citosina em sequência de DNA---varia substancialmente tanto entre quanto dentro de genomas \parencite{benjamini2012}. No genoma humano, conteúdo GC é distribuído através de sucessivos trechos (isocoros) que variam de aproximadamente 35\% em regiões pobres em GC até aproximadamente 60\% em regiões ricas em GC. Através de espécies, conteúdo GC genômico varia de abaixo de 25\% acima de 75\% e é moldado por interplay complexo de mutação, seleção, recombinação, e deriva genética.
+
+Um condutor maior de heterogeneidade de conteúdo GC em eucariotos é conversão de gene enviesada por GC (gBGC), um mecanismo de reparo de DNA associado a recombinação que preferencialmente fixa alelos G/C sobre alelos A/T em locais heterozigóticos durante meiose \parencite{galtier2001,eyre-walker1993,duret2009,lassalle2015}. Como gBGC gera padrões de substituição indistinguíveis daqueles produzidos por seleção positiva favorecendo conteúdo GC maior, pode confundir análises evolutivas moleculares e filogenéticas \parencite{romiguier2010}.
+
+A distribuição de elementos transponíveis correlaciona com conteúdo GC: SINEs como Alu tendem a acumular em regiões genômicas ricas em GC, enquanto L1 LINEs são enriquecidos em regiões pobres em AT \parencite{richard2008}.
+
+\subsubsection{Viés Técnico de GC em Sequenciamento de Alto Rendimento}
+
+No contexto de sequenciamento de alto rendimento, viés de conteúdo GC refere-se à dependência sistemática entre cobertura de leitura e conteúdo GC de fragmentos sequenciados \parencite{dohm2008,chen2013,browne2020}. Este efeito é bem documentado em plataformas de sequenciamento Illumina, onde o número de leituras mapeadas para uma região genômica depende consideralvelmente de sua composição de nucleotídeos, com fragmentos tanto de alto-GC quanto de alto-AT tipicamente sendo subrrepresentados.
+
+Evidência empírica fortemente implica amplificação de PCR durante preparação de biblioteca como a fonte principal deste viés técnico. A severidade de viés GC varia entre protocolos de preparação de biblioteca e plataformas de sequenciamento.
+
+Estratégias de mitigação incluem preparação de biblioteca livre de PCR, uso de aditivos como betaína (para regiões ricas em GC) ou cloreto de trimetilamônio (para regiões pobres em GC), seleção de misturas de polimerase de PCR menos enviesadas, e métodos de correção computacional aplicados pós-sequenciamento.
+
+\section{Origens Evolutivas de DNA Repetitivo}
+
+\subsection{Origens de Elementos Transponíveis}
+
+As origens evolutivas profundas de TEs permanecem debatidas. A conservação de um motivo de reconhecimento de RNA em várias enzimas cruciais para integração de TE sugere emergência pré-eucariota da maquinaria central de transposição. No entanto, se TEs originaram uma vez no último ancestral comum universal, surgiram independentemente múltiplas vezes, ou se espalharam através de linhagens por transferência horizontal permanece não resolvido.
+
+Dois fatores complicam reconstrução filogenética de história evolutiva de TE. Primeiro, muitas linhagens de TE sofreram transferência horizontal entre espécies até distantemente relacionadas \parencite{schaack2010}, decoplando filogenia de TE de filogenias de hospedeiro. Segundo, TEs podem exibir evolução modular ou quimérica, em que domínios funcionais são trocados entre superfamílias distintas.
+
+\subsection{Retrotransposons Não-LTR: LINEs e SINEs}
+
+Elementos nucleares interspersados longos (LINEs) são retrotransposons não-LTR autônomos que codificam a maquinaria enzimática requerida para sua própria retrotransposição. Elementos LINE-1 (L1) são o retrotransposon autônomo dominante em genomas mamíferos, compreendendo aproximadamente 17\% do genoma humano. L1 elementos são antigos \parencite{malik2001}, com clados similares a L1 reconhecidos através de vertebrados.
+
+Elementos nucleares interspersados curtos (SINEs) são retrotransposons não-autônomos que dependem de enzimas codificadas por LINE para sua mobilização \parencite{dewannieux2003}. SINEs são tipicamente derivados de genes de RNA estrutural pequena. A maioria de SINEs mamíferos derivam de tRNAs, com exceção notável de elementos Alu, que originaram do gene 7SL RNA que codifica o componente RNA da partícula de reconhecimento de sinal. Elementos Alu são restritos a primatas e surgiram aproximadamente 65 milhões de anos atrás através de fusão de dois precursores monoméricos \parencite{batzer2002}.
+
+\subsection{DNA Transposons}
+
+DNA transposons constituem aproximadamente 3\% do genoma humano, com superfamílias hAT e Mariner/Tc1 predominando \parencite{cordaux2009}. Embora sua transposição seja não-replicativa, DNA transposons acumularam grandes números de cópias através de transposição durante replicação de DNA e através de reparo mediado por recombinação homóloga de rupturas de fita dupla em locais de excisão. No genoma humano, todas as famílias conhecidas de DNA transposon são consideradas fósseis moleculares, com nenhum elemento atualmente ativo.
+
+\subsection{Repetições em Tandem: Satélites, Minissatélites, e Microssatélites}
+
+DNA satélite são arranjos de sequências repetidas em tandem que podem abranger megabases sem interrupção, tipicamente localizado em regiões cromossômicas centroméricas, pericentroméricas, e subteloméricos \parencite{garrido-ramos2017}. O termo ``satélite'' deriva da observação que estas sequências, devido sua composição de base enviesada, formam bandas secundárias distintas em centrifugação de gradiente de densidade de cloreto de césio.
+
+Origens evolutivas de famílias de DNA satélite são diversas e frequentemente específicas de linhagem \parencite{plohl2012}. Arrays de satélite centromério evoluem rapidamente, mostrando pouca conservação de sequência entre espécies distantemente relacionadas apesar de função centromério conservada \parencite{henikoff2001,malik2009}.
+
+Uma hipótese intrigante para origem de repetições centroméricas propõe que centrômeros foram derivados de telômeros durante evolução cromossômica eucariótica inicial. Este modelo postula que linearização de um genóforo circular ancestral foi acompanhada por captura de retrotransposons em extremidades cromossômicas quebradas, com divergência subsequente de repetições internas similares a telômeros dando origem a sequências proto-centroméricas.
+
+DNA satélite sofre evolução concertada \parencite{dover1982}, por meio da qual unidades de repetição dentro de espécie são homogeneizadas por mecanismos recombinacionais (crossing over desigual, conversão de gene, amplificação de círculo rolante), produzindo divergência de sequência baixa intrae específica mas alta interespecífica.
+
+Microssatélites (também conhecidos como repetições de sequência simples ou repetições em tandem curtas) consistem de motivos de 1--6 bp repetidos em tandem, tipicamente abrangendo alguns poucos centos de pares de bases \parencite{ellegren2004}. Eles são abundantes em genomas eucarióticos, compreendendo aproximadamente 3\% do genoma humano. O mecanismo primário gerando variação de comprimento de microssatélite é deslizamento de replicação (também chamado de desalinhamento de fita deslizada), em que polimerase de DNA dissocia transientemente durante replicação de molde repetitivo e reacondiciona fora de quadro, levando à inserção ou deleção de uma ou mais unidades de repetição.
+
+Minissatélites (repetições de número variável em tandem, VNTRs) têm unidades de repetição maiores de 10--100 bp e frequentemente são enriquecidos perto de telômeros. Sua expansão é dirigida primariamente por crossing over desigual e conversão de gene em vez de deslizamento de replicação, refletindo comprimento de unidade maior que favorece mecanismos baseados em recombinação.
+
+\section{Obstáculos que Repetições Genômicas Colocam para Estudos Genômicos}
+
+\subsection{Ambiguidade e Multi-Mapeamento}
+
+O núcleo de montagem de novo é identificação de sobreposições entre leituras para formar sequências contíguas mais longas (contigs). Quando uma leitura origina de uma região repetitiva, ela pode corresponder perfeitamente a múltiplas localizações através do genoma. A maioria de algoritmos de montagem (como Gráficos de Bruijn) dependem da unicidade de k-mers (sequências de comprimento $k$). Se um elemento repetitivo é mais longo que o tamanho de k-mer, o montador não pode determinar qual ``cópia'' da repetição uma leitura específica pertence.
+
+Isto resulta em montagens ``colapsadas'', onde múltiplos loci genômicos distintos são incorretamente fundidos em sequência representante única, ou o montador simplesmente termina o contig, levando a fragmentação alta.
+
+\subsection{Complexidade de Gráfico e Emaranhados}
+
+Montadores modernos representam dados genômicos como gráfico onde nós são sequências e arestas são sobreposições. Em genoma livre de repetição, o gráfico seria idealmente um caminho linear. No entanto, DNA repetitivo introduz ``emaranhados'' ou ciclos no gráfico.
+
+Em um gráfico de Bruijn, cada repetição cria um nó com múltiplas arestas de entrada e saída. Resolução destes caminhos requer informação que abrange repetição inteira para ``preencher'' sequências flanqueadoras únicas. Se comprimento de leitura ($L$) é mais curto que comprimento de repetição ($R$), o caminho através do gráfico é matematicamente não-determinístico sem informação auxiliar.
+
+\subsection{Variações Estruturais e Montagem Incorreta}
+
+Regiões repetitivas são pontos quentes para evolução estrutural. Repetições altamente similares (por exemplo, genes parálogos) podem ser confundidas com variações alélicas em organismos diploides. Um montador pode erroneamente conectar duas regiões únicas distantes porque compartilham fronteira repetitiva comum, levando a inversões de larga escala ou translocações na estrutura final.
+
+\section{Desafios Específicos de Montagem e Anotação}
+
+Montagem de sequências genômicas a partir de dados de leitura curta representa um dos desafios computacionais mais significativos em bioinformática, primariamente devido à presença de elementos de DNA repetitivo \parencite{treangen2011,phillippy2008,chaisson2015}. Sequências repetitivas constituem grande fração de genomas eucarióticos e são a fonte primária de fragmentação de montagem e erros.
+
+A dificuldade surge de três questões fundamentais: mapeamento ambíguo, complexidade baseada em gráfico, e limitações de comprimento de leitura.
+
+O desafio essencial é um ``quebra-cabeça'' onde muitas peças são idênticas. Sem leituras longas o suficiente para capturar elemento repetitivo e sequências únicas de ``âncora'' em ambos os lados, orientação física e número de cópias destes elementos permanece computacionalmente não resolvível. Isto é por que transição de Sequenciamento de Leitura Curta (Illumina) para Sequenciamento de Leitura Longa (PacBio, Oxford Nanopore) foi revolucionária para alcançar montagens ``telômero-a-telômero'' \parencite{logsdon2020}.
+
+\section{Soluções de Sequenciamento e Bioinformática}
+
+\subsection{Tecnologias de Sequenciamento de Leitura Longa}
+
+Sequenciamento de terceira geração, ou leitura longa, tecnologias transformaram paisagem de análise de repetição produzindo leituras que rotineiramente excedem 10.000 bp e podem estender além de 100.000 bp em configurações ultra-longas. Dois plataformas comerciais dominam este espaço: Pacific Biosciences (PacBio) e Oxford Nanopore Technologies (ONT).
+
+Sequenciamento SMRT (Single Molecule Real-Time) de PacBio, particularmente modo de alta fidelidade (HiFi), gera leituras com comprimentos medianos de 15--20 kb e precisão em nível de base excedendo 99,9\% através de sequenciamento de consenso circular. Leituras HiFi demonstraram precisão muito alta para mapeamento de polimorfismos de repetição e resolução de estruturas de repetição em tandem complexas. Sequenciamento ONT, em contraste, excele em produzir leituras ultra-longas que podem exceder 100 kb, tornando-o particularmente valioso para abranger até os maiores arrays repetitivos.
+
+Cada plataforma oferece forças complementares. Leituras HiFi fornecem precisão necessária para chamada de variante confiável dentro de repetições, enquanto leituras ONT ultra-longas fornecem contigüidade para abranger estruturas de repetição maiores e mais complexas.
+
+\subsection{Ferramentas Bioinformáticas para Identificação e Mascaramento de Repetição}
+
+Antes de anotação de genoma poder prosseguir, elementos repetitivos devem ser identificados e mascarados para prevenir predições de gene espúrias e alinhamentos falsos-positivos de BLAST.
+
+RepeatMasker é a ferramenta mais amplamente usada para este propósito \parencite{smit2013}. Ela rastreia sequências de DNA de entrada contra bibliotecas curadas de repetições conhecidas, incluindo banco de dados Dfam de Modelos Markov Ocultos de elemento transponível \parencite{storer2021}.
+
+RepeatModeler complementa RepeatMasker permitindo identificação de novo de famílias de repetição de montagens de genoma não anotadas \parencite{flynn2020}. Mais recentemente, o pipeline EDTA (Extensive De Novo TE Annotator) emergiu como alternativa abrangente que integra RepeatModeler, LTR\_retriever, e outras ferramentas especializadas para alcançar anotação de elemento transponível mais completa e precisa \parencite{ou2019}.
+
+Para genotipagem de repetição em tandem de dados de leitura longa, várias ferramentas especializadas foram desenvolvidas. TRGT (Tandem Repeat Genotyping Tool) foi especificamente projetado para dados PacBio HiFi e fornece genotipagem robusta e visualização de repetições em tandem em escala genômica \parencite{dolzhenko2024}. LongTR usa estratégia de agrupamento combinada com alinhamento de ordem parcial e modelos Markov ocultos para inferir haplótipos consenso.
+
+\subsection{Estratégias de Montagem para Genomas Ricos em Repetição}
+
+Montagem de genomas ricos em repetição foi revolucionada pela combinação de sequenciamento de leitura longa com algoritmos de montagem modernos. O insight fundamental é que sequência repetitiva pode ser resolvida quando leituras são mais longas que unidade de repetição. Montadores estado-da-arte atual, incluindo hifiasm \parencite{cheng2021}, Verkko \parencite{rautiainen2023}, e LJA, todos incorporam estratégias para manejar estruturas complexas de repetição dentro de gráficos de montagem.
+
+Para montagem perto de telômero-a-telômero de genomas hom ozigóticos, prática melhor atual envolve usar leituras PacBio HiFi e leituras ONT ultra-longas. Leituras HiFi são usadas para construir gráfico de montagem inicial consistindo de unitigs que contêm nenhuma repetição exata longa, com possíveis conexões entre eles determinadas por estrutura de repetição. Regiões altamente repetitivas tornam-se representadas como subgráficos complexos, ou ``emaranhados'', que são então resolvidos usando leituras ONT ultra-longas que abrangem estas regiões.
+
+A realização de marco do Consórcio Telômero-a-Telômero em completar primeiro montagem genômica humana sem lacunas (T2T-CHM13) demonstrou que esta abordagem combinada poderia resolver até mesmo regiões mais recalcitrantes de repetição \parencite{rhie2021b,nurk2022}, incluindo arrays de satélite centroméricas, clusters rDNA, e segmentações duplicadas.
+
+\subsection{Abordagens de Pangenoma para Variação de Repetição}
+
+Um único genoma de referência linear não pode capturar espectro completo de variação de repetição presente em população. O Consórcio de Referência de Pangenoma Humano \parencite{wang2022} aborda esta limitação construindo referências de pangenoma baseadas em gráfico que codificam diversidade em nível populacional, incluindo variação em regiões repetitivas \parencite{liao2023}.
+
+Gráficos de pangenoma são particularmente poderosos para resolução de repetições de número variável em tandem (VNTRs), que têm número de repetição hipervariável e composição. A estrutura de dados gráfico-pangenoma de repetição (RPGG) foi desenvolvida para codificar tanto diversidade populacional quanto estrutura interna de repetição de loci VNTR de montagens multi-haplotípicas resolvidas, permitindo estimativa de composição VNTR precisa até mesmo de dados de leitura curta.
+
+\subsection{Combinação de Estratégias}
+
+Dado complexidade de lidando com repetições, estratégia crescentemente adotada envolve combinação de múltiplas tecnologias de sequenciamento e ferramentas bioinformáticas. Por exemplo:
+
+\begin{enumerate}
+\item Sequenciamento PacBio HiFi para precisão e chamada de variante de repetição confiável
+\item Sequenciamento ONT ultra-longo para contigüidade de estrutura de repetição
+\item Mapeamento de Strand-seq para resolução de fase de haplótipo
+\item Ferramentas de mascaramento como RepeatMasker para anotação
+\item Ferramentas de genotipagem como TRGT para caracterização de tandem repetido
+\item Construção de pangenoma para capturar variação nível-populacional
+\end{enumerate}
+
+\section{Implicações para Filogenômica}
+
+Elementos repetitivos apresentam desafios únicos e oportunidades para estudos filogenômicos. Enquanto matrizes alinhadas tradicionalmente excluem regiões repetitivas devido à ambiguidade de alinhamento, trabalho recente demonstrou que repetições---particularmente elementos transponíveis---podem fornecer sinal filogenômico informativo quando tratadas adequadamente.
+
+Estrutura, número de cópia, e sequência de repetições evoluem sob pressões seletivas e demográficas complexas, refletindo história evolutiva de linhagens. Compreendendo dinâmica de elemento repetitivo e desenvolvendo métodos para incorporar sinal de repetição em análise filogenética permanece área produtiva de investigação.
+
+\clearpage
+\begin{destaque}
+\textbf{Roteiro de Revisão --- Capítulo 6}
+\begin{enumerate}\small
+    \item Genoma humano: $\sim$50\% repetitivo; $\sim$45\% TEs; exons codificantes apenas $\sim$1,5--2\% \parencite{lander2001,dekonig2011}.
+    \item Classificação de TEs: Classe I (retrotransposons, ``cópia-e-cola'' via RNA): LTR (relacionados a retrovírus), LINEs (L1 $\approx$ 17\% genoma humano), SINEs (Alu $\approx$ 10--13\%, derivado de 7SL RNA, $\sim$65 Mya, restrito a primatas). Classe II (DNA transposons, ``corte-e-cola''): hAT, Mariner/Tc1; $\sim$3\% do genoma humano; todos fósseis em humanos.
+    \item Autônomos vs.\ não-autônomos: SINEs dependem de maquinaria L1 em trans.
+    \item DNA satélite: repetições em tandem megabase (centrômeros, telômeros); evolução concertada (Dover, 1982) via crossing-over desigual e conversão gênica.
+    \item Microssatélites (STRs, 1--6\,bp): $\sim$3\% genoma humano; variação por deslizamento de replicação. Minissatélites (VNTRs, 10--100\,bp): enriquecidos perto de telômeros; expansão por recombinação.
+    \item Viés GC biológico: gBGC (conversão gênica enviesada por GC) gera padrões indistinguíveis de seleção positiva \parencite{galtier2001}; SINEs acumulam em regiões ricas em GC, LINEs em regiões AT.
+    \item Viés GC técnico: cobertura depende de composição GC em Illumina; fonte principal = amplificação PCR; mitigação: biblioteca livre de PCR, betaína, correção computacional.
+    \item Obstáculos para montagem: k-mers ambíguos $\to$ colapso de repetições; emaranhados no grafo de Bruijn; se $L_{\text{leitura}} < R_{\text{repetição}}$, caminho indeterminístico.
+    \item Soluções de leitura longa: PacBio HiFi (15--20\,kb, $>$99,9\% precisão, chamada de variante) + ONT ultra-longo ($>$100\,kb, contigüidade); montagem T2T-CHM13 \parencite{nurk2022}.
+    \item Ferramentas: RepeatMasker (Dfam HMMs), RepeatModeler (de novo), EDTA (LTR\_retriever integrado), TRGT (genotipagem de tandem, PacBio HiFi).
+    \item Pangenoma: referência baseada em grafo (HPRC) captura variação populacional em repetições; RPGG para VNTRs.
+\end{enumerate}
+\end{destaque}
+
+\clearpage
+
+\printbibliography[heading=subbibliography,title={Referências}]
+

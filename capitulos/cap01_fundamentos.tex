@@ -1,0 +1,104 @@
+
+\chapter{Fundamentos Teórico-Filosóficos da Filogenética}
+
+\section{Introdução}
+
+A sistemática filogenética repousa sobre três pilares conceituais inter-relacionados: o caráter, a homologia e a homoplasia. Este capítulo examina os fundamentos teóricos e filosóficos desses conceitos e analisa como são operacionalizados em fluxos de trabalho contemporâneos de reconstrução filogenética, com ênfase em dados de sequenciamento de alto rendimento (HTS, do inglês \textit{high-throughput sequencing}).
+
+\section{Caracteres, Homologia e Homoplasia}
+
+\subsection{A Natureza Histórica do Caráter}
+
+Caracteres são indivíduos históricos --- séries de transformação no sentido de Hennig (1966) --- e a sistemática filogenética é, portanto, uma ciência ideográfica, não nomotética \parencite{grant2004}. Isso significa que a filogenética busca compreender a história singular e irrepetível das linhagens biológicas, não generalizações nomológicas que se aplicam universalmente.
+
+A implicação dessa posição é profunda: cada caráter observado em um organismo é resultado de uma história evolutiva particular, e a inferência filogenética deve respeitar essa singularidade histórica. Não podemos tratar caracteres como repetições independentes de algum processo estocástico geral; cada um representa um evento histórico com seu próprio contexto.
+
+\subsection{Homologia: Uma Relação Histórica de Identidade}
+
+A homologia refere-se a uma relação histórica de identidade, não sendo sinônima com sinapomorfia. A plesiomorfia também é uma forma de homologia, e a equação de homologia com sinapomorfia, introduzida por Patterson (1982), é histórica e conceitualmente errônea \parencite{nixon2011}.
+
+Este é um ponto crítico frequentemente mal compreendido na sistemática moderna. A sinapomorfia --- um estado de caráter compartilhado por dois ou mais táxons, presente em seu ancestral comum exclusivo --- é apenas um tipo particular de homologia. A plesiomorfia --- um estado ancestral compartilhado por múltiplos táxons --- é igualmente uma homologia, apenas não é informativa para discriminar entre hipóteses de relacionamento.
+
+O conceito de homologia é inerentemente dependente da árvore e não pode ser avaliado isoladamente de um cladograma. Esta circularidade não é uma fraqueza mas uma característica de um marco epistemológico coerente no qual hipóteses de homologia e hipóteses de relacionamento são testadas simultaneamente \parencite{nixon1993}.
+
+\subsection{Homoplasia e sua Distinção de Homologia}
+
+A homoplasia refere-se ao surgimento independente de estados de caráter similares em linhagens distintas. Diferente da homologia, que é uma relação histórica de identidade derivada de um ancestral comum, a homoplasia resulta de evolução convergente ou reversão. Reconhecer homoplasia requer, necessariamente, uma hipótese de relacionamento (uma árvore), porque a determinação de se dois estados de caráter são homólogos ou homoplásticos depende completamente da topologia arbórea adotada.
+
+\section{Comparação com Grupo Externo e Polaridade de Caráter}
+
+\subsection{Raízes, Polaridade e Análise Simultânea}
+
+A comparação com grupo externo, a determinação da polaridade de caráter e o enraizamento da árvore reduzem-se todos ao mesmo problema e são melhor abordados através de análise simultânea sem restrições de todos os terminais. A suposição de que um grupo é monofilético em relação aos demais --- frequentemente uma prática comum --- não é um axioma do método mas uma hipótese a ser testada \parencite{nixon1993}.
+
+Isso contrasta com práticas tradicionais que frequentemente assumem a priori que determinados táxons formam um grupo monofilético (por exemplo, assumir que \"Invertebrados\" é um grupo natural). Na verdade, a monofilia de qualquer agrupamento é uma proposição a ser avaliada pela congruência de caracteres, não uma assunção metodológica.
+
+\subsection{Implementação Prática}
+
+Na prática filogenética moderna, especialmente com dados de sequenciamento de alto rendimento, esta abordagem significa: (1) incluir o máximo possível de táxons, incluindo potenciais grupos externos alternativos; (2) não polarizar caracteres \textit{a priori} com base em comparação com grupo externo; (3) deixar que a análise determine qual enraizamento é mais parsimonioso; (4) testar múltiplas topologias para verificar se a posição de certos táxons é bem suportada.
+
+\section{Homologia Dinâmica e Sequenciamento de Alto Rendimento}
+
+\subsection{Conceitos de Homologia Dinâmica}
+
+A homologia dinâmica, tal como implementada em análise direta \parencite{wheeler1996}, estende o conceito tradicional de homologia ao reconhecer que a correspondência de posições em sequências é ela própria uma hipótese filogenética. Diferentes alinhamentos de sequências podem representar diferentes hipóteses sobre qual posição em uma sequência é homóloga à correspondente posição em outra sequência.
+
+Em dados de sequências DNA ou proteína, isto é particularmente relevante quando há inserções e deleções (indels). Dois indivíduos podem ter diferentes comprimentos de sequência, e a forma como alinhamos suas sequências determina quais posições consideramos homólogas. Tratamentos tradicionalistas que ``congelam'' um alinhamento antes da análise filogenética convertem uma hipótese provisória sobre homologia em certeza assumida, frequentemente sem verificação.
+
+\subsection{Implementação em Dados de HTS}
+
+Com dados de sequenciamento de alto rendimento, envolvendo milhares de loci, as considerações de homologia dinâmica tornam-se computacionalmente intensivas mas conceitualmente ainda mais importantes. Cada loco pode ter uma história única de inserções, deleções e substituições. Alguns métodos modernos, como Direct Optimization \parencite{wheeler2006}, tentam co-otimizar o alinhamento e a árvore sob um critério de máxima verossimilhança, permitindo que a topologia influencie a inferência de homologia de posição.
+
+Alternativamente, abordagens paralelas usam alinhamentos fixos pré-computados com base em homologia de sequência (usando ferramentas como MUSCLE ou MAFFT), aceitando a hipótese de alinhamento embora reconhecendo que ela é provisória e poderia, em princípio, ser modificada.
+
+\section{Implicações para Reconstrução Filogenética Moderna}
+
+\subsection{Critério de Otimalidade}
+
+A sistemática filogenética requer um critério de otimalidade: uma métrica pela qual comparamos árvores candidatas e selecionamos aquela(s) que melhor explicam os dados. Os critérios mais comuns na prática moderna são:
+
+\begin{itemize}
+    \item \textbf{Parcimônia}: minimizar o número total de passos evolutivos (mudanças de caráter) na árvore.
+    \item \textbf{Máxima Verossimilhança}: selecionar a árvore que maximiza $\Pr(D|T, \theta)$, a probabilidade dos dados dado a árvore e um conjunto de parâmetros.
+    \item \textbf{Inferência Bayesiana}: calcular a probabilidade posterior $P(T|D)$ dos diferentes topologias sob uma priori especificada.
+\end{itemize}
+
+Cada critério encarna diferentes assunções filosoficamente e representa uma hipótese diferente sobre como a inferência deve proceder.
+
+\subsection{Dados de Sequenciamento de Alto Rendimento}
+
+O HTS gera dados em escala sem precedentes. Um experimento moderno de captura de exoma em um conjunto de 100 metazoários pode produzir alinhamentos de 50.000 ou mais locos distintos, resultando em centenas de milhões de caracteres comparáveis. Essa abundância de dados tem implicações profundas:
+
+\begin{itemize}
+    \item Embora o número total de caracteres seja vasto, o número efetivo de caracteres filogeneticamente informativos (aqueles que variam entre os táxons) pode estar concentrado em um subconjunto pequeno dos locos.
+    \item Diferentes locos podem ter histórias evolutivas discordantes devido a eventos de especiação incompleta ou introgressão.
+    \item O custo computacional de métodos complexos escala com o tamanho dos dados, tornando imprescindível não apenas precisão mas também eficiência computacional.
+\end{itemize}
+
+\section{Conclusão}
+
+Os fundamentos teórico-filosóficos da filogenética --- os conceitos de caráter como indivíduo histórico, homologia como relação histórica, e a rejeição de assunções *a priori* sobre monofilia --- permanecem vigentes e essenciais mesmo na era do sequenciamento de alto rendimento. As mudanças em escala e tecnologia não invalidam esses princípios; ao contrário, os contextos nos quais esses princípios operam apenas se tornaram mais complexos e exigem ainda maior rigor conceitual.
+
+A integração de dados de HTS com esses fundamentos conceituais exige que: (1) reconheçamos que cada loco tem sua própria história; (2) testemos rigorosamente hipóteses de homologia de sequência; (3) não assumamos monofilia de grupos sem justificativa empírica; (4) apliquemos critérios de otimalidade que sejam filosoficamente coerentes com nossos objetivos científicos.
+
+\clearpage
+\begin{destaque}
+\textbf{Roteiro de Revisão --- Capítulo 1}
+\begin{enumerate}
+    \item Caracteres são \textbf{indivíduos históricos} (séries de transformação de Hennig, 1966); a filogenética é ciência \textbf{ideográfica}, não nomotética \parencite{grant2004}.
+    \item Homologia $\neq$ sinapomorfia. Plesiomorfia também é homologia; a equação Patterson (1982) é errônea \parencite{nixon2011}.
+    \item Homologia é \textbf{dependente da árvore}: avaliada simultaneamente com hipóteses de relacionamento (circularidade epistemológica coerente) \parencite{nixon1993}.
+    \item Homoplasia = semelhança por convergência ou reversão; só é detectável \textit{dado} um cladograma.
+    \item Comparação com grupo externo, polaridade de caráter e enraizamento são o \textbf{mesmo problema}; resolvem-se por análise simultânea sem restrições \parencite{nixon1993}.
+    \item Monofilia de qualquer grupo é \textbf{hipótese a testar}, não axioma metodológico.
+    \item Homologia dinâmica (Wheeler, 1996): correspondência de posição em sequências é hipótese filogenética; alinhamento ``congelado'' converte hipótese provisória em certeza assumida.
+    \item Direct Optimization \parencite{wheeler2006} co-otimiza alinhamento e árvore sob critério de otimalidade.
+    \item Três critérios de otimalidade: parcimônia (mínimos passos), MV ($\max \Pr(D|T,\theta)$) e inferência bayesiana ($P(T|D)$).
+    \item HTS gera $>50\,000$ loci; nem todos são informativos; loci podem ter histórias discordantes (ILS, introgressão).
+\end{enumerate}
+\end{destaque}
+
+\clearpage
+
+\printbibliography[heading=subbibliography,title={Referências}]
+

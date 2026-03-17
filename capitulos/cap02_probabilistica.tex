@@ -1,0 +1,200 @@
+
+\chapter{Métodos de Inferência Probabilística para Reconstrução Filogenômica}
+
+\section{Introdução}
+
+A reconstrução de relações filogenéticas a partir de dados genômicos situa-se na intersecção da biologia evolutiva, estatística e ciência computacional. Nos últimos três decênios, o paradigma analítico dominante em filogenética deslocou-se de métodos baseados em parcimônia para abordagens probabilísticas --- máxima verossimilhança (MV) e inferência bayesiana (IB). Este deslocamento foi impulsionado pela explosão de dados de sequências moleculares, pelo desenvolvimento de modelos cada vez mais sofisticados de evolução de sequências e pela disponibilidade de poder computacional que teria parecido fantástico aos sistematas dos anos 1990.
+
+Como Wheeler (2012) nos lembra, ``não existe uma única resposta para 'qual é o melhor método?' da mesma forma que não existe uma única resposta para 'qual é a melhor árvore?' Um critério deve ser especificado em ambos os casos'' \parencite{wheeler2012}. A escolha de um marco probabilístico é ela própria uma hipótese sobre como a inferência deve proceder --- e é uma que tem sido vigorosamente contestada em fundamentos teóricos, filosóficos e práticos.
+
+\section{Fundamentos Teóricos da Probabilidade em Filogenética}
+
+\subsection{A Função de Verossimilhança}
+
+A verossimilhança de uma árvore $T$ dado dados $D$ é proporcional à probabilidade dos dados dada a árvore \parencite{edwards1972}:
+
+$$l(T|D) \propto \Pr(D|T)$$
+
+Um método sistemático de MV seleciona a árvore $T$ que maximiza $\Pr(D|T)$. Esta maximização requer especificar um conjunto de \textit{parâmetros de incômodo} (nuisance parameters) $\theta$, definidos como todas as quantidades necessárias para calcular $\Pr(D|T)$ além dos dados e da topologia da árvore \parencite{wheeler2012}. Os três parâmetros de incômodo mais consequentes são: (1) o modelo de transformação de caracteres; (2) parâmetros de ramo (comprimentos de ramo); e (3) a distribuição de taxas de mudança entre caracteres.
+
+\subsection{O Modelo Markov Geral}
+
+A descrição reversível mais geral de mudança de caráter para $n$ estados é especificada por uma matriz de taxa instantânea $R$ e um vetor de frequência estacionária $\symbf{\pi}$. As condições de simetria impostas em $R$ são:
+
+$$\forall i,\; R_{ii} = 0; \quad \forall i,j,\; R_{ij} = R_{ji}; \quad \sum_{i=1}^{n}\sum_{j=1}^{n} \pi_i \cdot \pi_j \cdot R_{ij} = 1$$
+
+Estas matrizes são combinadas na matriz de taxa $Q$:
+
+$$Q_{ij} = \begin{cases} R_{i,j} \cdot \pi_j & \text{se } i \neq j \\ -\sum_{m=1}^{n} R_{i,m} \cdot \pi_m & \text{se } i = j \end{cases}$$
+
+A probabilidade de mudança entre estados $i$ e $j$ em tempo $t$ é:
+
+$$P_{i,j}(t) = \sum_{m=1}^{n} e^{\lambda_m t} \cdot U_{m,i} \cdot U^{-1}_{j,m}$$
+
+onde $\lambda_m$ são os autovalores de $Q$, $U$ é a matriz de autovetores e $U^{-1}$ sua inversa.
+
+\section{Classificação de Métodos de Verossimilhança Máxima}
+
+\subsection{O Conceito de Parâmetros de Incômodo}
+
+Wheeler (2012) apresenta uma classificação hierárquica dos métodos de verossimilhança usados em sistemática. A ideia-chave é que cada método difere em \textit{como trata os parâmetros de incômodo e as atribuições de estados ancestrais}. Este é um ponto fundamental frequentemente negligenciado: diferentes formulações do que exatamente está sendo maximizado --- médias sobre estados (MVM), melhores estados em nós (MVP), ou melhores caminhos evolutivos completos (VPC) --- levam a métodos genuinamente diferentes com propriedades distintas.
+
+\subsection{Máxima Verossimilhança Integrada (MVI)}
+
+Se conhecêssemos a distribuição de parâmetros de incômodo, $\Phi(\theta|T)$, poderíamos integrá-los fora do espaço de parâmetros $\Theta$:
+
+$$p(D|T) = \int p(D|T, \theta) d\Phi(\theta|T)$$
+
+A árvore que maximiza esta probabilidade integrada é a árvore de \textbf{Máxima Verossimilhança Integrada} (MVI). Esta é a abordagem teoricamente mais satisfatória porque conta para nossa incerteza nos parâmetros de incômodo ao invés de escolher um único conjunto ``melhor''.
+
+\subsection{Máxima A Posteriori (MAP)}
+
+Se também temos uma \textbf{distribuição priori sobre árvores}, $p(T)$, podemos perguntar: qual árvore tem a maior probabilidade posterior? Székelyi e Steel (1999) mostraram que o método com a maior expectativa de retornar a árvore verdadeira seleciona a árvore maximizando $p(T) \times \Pr(D|T)$. Esta é a árvore de \textbf{Máxima A Posteriori} (MAP) --- a estimativa bayesiana.
+
+Aqui está a conexão importante: quando todas as prioris de árvore são \textbf{iguais} (uma priori flat, não-informativa), a árvore MAP é idêntica à árvore MVI. Como Wheeler nota, ``o uso de prioris de árvore não-uniformes (tais como empíricas ou Yule) quebra esta identidade'' \parencite{wheeler2012}.
+
+\subsection{Máxima Verossimilhança Relativa (MVR) e Suas Três Variantes}
+
+Na prática, raramente conhecemos a distribuição de parâmetros de incômodo. Ao invés de integrá-los, \textbf{otimizamos}: escolhemos $\theta$ para maximizar $p(D|T, \theta)$. Isto é chamado \textbf{Máxima Verossimilhança Relativa} (MVR), e é ``em geral, a metodologia usada em análises empíricas'' \parencite{wheeler2012}.
+
+\subsubsection{Máxima Verossimilhança Média (MVM)}
+
+Este é o abordagem mais comumente usada. Ela \textbf{soma sobre todas as atribuições de estados possíveis de vértice}, ponderadas por suas probabilidades. Quando as pessoas referem-se a ``MV'' em análises filogenéticas típicas, geralmente significam MVM --- e Wheeler nota que ``para o restante desta discussão, quando falarmos de métodos de MV, estaremos referindo-nos a MVM'' \parencite{wheeler2012}.
+
+Em MVM, os estados ancestrais são parâmetros de incômodo. Não nos importamos realmente qual estado um ancestral tinha; nos importamos com a verossimilhança da \textit{árvore e dos dados}. A forma estatisticamente correta de remover quantidades desconhecidas de um cálculo de probabilidade é \textbf{marginalizar} (isto é, somar ou integrar) sobre elas, não otimizá-las.
+
+\subsubsection{Máxima Verossimilhança Mais Parcimoniosa (MVP)}
+
+Também sugerida por Barry e Hartigan (1987), MVP \textbf{atribui estados de vértice específicos} (junto com outros parâmetros) tais que a verossimilhança geral da árvore é maximizada. O nome insinua uma conexão com parcimônia, e de fato a ideia de selecionar estados ancestrais ``melhores'' soa similar. Porém, há um detalhe: em MVP, as \textbf{probabilidades de ramo são as mesmas sobre todos os caracteres}, então ``MVP não escolherá (em geral) a mesma árvore que parcimônia'' \parencite{wheeler2012}.
+
+MVP difere de MVM em que otimiza sobre estados ancestrais. Ela escolhe a atribuição única melhor. Em estatística, substituir uma integral por uma otimização é conhecido como tomar um estimador ``plug-in'' ou de ponto, e tende a \textbf{superestimar a evidência} para uma árvore particular.
+
+\subsubsection{Verossimilhança de Caminho Evolutivo (VCE)}
+
+Originalmente proposta por Farris (1973), VCE vai além de MVP. Ao invés de apenas especificar estados de vértice ancestrais, VCE especifica \textbf{a sequência inteira de estados de caráter intermediários entre vértices} tais que a verossimilhança geral da árvore é maximizada. Pense nela como maximizar a verossimilhança ao longo de cada único ``caminho'' evolutivo na árvore.
+
+Um resultado notável: a árvore que maximiza VCE \textbf{é precisamente a árvore mais parcimoniosa}. Wheeler afirma isto diretamente:
+
+\begin{quote}
+``A árvore que maximiza esta forma de verossimilhança é precisamente a árvore mais parcimoniosa. Este resultado se sustenta para um conjunto amplo e robusto de assunções (não há exigência de taxas baixas ou homogêneas de mudança de caráter, por exemplo)'' \parencite{wheeler2012}
+\end{quote}
+
+\section{A Perspectiva Bayesiana}
+
+\subsection{Teorema de Bayes e Inferência Posterior}
+
+A inferência bayesiana em filogenética reformula inferência de árvore usando o Teorema de Bayes. A probabilidade posterior de uma topologia $T$ dado dados $D$, parâmetros de substituição $\theta$, e pesos de ramo $t_T$ é:
+
+$$p(T|D, \theta, t_T) = \frac{p(T) \cdot p(D|T, \theta, t_T)}{\sum_{T_j \in \tau} p(T_j) \cdot p(D|T_j, \theta, t_T)}$$
+
+Integração sobre parâmetros de incômodo remove a condicionalidade sobre eles:
+
+$$p(T|D) = \frac{\iint p(\theta), p(T|\theta), p(t_T|\theta, T), p(D|\theta, T, t_T)\; dt_T, d\theta}{\sum_{T_j \in \tau} \iint p(\theta), p(T_j|\theta), p(t_{T_j}|\theta, T_j), p(D|\theta, T_j, t_{T_j})\; dt_{T_j}, d\theta}$$
+
+\subsection{Convergência Bayesiana e o Teorema de Bernstein-von Mises}
+
+Uma garantia teórica fundamental frequentemente citada em análise bayesiana é que, dados dados suficientes, a distribuição posterior convergerá à ``verdade''. Isto é formalizado pelo \textbf{Teorema de Bernstein-von Mises} (BvM). O Teorema BvM afirma que sob condições de regularidade específicas, conforme a quantidade de dados (em filogenética, o comprimento de sequência $n$) aproxima-se do infinito, a distribuição posterior converge para uma distribuição normal multivariada centrada nos valores de parâmetros verdadeiros (ou no estimador de máxima verossimilhança), com variância encolhendo a zero \parencite{vandervaart1998}.
+
+Porém, é crítico reconhecer que esta garantia de convergência é tanto \textbf{assintótica} quanto \textbf{condicional}:
+
+\begin{itemize}
+    \item \textbf{Assintótica.} Aplica-se estritamente apenas no limite conforme $n \to \infty$. Para qualquer alinhamento finito (que é tudo que temos), a garantia é uma aproximação cuja qualidade depende de quão grande $n$ é relativo à complexidade do problema.
+    \item \textbf{Condicional.} A formulação padrão do Teorema BvM requer que o mecanismo gerador de dados verdadeiro (i.e., o processo biológico real que produziu as sequências) situe-se perfeitamente dentro do espaço de modelos predefinidos sendo explorado. Se o modelo verdadeiro $M_{\text{verdadeiro}}$ não é um elemento do espaço de modelos $\mathcal{M}$, as garantias fundamentais do Teorema BvM padrão não se aplicam diretamente.
+\end{itemize}
+
+\subsection{Topologias Discretas e Espaço BHV}
+
+Uma sutileza adicional frequentemente negligenciada: o Teorema BvM clássico aplica-se a parâmetros contínuos em espaço euclidiano. Topologias de árvore, porém, são \textbf{objetos combinatórios discretos}. O espaço de parâmetros filogenético não é uma variedade suave. É, ao invés, uma coleção de ortantes (um por topologia) colados ao longo de suas fronteiras, formando o espaço de árvore Billera-Holmes-Vogtmann (BHV) \parencite{billera2001}.
+
+O Teorema BvM pode ser aplicado aos parâmetros contínuos (comprimentos de ramo, parâmetros do modelo de substituição) \textit{condicional em uma topologia fixada}, mas a convergência de probabilidade posterior sobre topologias é um problema separado e mais difícil. Para a topologia discreta em si, o comportamento de convergência depende de condições adicionais, incluindo se a topologia verdadeira é identificável sob o modelo assumido, e se os dados fornecem sinal suficiente para distinguir entre topologias concorrentes.
+
+\section{Especificação Incorreta de Modelo}
+
+\subsection{Convergência para a Resposta Melhor Errada}
+
+Em filogenética, podemos afirmar com confiança que o modelo é \textit{sempre} especificado incorretamente em algum grau. Evolução de sequência biológica é um processo profundamente complexo impulsionado por taxas de mutação heterogêneas, seleção natural operando em múltiplos níveis, assortimento incompleto de linhagens, transferência horizontal de genes, dinâmica populacional mutável, e processos de substituição dependentes de contexto. Modelos Markov padrão de evolução de sequência (e.g., GTR+$\Gamma$) são abstrações matematicamente tratáveis.
+
+Quando o modelo é especificado incorretamente ($M_{\text{verdadeiro}} \notin \mathcal{M}$), devemos perguntar: a que a distribuição posterior bayesiana converge conforme o comprimento de sequência aumenta?
+
+Sob especificação incorreta de modelo, a distribuição posterior não converge para a verdade absoluta. Ao invés, conforme $n \to \infty$, a probabilidade posterior concentra-se nos valores de parâmetros dentro do espaço de modelos explorado que minimizam a divergência de Kullback-Leibler (KL) da distribuição verdadeira geradora de dados. Formalmente, convergência é para:
+
+$$M^* = \arg\min_{M \in \mathcal{M}} D_{KL}(P_{\text{verdadeiro}} | P_M)$$
+
+Este $M^*$ é às vezes chamado o valor de parâmetro ``pseudo-verdadeiro'': a melhor aproximação à verdade disponível dentro da família de modelo errada.
+
+\subsection{Consequência Topológica}
+
+Para parâmetros \textbf{contínuos} (comprimentos de ramo, taxas de substituição), convergência para o minimizador KL pode produzir valores que são ``próximos o suficiente'' para ser biologicamente úteis, mesmo que não exatamente corretos. Mas para topologia de árvore (um parâmetro \textbf{discreto}), as consequências de especificação incorreta são mais proeminentes.
+
+Um modelo especificado incorretamente pode fazer a posterior concentrar-se em uma topologia que \textbf{não é a árvore verdadeira}, e esta concentração pode ocorrer com probabilidade posterior arbitrariamente alta conforme $n \to \infty$. Isto é o mecanismo subjacente ao fenômeno bem-documentado de inflação de probabilidade posterior: posteriores bayesianas podem atribuir probabilidade aproximando-se a 1.0 a clados incorretos quando o modelo está errado \parencite{suzuki2002,cummings2003,yang2007}.
+
+Em filogenômica, onde conjuntos de dados massivos produzem superfícies de verossimilhança íngremes, este modo de falha torna-se especialmente perigoso: mais dados não corrige o erro mas ao invés aumenta a certeza com qual a resposta errada é entregue \parencite{kumar2012}.
+
+\section{Dados Finitos e a Priori Inescapável}
+
+Embora teoremas assintóticos sejam valiosos para compreender propriedades teóricas de estimadores, \textbf{sistemática empírica lida exclusivamente com dados finitos}. O comprimento de sequência $n$ de qualquer alinhamento físico é sempre um inteiro finito.
+
+Porque \textbf{operamos permanentemente em um regime de dados finitos}, o estado assintótico onde a verossimilhança perfeita domina a priori nunca é estritamente atingido. Retornando à proporcionalidade do Teorema de Bayes:
+
+$$P(\tau, \theta|X) \propto P(X|\tau, \theta) \, P(\tau, \theta)$$
+
+O posterior é sempre um compromisso matemático entre a informação contida nos dados (a verossimilhança) e a informação especificada antes dos dados serem observados (a priori). Conforme $n$ cresce, a superfície de verossimilhança torna-se mais acentuada e exerce muito mais alavancagem, aplanando o impacto relativo da priori. Porém, porque $n$ é finito, a verossimilhança nunca atinge precisão infinita.
+
+Consequentemente, \textbf{a distribuição priori é estritamente \textit{sempre} parte da resposta final}.
+
+\subsection{Influência Persistente da Priori}
+
+A influência da priori não é uniforme através de todos os parâmetros. Para parâmetros do modelo de substituição (e.g., entradas da matriz de taxa e frequências de base), quantidades moderadas de dados típicamente dominam prioris razoáveis, e o efeito prático da priori torna-se negligenciável. Estes são parâmetros para os quais os dados são altamente informativos, o espaço de parâmetros é baixo-dimensional, e diferentes prioris razoáveis convergem em posteriores similares.
+
+Porém, para outros parâmetros listados abaixo, a priori pode persistir tenazmente:
+
+\begin{itemize}
+    \item \textbf{Topologia de árvore.} A priori sobre topologias é uma distribuição de probabilidade sobre um espaço discreto combinatoriamente vasto. Para $n = 50$ táxons, há aproximadamente $2.8 \times 10^{76}$ árvores bifurcadas não-enraizadas. Uma priori uniforme atribui probabilidade infinitesimal a cada topologia, e diferentes prioris estruturais (uniforme vs. Yule vs. nascimento-morte) atribuem diferentes probabilidades a formas de árvore diferentes. Em regiões da árvore onde os dados carecem de sinal forte --- radiações rápidas, internós curtos, substituições saturadas --- a posterior sobre topologias concorrentes dependerá fortemente de qualquer priori foi especificada.
+
+    \item \textbf{Comprimentos de ramo próximos a zero.} Internós curtos, que caracterizam radiações rápidas e a ``zona de anomalia'' filogenômica, são precisamente os ramos onde os dados fornecem o mínimo de sinal e a priori tem a máxima influência. Brown et al. (2010) demonstraram que a priori exponencial de comprimento de ramo padrão em MrBayes pode produzir probabilidades posteriores inflacionadas e estimativas de comprimento de ramo não-confiáveis, não por um bug de software, mas porque a priori era inadvertidamente informativa de formas que interagiam mal com os dados. Rannala et al. (2012) confirmaram que prioris de comprimento de ramo podem ter efeitos substanciais em probabilidades posteriores de árvore mesmo com conjuntos de dados moderadamente grandes.
+
+    \item \textbf{Tempos de divergência.} Em análises de relógio molecular, a priori em taxas de ramo (e.g., log-normal, exponencial, ou uniforme) pode deslocar datas de divergência estimadas por dezenas de milhões de anos. Wheeler (2012) sugere que ``dada nossa falta de conhecimento, amostragem, linhagem, ambiental, e locus específicos (entre uma miríade de outros conhecidos e desconhecidos) efeitos, a distribuição uniforme pareceria tão apropriada quanto log-normal ou exponencial''. Porém, uma priori uniforme em taxas é ela própria uma afirmação forte, atribuindo probabilidade priori igual a taxas biologicamente absurdas quanto a plausíveis. Toda priori diz \textit{algo}, e ``não sei'' não é uma distribuição de probabilidade.
+\end{itemize}
+
+\section{Práticas Responsáveis para Trabalhar com Prioris e Modelos}
+
+Se prioris sempre importam e modelos são sempre errados, a questão não é se estas limitações podem ser eliminadas (não podem). Ao invés, a questão torna-se como trabalhar responsavelmente dentro delas.
+
+\subsection{Análise de Sensibilidade}
+
+A resposta prática mais importante é variar ambas as prioris e modelos e examinar como os resultados mudam. Se um clado é apoiado sob uma priori mas não sob outra, ou sob um modelo mas não outro, os dados não são fortes o suficiente para apoiar aquele clado independentemente do método. Esta lógica paralela a recomendação de Wheeler (2012, Seção 10.11) para análise de sensibilidade sob regimes de custo diferente em parcimônia. Conclusões robustas a assunções analíticas são mais confiáveis que aquelas que não são.
+
+\subsection{Teste de Adequação de Modelo}
+
+Ao invés de assumir que o modelo escolhido é ``próximo o suficiente'', pesquisadores devem explicitamente testar se o modelo ajusta-se aos dados, usando ferramentas tais como simulações preditivas posteriores e avaliações de adequação de modelo. Se o modelo falha seu próprio teste de qualidade de ajuste, o posterior que produz é condicional em uma assunção inadequada, e nenhuma quantidade de dados a resgatará.
+
+\subsection{Relatório Honesto de Incerteza}
+
+Uma probabilidade posterior de 1.0 para um clado significa ``este clado é esmagadoramente apoiado \textbf{dado} o modelo e as prioris.'' Não significa que ``este clado é certamente correto.'' Relatando suporte de clado juntamente com fatores de concordância que quantificam quanta proporção do genoma realmente apoia um clado dado fornecerá uma figura mais honesta da evidência que probabilidades posteriores sozinhas.
+
+\section{Conclusão}
+
+Inferência filogenética probabilística é uma ferramenta matematicamente rigorosa e praticamente poderosa, mas seus resultados devem ser interpretados com uma compreensão clara de seus limites matemáticos. A convergência de posteriores à ``verdade'' é uma garantia assintótica aplicável a parâmetros contínuos condicional na assunção não-realista de especificação de modelo perfeita. Esta garantia não se estende diretamente a topologias de árvore discretas. Em realidade biológica, modelos são sempre aproximações, significando que sob especificação incorreta, inferência converge para a melhor aproximação disponível dentro da família de modelo errada. No caso da topologia de árvore, isto pode significar convergência a uma árvore incorreta com alta confiança.
+
+Além disso, a natureza finita de dados genômicos garante que assunções prioris permanentemente continuem um ingrediente ativo nas distribuições posteriores que calculamos, com sua influência persistindo mais fortemente precisamente onde precisamos de confiabilidade: em ramos curtos, em radiações rápidas, e em estimativas de tempo de divergência. Como nossa compreensão coletiva de métodos bayesianos evolui com o tempo, eles podem ou não permanecer populares e considerados uma ferramenta flexível e informativa. Porém, devem ser usados com a honestidade intelectual que exigem: testando adequação de modelo, conduzindo análises de sensibilidade, e relatando incerteza de forma que distinga o que os dados dizem do que as assunções contribuem.
+
+\clearpage
+\begin{destaque}
+\textbf{Roteiro de Revisão --- Capítulo 2}
+\begin{enumerate}
+    \item Verossimilhança: $l(T|D) \propto \Pr(D|T)$; parâmetros de incômodo $\theta$: modelo de substituição, comprimentos de ramo, distribuição de taxas \parencite{edwards1972,wheeler2012}.
+    \item Quatro formas de verossimilhança (Wheeler, 2012): \textbf{MVM} (soma sobre estados ancestrais --- o ``MV'' padrão), \textbf{MVP} (otimiza estados nos nós), \textbf{VCE} (Farris, 1973 --- especifica caminho evolutivo completo; $\text{VCE}_{\max} \equiv$ parcimônia) e \textbf{MVI} (integra sobre $\theta$; = MAP com priori plana).
+    \item Teorema de Bernstein--von Mises (BvM): posterior $\to$ normal centrada na verdade quando $n\to\infty$ --- mas \textbf{assintótico} e \textbf{condicional} ao modelo verdadeiro $\in \mathcal{M}$.
+    \item Topologias são objetos discretos; espaço BHV (Billera--Holmes--Vogtmann, 2001) não é variedade suave; BvM para topologias é problema separado.
+    \item Especificação incorreta ($M_{\text{verdadeiro}} \notin \mathcal{M}$): posterior converge ao minimizador KL $M^* = \arg\min D_{KL}(P_{\text{verdadeiro}} \| P_M)$, não à verdade.
+    \item Consequência: mais dados $\Rightarrow$ maior certeza na resposta \textbf{errada} (inflação de probabilidade posterior) \parencite{suzuki2002,kumar2012}.
+    \item Priori é \textbf{sempre} ingrediente ativo com dados finitos; influência persiste em: topologias (espaço combinatório $\sim 2{,}8\times 10^{76}$ para 50 táxons), ramos curtos (radiações rápidas) e tempos de divergência.
+    \item Priori exponencial padrão de comprimento de ramo em MrBayes pode inflacionar posteriores (Brown et al., 2010; Rannala et al., 2012).
+    \item Práticas responsáveis: análise de sensibilidade (variar prioris e modelos), teste de adequação de modelo (simulações preditivas posteriores), relatório honesto de incerteza (fatores de concordância).
+\end{enumerate}
+\end{destaque}
+
+\clearpage
+
+\printbibliography[heading=subbibliography,title={Referências}]
+

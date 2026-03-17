@@ -1,0 +1,199 @@
+% ============================================================
+% Filogenômica e Bioinformática de Metazoários
+% ============================================================
+% Projeto LaTeX para compilação no Overleaf
+% Autor: Denis Jacob Machado
+% Licença: CC-BY-NC v4.0
+% ============================================================
+
+\documentclass[12pt,a4paper,openright,twoside]{book}
+
+% ---- Codificação e idioma ----
+% Compilar com XeLaTeX no Overleaf (Menu -> Compiler -> XeLaTeX)
+% XeLaTeX le UTF-8 nativamente: acentos, letras gregas, e simbolos
+% especiais funcionam diretamente no codigo-fonte.
+\usepackage{fontspec}          % substitui inputenc + fontenc para XeLaTeX
+
+% ---- Matemática ----
+% mathtools deve ser carregado ANTES de unicode-math
+\usepackage{amsmath,amsthm}
+\usepackage{mathtools}
+% Silenciar avisos inofensivos de unicode-math sobre comandos de mathtools
+\makeatletter
+\ExplSyntaxOn
+\msg_redirect_name:nnn{unicode-math}{colon-redefine}{none}
+\msg_redirect_name:nnn{unicode-math}{mathtools-overbracket}{none}
+\ExplSyntaxOff
+\makeatother
+\usepackage{unicode-math}      % símbolos matemáticos Unicode (após mathtools)
+% \bm não é necessário com unicode-math; usar \symbf{} para negrito matemático
+
+% ---- Idioma ----
+\usepackage{polyglossia}       % substitui babel para XeLaTeX
+\setdefaultlanguage{brazil}
+
+% ---- Fontes ----
+\setmainfont{Latin Modern Roman}
+\setsansfont{Latin Modern Sans}
+\setmonofont{Latin Modern Mono}
+\setmathfont{Latin Modern Math}
+\usepackage{microtype}
+
+% ---- Tabelas e figuras ----
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{hologo}
+
+% ---- Layout ----
+\usepackage[top=2.5cm,bottom=2.5cm,left=3cm,right=2.5cm,headheight=28pt]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE]{\small\nouppercase{\leftmark}}
+\fancyhead[RO]{\small\nouppercase{\rightmark}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ---- Referências por capítulo (biblatex + biber) ----
+\usepackage[
+  backend=biber,
+  style=authoryear-comp,
+  sorting=nyt,
+  maxcitenames=2,
+  maxbibnames=99,
+  uniquelist=false,
+  uniquename=init,
+  giveninits=true,
+  dashed=false,
+  refsection=chapter
+]{biblatex}
+
+% Adicionar arquivos .bib --- um por capítulo
+\addbibresource{referencias/cap01.bib}
+\addbibresource{referencias/cap02.bib}
+\addbibresource{referencias/cap03.bib}
+\addbibresource{referencias/cap04.bib}
+\addbibresource{referencias/cap05.bib}
+\addbibresource{referencias/cap06.bib}
+\addbibresource{referencias/cap07.bib}
+\addbibresource{referencias/cap08.bib}
+\addbibresource{referencias/cap09.bib}
+\addbibresource{referencias/cap10.bib}
+\addbibresource{referencias/cap11.bib}
+
+% ---- Hiperlinks ----
+\usepackage[
+  colorlinks=true,
+  linkcolor=blue!60!black,
+  citecolor=green!50!black,
+  urlcolor=blue!70!black
+]{hyperref}
+% cleveref removido: incompatível com polyglossia e não utilizado nos capítulos
+
+% ---- Blocos de destaque ----
+\usepackage[most]{tcolorbox}
+\newtcolorbox{destaque}{
+  colback=blue!5!white,
+  colframe=blue!50!black,
+  fonttitle=\bfseries,
+  title=Nota,
+  sharp corners,
+  boxrule=0.5pt
+}
+
+% ---- Epígrafe ----
+\usepackage{epigraph}
+
+% ---- Ambientes de teorema ----
+\theoremstyle{definition}
+\newtheorem{definicao}{Definição}[chapter]
+\theoremstyle{plain}
+\newtheorem{teorema}{Teorema}[chapter]
+\theoremstyle{remark}
+\newtheorem{observacao}{Observação}[chapter]
+
+% ============================================================
+\begin{document}
+
+% ---- Páginas preliminares ----
+\frontmatter
+
+% Página de título
+\begin{titlepage}
+\centering
+\vspace*{3cm}
+{\Huge\bfseries Tópicos de Estudo em Filogenômica e Bioinformática de Metazoários\par}
+\vspace{1.5cm}
+{\Large Denis Jacob Machado\par}
+\vspace{0.5cm}
+{\scriptsize
+    Laboratório de Filoinformática (\url{https://phyloinformwatics.com}), and\\
+    Departamento de Bioinformática e Genômica $\cdot$ Colégio de Computação e Informática, and\\
+    Centro de Computação Inteligente para Prevenção de Ricos para Saúde e Meio Ambiente (CIPHER).\\
+    \textbf{Universidade da Carolina do Norte em Charlotte, Charlotte, Carolina do Norte, E.U.A.}\\
+    ORCiD: \href{https://orcid.org/0000-0001-9858-4515}{0000-0001-9858-4515}.\\
+    \par
+}
+\vfill
+{\large 2026\par}
+\end{titlepage}
+
+% Página de direitos autorais
+\newpage
+\thispagestyle{empty}
+\vspace*{\fill}
+\noindent
+\textcopyright\ 2026 Denis Jacob Machado.\\[0.5em]
+Este trabalho está licenciado sob a licença Creative Commons
+Atribuição-NãoComercial 4.0 Internacional (CC-BY-NC 4.0).\\[0.5em]
+\url{https://creativecommons.org/licenses/by-nc/4.0/deed.pt_BR}
+\vspace{2cm}
+
+% Sumário
+\tableofcontents
+
+% Prefácio
+\chapter{Prefácio}
+
+    Este livro reúne material de estudo sobre filogenômica e bioinformática de metazoários, abrangendo desde os fundamentos teórico-filosóficos da sistemática filogenética até questões contemporâneas de inteligência artificial, legislação brasileira e infraestrutura computacional. A obra é organizada em onze capítulos que cobrem os principais tópicos necessários para a compreensão e a prática da reconstrução filogenômica em larga escala. Estes capítulos correspondem aos 11 itens listados no edital EDITAL IB/AAcad/19/2025 sobre ``Filogenômica eBioinformática de Metazoários,'' publicado na Edição de 4 de julho de 2025 do Diário Oficial do Estado de São Paulo.
+
+    O texto enfatiza tanto os princípios teóricos quanto os aspectos práticos de implementação, incluindo a formulação matemática dos métodos probabilísticos, a diversidade de dados moleculares disponíveis, as estratégias de sequenciamento, os desafios impostos por elementos repetitivos, e os requisitos de infraestrutura computacional. Os capítulos finais abordam o papel emergente da inteligência artificial na ciência biomédica e os aspectos legais e éticos do uso de dados genômicos, com ênfase na legislação brasileira e nos marcos internacionais.
+
+    Cada capítulo contém suas próprias referências bibliográficas, permitindo consulta independente. A ordem dos capítulos segue uma progressão lógica dos fundamentos para as aplicações, mas os capítulos foram escritos para serem razoavelmente autocontidos. Um guia de estudo é apresentado ao final de cada capítulo para facilitar o estudo.
+
+\vspace{1cm}
+\begin{flushright}
+Denis Jacob Machado\\
+Charlotte, Carolina do Norte, E.U.A., 2026
+\end{flushright}
+
+% ---- Corpo principal ----
+\mainmatter
+
+\include{capitulos/cap01_fundamentos}
+\include{capitulos/cap02_probabilistica}
+\include{capitulos/cap03_modelos}
+\include{capitulos/cap04_tipos_dados}
+\include{capitulos/cap05_rnaseq}
+\include{capitulos/cap06_repetitivos}
+\include{capitulos/cap07_ti}
+\include{capitulos/cap08_hpc}
+\include{capitulos/cap09_gestao_dados}
+\include{capitulos/cap10_ia}
+\include{capitulos/cap11_legal}
+
+% ---- Pós-textual ----
+\backmatter
+
+\chapter{Agradecimentos}
+
+    Este livro usou inteligência artificial (IA) para traduzir as anotações originais do inglês para o português, para revisão gramatical e para produzir o código do projeto em \hologo{LaTeX} (Claude--Opus 4.6, Anthropic, \href{https://claude.ai/chats}{https://claude.ai/chats}). O projeto foi compilado no Overleaf (\href{https://www.overleaf.com/}{https://www.overleaf.com/}).
+
+\end{document}

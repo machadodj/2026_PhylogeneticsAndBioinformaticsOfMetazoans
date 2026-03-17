@@ -1,0 +1,302 @@
+
+\chapter{Projeto de Sistemas Computacionais de Alto Desempenho para Filogenômica}
+
+\section*{Resumo}
+
+Análises filogenômicas modernas envolvem centenas a milhares de loci extraídos de dados em escala genômica. Cada locus deve ser individualmente alinhado, aparado e submetido a estimação de árvore de genes antes de inferência de árvore de espécies downstream. Esta expansão de escala, impulsionada por sequenciamento de captura de alvo, transcriptômica e abordagens de genoma inteiro, tornou computação em escala de desktop inadequada para a maioria dos grupos de pesquisa. Este capítulo examina design e implementação de sistemas computacionais de alto desempenho (HPC) especificamente otimizados para filogenômica, cobrindo desde auditoria de perfil de workload através otimização financeira, estratégia de alocação de recursos, e gerenciamento multi-usuário. Apresentamos uma proposta de cluster específica para departamento de bioinformática universitário e discutimos princípios gerais aplicáveis a laboratórios variando em escala de simple workstations até clusters regionais.
+
+\section{Introdução}
+
+Uma análise única de IQ-TREE em um alinhamento particionado de várias centenas de loci pode consumir dezenas de milhares de horas de CPU. Análises bayesianas com BEAST ou MrBayes adicionam ordens de magnitude adicionais quando convergência MCMC requer comprimentos de cadeia estendidos. Além disso, questões sobre se métricas padrão de suporte de clado (bootstrap, SH-aLRT, aBayes) são calibradas com respeito a sensibilidade de alinhamento --- uma questão ativamente sendo investigada --- demandam replicação em larga escala através de alinhamentos alternativos e configurações de parâmetros. Tais estudos são computacionalmente inviáveis sem recursos HPC dedicados.
+
+Clusters de pesquisa gerais da universidade, enquanto valiosos, frequentemente têm políticas de agendamento otimizadas para justiça em escala de campus e não para as características específicas de workloads filogenômicos. Um cluster departamental dedicado permite otimização de heterogeneidade de hardware, topologia de armazenamento, e políticas de agendamento especificamente para filogenômica.
+
+\section{Perfil Computacional de Workflows Filogenômicos}
+
+O design de um sistema HPC para filogenômica deve ser informado por análise cuidadosa dos gargalos computacionais em cada estágio do pipeline. Workflows filogenômicos são heterogêneos: alguns estágios são limitados em memória, outros limitados em CPU ou I/O, e alguns são cada vez mais adequados para GPU.
+
+\subsection{Fase 1: Controle de Qualidade e Pré-processamento de Leituras}
+
+Ferramentas como \textit{fastp} \parencite{chen2018} e Trimmomatic \parencite{bolger2014} realizam remoção de adaptador, aparagem de qualidade e filtragem de leitura. Essas tarefas são predominantemente limitadas por I/O, com requisitos de CPU modestos. \textit{fastp} é notável por seu tratamento multi-threaded de I/O e tipicamente se saturação em 4--8 threads. O gargalo chave é throughput de armazenamento: uma única lane Illumina HiSeq/NovaSeq pode produzir 100--400 GB de dados FASTQ comprimidos, e operações de QC envolvem ler e reescrever esses arquivos em sua totalidade.
+
+\textbf{Perfil de Recurso:} limitado por I/O; 4--8 núcleos de CPU por job; 4--16 GB de RAM; armazenamento de scratch de alto throughput crítico.
+
+\subsection{Fase 2: Montagem, Mapeamento e Extração de Locus}
+
+Dependendo do design do estudo, leituras podem ser montadas \textit{de novo} (e.g., SPAdes, Trinity) ou mapeadas para uma referência (e.g., BWA-MEM2, HybPiper para dados de captura de alvo). Montagem \textit{de novo}, particularmente com Trinity para dados de transcriptômica, é ambos CPU-intensiva e memory-hungry, com pico de uso de RAM frequentemente excedendo 100 GB para datasets de tamanho moderado. Abordagens baseadas em referência são mais modestas mas ainda se beneficiam de armazenamento rápido para I/O de arquivo BAM.
+
+\textbf{Perfil de Recurso:} CPU- e memory-intensivo; 16--32 núcleos; 64--256 GB de RAM; armazenamento de scratch rápido.
+
+\subsection{Fase 3: Inferência de Ortologia}
+
+Ferramentas como OrthoFinder \parencite{emms2019} realizam buscas DIAMOND/BLAST all-vs-all seguidas por clustering MCL. A fase de busca DIAMOND é embaraçosamente paralela e se beneficia de contagem de núcleos alta, enquanto a fase de clustering MCL é memory-intensiva para conjuntos de proteomas grandes (>50 espécies).
+
+\textbf{Perfil de Recurso:} CPU-intensivo (paralelizável); 16--64 núcleos; 32--128 GB de RAM.
+
+\subsection{Fase 4: Alinhamento Múltiplo de Sequências}
+
+MAFFT \parencite{katoh2013}, MUSCLE e outras ferramentas de alinhamento são CPU-bound, com a maioria das implementações threading eficientemente para 4--16 núcleos. No entanto, porque um dataset filogenômico típico envolve centenas a milhares de loci individuais, a estratégia de paralelismo dominante é executar muitos jobs de alinhamento independentes concorrentemente em vez de alocar muitos núcleos para um único alinhamento. Isso torna alinhamento uma carga de trabalho ideal para arrays de job SLURM.
+
+\textbf{Perfil de Recurso:} CPU-bound; 4--16 núcleos por alinhamento individual; 2--8 GB de RAM por alinhamento; alto throughput de job via arrays.
+
+\subsection{Fase 5: Aparagem e Filtragem de Alinhamento}
+
+Ferramentas como trimAl \parencite{capella2009} e BMGE \parencite{criscuolo2010} são leves, tipicamente completando em segundos por locus. A consideração primária é latência de I/O em vez de poder de computação.
+
+\textbf{Perfil de Recurso:} CPU/RAM mínimos; I/O-latency-sensível.
+
+\subsection{Fase 6: Estimação de Árvore de Gene (Máxima Verossimilhança)}
+
+Inferência de árvore de máxima verossimilhança com IQ-TREE \parencite{minh2020} ou RAxML-NG \parencite{kozlov2019} é a fase mais CPU-intensiva do pipeline para abordagens baseadas em ML. Ambas ferramentas implementam avaliação de verossimilhança multi-threaded eficiente usando kernels vetorizados SIMD (AVX2/AVX-512). IQ-TREE 2 demonstra eficiência de paralelismo alta, atingindo scaling quase-linear para 4 núcleos e speedups úteis para 8--16 núcleos para análises individuais. Para estudos filogenômicos, a estratégia ótima é frequentemente inferir árvores de gene em paralelo (uma por locus), com cada busca em árvore alocada 4--8 núcleos.
+
+\textbf{Perfil de Recurso:} CPU-bound; beneficia de velocidade de clock alta e AVX-512; 4--16 núcleos por árvore de gene; 2--16 GB de RAM; alto throughput de job via arrays SLURM.
+
+\subsection{Fase 7: Estimação de Árvore de Gene (Bayesiana)}
+
+Inferência bayesiana com MrBayes \parencite{ronquist2012} ou BEAST/BEAST2 \parencite{bouckaert2019} é substancialmente mais cara do que inferência ML devido a requisitos de amostragem MCMC. A biblioteca BEAGLE \parencite{ayres2019} fornece computação de verossimilhança acelerada por GPU, atingindo speedups de até 100$\times$ para datasets grandes em GPUs NVIDIA. BEAGLE 3 inclui implementações OpenCL e CPU-threaded, mas a implementação baseada em CUDA em hardware NVIDIA moderno permanece como líder de desempenho. Memória de GPU é a restrição primária: análises nucleotídicas de dupla-precisão com quatro categorias de taxa requerem aproximadamente 2 GB de memória de GPU por 1.000 OTUs e 10.000 padrões de sites únicos.
+
+\textbf{Perfil de Recurso:} GPU-acelerado via BEAGLE/CUDA; 24--48 GB de memória de GPU recomendada; CPU moderado para caminhos de código não-BEAGLE.
+
+\subsection{Fase 8: Inferência de Árvore de Espécies e Análise de Concordância}
+
+Métodos coalescentes sumários como ASTRAL-III \parencite{zhang2018} são rápidos e memory-eficientes, tipicamente completando em minutos mesmo para datasets com centenas de loci e espécies. Abordagens baseadas em concatenação (supermatriz) usando IQ-TREE ou RAxML-NG no alinhamento particionado completo são mais demandantes e representam um segundo gargalo computacional major. Análise de fator de concordância (gCF, sCF) em IQ-TREE requer re-avaliação de todas as árvores de gene contra a árvore de espécies e é moderadamente CPU-intensiva.
+
+\textbf{Perfil de Recurso:} Variável; ASTRAL é leve; ML concatenado é CPU-intensivo (similar a Fase 6 mas em dados maiores); análise de concordância é moderada.
+
+\section{Arquitetura de Hardware Proposta}
+
+\subsection{Filosofia de Design}
+
+O cluster segue uma filosofia de design heterogêneo: em vez de comprar nós uniformes, propomos três tipos de nó distintos otimizados para os diferentes perfis computacionais. Esta abordagem maximiza eficácia de custo evitando over-provisioning de recursos caros (GPU, RAM grande) em nós onde não são necessários.
+
+\subsection{Componentes Recomendados}
+
+\begin{table}[htbp]
+\centering
+\caption{Componentes Recomendados de Hardware para Cluster Filogenômico}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrllll}
+\hline
+\textbf{Componente} & \textbf{Qtd} & \textbf{CPU} & \textbf{RAM} & \textbf{Armazenamento} & \textbf{GPU} \\
+\hline
+Nó Computacional (Tipo A) & 4 & 2$\times$ EPYC 9554 (64C) & 512 GB DDR5 & 2$\times$ 2TB NVMe & --- \\
+Nó High-Memory (Tipo B) & 1 & 2$\times$ EPYC 9554 (64C) & 1.5 TB DDR5 & 4$\times$ 4TB NVMe & --- \\
+Nó GPU (Tipo C) & 1 & 1$\times$ EPYC 9454 (48C) & 256 GB DDR5 & 2$\times$ 2TB NVMe & 2$\times$ RTX A6000 (48GB) \\
+Nó Management/Login & 1 & 1$\times$ EPYC 9124 (16C) & 64 GB DDR5 & 2$\times$ 1TB NVMe (RAID 1) & --- \\
+Servidor NAS & 1 & 1$\times$ Xeon entry & 64 GB ECC & 12$\times$ 18TB HDD (RAID6) + 2$\times$ 4TB NVMe & --- \\
+Networking (Switch 25GbE) & 1 & --- & --- & --- & --- \\
+UPS + Rack + Cabagem & 1 & --- & --- & --- & --- \\
+\hline
+\multicolumn{6}{l}{\textbf{Custo Total Estimado: \$163.000--\$185.000}} \\
+\hline
+\end{tabular}%
+}
+\end{table}
+
+\subsection{Rationale de Seleção de CPU}
+
+O AMD EPYC 9554 (64 núcleos, 3.75 GHz boost, 256 MB cache L3) fornece excelente balanço de contagem de núcleos, velocidade de clock, e tamanho de cache para workloads filogenômicos. Ambas IQ-TREE e RAxML-NG usam kernels de verossimilhança vetorizados AVX2/AVX-512, e a arquitetura Zen 4 na série EPYC 9004 fornece suporte nativo AVX-512. O cache L3 grande é particularmente benéfico para operações de busca em árvore, que exibem padrões de acesso à memória irregulares quando atravessando arrays de verossimilhança através de nós internos de árvore. A configuração dual-socket rende 128 núcleos por nó Tipo A (512 total através de quatro nós), permitindo execução simultânea de 32--64 jobs de árvore de gene por nó em 4--8 núcleos cada.
+
+\subsection{Rationale de Seleção de GPU}
+
+O NVIDIA RTX A6000 fornece 48 GB de memória GDDR6 por card, o que é crítico para análises bayesianas aceleradas por BEAGLE. Memória de GPU é a restrição vinculante para BEAGLE: uma análise nucleotídica com 500 OTUs e 50.000 padrões de sites únicos em dupla precisão requer aproximadamente 10 GB de memória de GPU. Dois cards RTX A6000 permitem análise simultânea de múltiplas partições ou cadeias MCMC independentes, e BEAST pode particionar datasets através de múltiplas instâncias de BEAGLE, uma por GPU.
+
+\subsection{Arquitetura de Armazenamento}
+
+A arquitetura de armazenamento proposta segue um design de três tiers:
+
+\begin{enumerate}
+\item \textbf{Tier 1 --- NVMe SSD (fast scratch):} Use para diretórios de análise ativa. Raw read processing, montagem e alinhamento são I/O-intensivos. Unidades NVMe (idealmente em RAID-0 ou ZFS stripe para throughput) previnem armazenamento de se tornar gargalo. Apunte para pelo menos 4--8 TB de scratch rápido por nó.
+
+\item \textbf{Tier 2 --- SATA SSD ou HDD RAID (warm storage):} Resultados intermediários, alinhamentos completados, e arquivos de árvore que precisam ser acessíveis mas não estão sob computação ativa. 20--50 TB é um ponto de partida razoável.
+
+\item \textbf{Tier 3 --- Cold/archival (tape, cloud cold-tier):} Leituras sequenciadas brutas (FASTQ) após QC e montagem. Estes são grandes mas raramente re-acessados. Armazenamento comprimido aqui é eficaz em custo.
+\end{enumerate}
+
+\subsection{Fabric de Rede}
+
+Para um cluster multi-nó, se seu workflow paraleliza \textit{através} de nós (e.g., análises MPI baseadas como ExaBayes; \textcite{aberer2014}), você necessita interconnect de baixa latência. InfiniBand (HDR, 200 Gb/s) é o padrão ouro. Se jobs MPI cross-nó são raros, 25 GbE ou mesmo 10 GbE é suficiente e muito mais barato.
+
+Para a maioria de labs filogenômicos, InfiniBand pode ser completamente evitado. O padrão paralelo dominante é ``muitos jobs independentes através de loci,'' o qual requer um agendador de job --- não MPI.
+
+\subsection{Otimização Financeira: Custo Total de Propriedade}
+
+Preço de compra de hardware é apenas ~40--60\% do custo total de 5 anos de propriedade. O restante é eletricidade, resfriamento, manutenção, e tempo de staff.
+
+\subsubsection{Eletricidade e Resfriamento}
+
+Um servidor dual-socket com CPUs high-end consome 800--1500 W sob carga. Em uma taxa institucional norte-americana média de ~\$0.10/kWh, um único nó executando 1 kW continuamente custa ~\$876/ano em eletricidade sozinho --- antes de sobrecarga de resfriamento. Resfriamento tipicamente adiciona 30--60\% ao custo de eletricidade (expresso como Eficácia de Uso de Energia, PUE). Uma sala de servidor bem-desenhada alcança PUE ~1.3--1.5; um closet de escritório repurposado pode atingir 2.0+.
+
+\subsubsection{Buy vs. Cloud}
+
+Para workloads sustentados e previsíveis (runs de pipeline diárias, recurso compartilhado sempre-ativo), hardware possuído quase sempre vence computação em nuvem em custo por hora-compute após ano 1--2. Para workloads bursty (montagem grande ocasional, crise de prazo de concessão anual), instâncias em nuvem (AWS, Google Cloud, Azure) evitam custos de hardware ocioso. AWS Spot / GCP Preemptible instances são 60--90\% mais baratos do que on-demand e toleráveis para jobs embaraçosamente paralelos filogenômicos que checkpoint bem.
+
+Uma abordagem híbrida é cada vez mais a estratégia recomendada para labs de genômica acadêmica: possuir um sistema base modesto para trabalho diário, burst para nuvem durante picos.
+
+\subsubsection{Projeção de Custo Total de 5 Anos}
+
+\begin{table}[htbp]
+\centering
+\caption{Projeção de Custo Total de Propriedade (5 Anos)}
+\begin{tabular}{lrr}
+\hline
+\textbf{Categoria} & \textbf{Ano 1} & \textbf{Anos 2--5 (anual)} \\
+\hline
+Aquisição de hardware & \$163.000--\$185.000 & --- \\
+Eletricidade (~8 kW sustentado) & \$7.000 & \$7.000 \\
+Resfriamento (suplementar, est.) & \$2.000 & \$2.000 \\
+Administração de sistema (0.25 FTE) & \$20.000 & \$20.000 \\
+Fundo de warranty/replacement & --- & \$5.000 \\
+Burst em nuvem (contingência) & \$3.000 & \$3.000 \\
+\hline
+\textbf{TOTAL} & \textbf{\$195.000--\$217.000} & \textbf{\$37.000/yr} \\
+\hline
+\multicolumn{3}{l}{\textbf{Custo Total 5 Anos: ~\$343.000--\$365.000}} \\
+\multicolumn{3}{l}{\textbf{Custo por usuário por ano (15--25 usuários): \$2.700--\$4.900}} \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Software Stack e Gerenciamento de Ambiente}
+
+\subsection{Sistema Operacional e Agendamento de Job}
+
+Todos os nós executarão Rocky Linux 9 (compatível com RHEL), que fornece estabilidade de longo prazo e compatibilidade ampla com software de bioinformática. O gerenciador de workload SLURM \parencite{slurm2023} manipulará agendamento de job, alocação de recurso, e accounting.
+
+SLURM é o agendador dominante em HPC acadêmico e fornece suporte nativo para agendamento consciente de GPU (GRES), arrays de job (essenciais para processamento em batch filogenômico), agendamento fair-share através de grupos de usuário, e accounting detalhado para relatório de uso de recurso.
+
+\subsection{Containerização e Reproducibilidade}
+
+Ambientes de software serão manipulados via containers Apptainer (anteriormente Singularity) e o sistema Lmod de environment modules. Containers Apptainer permitem usuários empacotar pilhas de software completas (incluindo versões específicas de IQ-TREE, RAxML-NG, BEAST, MAFFT, etc.) em imagens portáveis e reproduzíveis que podem ser compartilhadas e arquivadas ao lado de publicações.
+
+Diferentemente de Docker, Apptainer executa sem privilégio e integra nativamente com SLURM, tornando-o adequado para ambientes HPC compartilhados. Imagens de container pré-construídas para workflows filogenômicos comuns serão mantidas pelo time de administração de sistema.
+
+\subsection{Orquestração de Pipeline}
+
+Usuários serão encorajados a implementar workflows reproduzíveis usando Snakemake \parencite{molder2021} ou Nextflow, ambos integrando com SLURM para automaticamente decompor pipelines filogenômicos em steps de job paralelizáveis. Um template de Snakemake departamental para workflows padrão filogenômicos (QC $\rightarrow$ montagem $\rightarrow$ ortologia $\rightarrow$ alinhamento $\rightarrow$ aparagem $\rightarrow$ árvores de gene $\rightarrow$ árvore de espécies) será fornecido como ponto de partida.
+
+\section{Estratégia de Alocação de Recursos}
+
+\subsection{Design de Partição SLURM}
+
+O cluster será dividido em partições SLURM que mapeiam para topologia de hardware e perfis computacionais identificados acima:
+
+\begin{table}[htbp]
+\centering
+\caption{Partições SLURM Recomendadas}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llll}
+\hline
+\textbf{Partição} & \textbf{Nós} & \textbf{Max Walltime} & \textbf{Caso de Uso} \\
+\hline
+standard & Tipo A (4 nós) & 7 dias & Busca em árvore ML, alinhamento \\
+highmem & Tipo B (1 nó) & 14 dias & Montagem \textit{de novo}, análises concatenadas grandes \\
+gpu & Tipo C (1 nó) & 14 dias & BEAST/MrBayes com BEAGLE \\
+quick & Todos Tipo A & 4 horas & QC, aparagem, ASTRAL, testes \\
+\hline
+\end{tabular}%
+}
+\end{table}
+
+\subsection{Agendamento Fair-Share}
+
+O algoritmo de agendamento fair-share de SLURM será configurado com contas hierárquicas correspondendo a grupos de pesquisa. Cada PI receberá uma alocação base (e.g., 40\% de capacidade de cluster para grupo de filogenômica primária, com restante dividido entre grupos colaboradores). Fair-share decay garantirá que grupos que consumiram recentemente recursos desproporcionais são desprioritizados na fila, prevenindo qualquer projeto único de monopolizar o cluster.
+
+\subsection{Limites de Recurso e Accountability}
+
+Limites de CPU e memória por-usuário serão impostos via agendamento fair-share de SLURM. Sem estes, um único usuário executando 10.000 jobs de IQ-TREE desfalecerá todos os demais. Limites de wall-time máximo por partição prevenirão jobs zumbis de entesourar recursos. Accounting de SLURM (\texttt{sacct}) será usado para monitorar uso, justificar compras de hardware em relatórios de concessão, e identificar gargalos.
+
+\section{Requisitos de Recurso Recomendados por Tipo de Análise}
+
+\begin{table}[htbp]
+\centering
+\caption{Requisições de Recurso Recomendadas por Tipo de Análise}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lllll}
+\hline
+\textbf{Tarefa} & \textbf{Núcleos} & \textbf{RAM} & \textbf{Partição} & \textbf{Notas} \\
+\hline
+fastp (por amostra) & 4--8 & 8 GB & quick & Array job; \~{}5 min/amostra \\
+MAFFT L-INS-i (por locus) & 4 & 4 GB & quick & Array job; seg--min/locus \\
+IQ-TREE árvore de gene & 4--8 & 4 GB & standard & Array job; 10 min--hrs/locus \\
+IQ-TREE concat. (particionado) & 32--64 & 64--128 GB & standard & Job único grande; hrs--days \\
+RAxML-NG (particionado) & 32--64 & 64--128 GB & standard & Considere MPI para >64 núcleos \\
+Trinity assembly & 32 & 256--1024 GB & highmem & Requer nó Tipo B \\
+BEAST + BEAGLE (por cadeia) & 4--8 + 1 GPU & 32 GB + 48GB VRAM & gpu & Use \texttt{-{}-gres=gpu:1} \\
+ASTRAL-III & 1--4 & 16 GB & quick & Usualmente < 30 minutos \\
+\hline
+\end{tabular}%
+}
+\end{table}
+
+\section{Gerenciamento Multi-Usuário}
+
+\subsection{Estrutura de Conta}
+
+Contas de usuário serão manipuladas através de LDAP, integrado com sistema existente de gerenciamento de identidade da universidade. Contas de SLURM seguirão uma estrutura hierárquica: uma conta ``filogenômica'' de nível superior com sub-contas para cada grupo de PI. Estudantes e postdocs serão adicionados à sub-conta de seu PI, herdando alocações de fair-share e acesso de partição.
+
+\subsection{Quotas de Armazenamento}
+
+Cada usuário receberá diretório home de 50 GB (backed up cada noite) e alocação de scratch de 2 TB no NAS. Diretórios compartilhados de nível de grupo serão provisionados em 10--20 TB por PI, dependendo de necessidades ativas de projeto. Dados de scratch com mais de 60 dias sem acesso serão marcados para arquivamento. Um relatório mensal automatizado notificará usuários de consumo de armazenamento e limites de quota próximos.
+
+\subsection{Segurança e Controle de Acesso}
+
+Autenticação baseada em chave SSH será requerida para todo acesso. Autenticação de dois-fatores será imposta para operações administrativas. Dados de usuário serão separados por permissões de grupo Unix, e datasets sensíveis podem ser colocados em diretórios restritos acessíveis apenas a usuários autorizados. Todos os nós estarão atrás de firewall departamental, com acesso apenas via VPN ou rede de campus.
+
+\subsection{Treinamento e Documentação}
+
+Uma wiki departamental fornecerá documentação cobrindo submissão de job de SLURM, uso de container, scripts SLURM exemplo para tarefas filogenômicas comuns, e melhores práticas para alocação de recurso. Workshops bi-anuais serão oferecidos para estudantes graduados novos. Usuários power serão designados como ``cluster champions'' para fornecer suporte de nível peer e contribuir à documentação.
+
+\section{Monitoramento e Alertas}
+
+Você não pode otimizar o que não mede.
+
+\begin{itemize}
+\item \textbf{Monitoramento de Recurso:} Implante stack leve tal qual Prometheus + Grafana ou simplesmente use accounting incorporado de SLURM mais summários de \texttt{squeue}/\texttt{sacct}. Rastreie utilização de CPU, marcas de água alta de memória, throughput de I/O de disco, e utilização de GPU ao longo do tempo.
+
+\item \textbf{Saúde Térmica e de Hardware:} Use IPMI/iDRAC/iLO (disponível em todo hardware de servidor-grade) para monitorar temperaturas, velocidades de ventilador, e saúde de disco. Configure email alerts para avisos de disco SMART e thermal throttling.
+
+\item \textbf{Auditorias de Eficiência de Job:} Periodicamente revise jobs completados. Usuários que requisitam 500 GB de RAM mas usam 30 GB, ou requisitam 64 núcleos mas executam single-threaded, desperdiçam recursos de agendador. Forneça feedback --- a maioria de usuários simplesmente copiam-colam scripts de job sem ajustar parâmetros.
+\end{itemize}
+
+\section{Roadmap de Escalabilidade: Pense em Fases}
+
+A maioria de labs não pode (e não deve) construir um cluster completo no dia um. Uma progressão sensata:
+
+\begin{enumerate}
+\item \textbf{Fase 1 --- Single high-spec workstation} (dual-socket, 256--512 GB RAM, 64--128 núcleos, scratch NVMe, 1 GPU). Instale SLURM mesmo aqui. Isso manipula a maioria de workflows filogenômicos para lab de 3--5 usuários.
+
+\item \textbf{Fase 2 --- Adicione segundo nó} quando contenção de CPU se torna crônica. Conecte via 10/25 GbE, compartilhe dados via NFS.
+
+\item \textbf{Fase 3 --- Servidor de armazenamento dedicado} quando volumes de dados ultrapassa discos locais. Centralize warm e cold storage.
+
+\item \textbf{Fase 4 --- Cluster heterogêneo} com nós especializados (high-memory, GPU, high-clock) conforme grants e workloads justificam.
+
+\item \textbf{Contínuo --- Cloud bursting} para pico de demanda transiente em vez de over-provisioning de hardware permanente.
+\end{enumerate}
+
+\section{Conclusão}
+
+Sistemas HPC bem-designados para filogenômica amplificam capacidade analítica de grupos de pesquisa por órdãos de magnitude. O investimento --- capital inicial, eletricidade, staff --- é significante, mas retornam-se rapidamente em forma de mais análises por pesquisador, mais estudantes habilitados, e publicações de maior qualidade. Para laboratórios operando em instituições com suporte de HPC central limitado, um cluster departamental dedicado é frequentemente o caminho mais pragmático para produtividade analítica sustentada.
+
+\clearpage
+\begin{destaque}
+\textbf{Roteiro de Revisão --- Capítulo 8}
+\begin{enumerate}
+    \item 8 fases do workflow: (1) QC/pré-proc.\ (I/O, fastp 4--8 cores), (2) montagem/mapeamento (CPU+RAM, Trinity $>$100\,GB), (3) ortologia (OrthoFinder, DIAMOND paralelo), (4) alinhamento (MAFFT, arrays SLURM), (5) aparagem (trimAl/BMGE, leve), (6) árvore de gene ML (IQ-TREE/RAxML-NG, AVX-512, 4--8 cores/locus), (7) árvore de gene bayesiana (BEAST+BEAGLE/GPU, 24--48\,GB VRAM), (8) árvore de espécies (ASTRAL leve; concatenação pesada).
+    \item Design heterogêneo: 3 tipos de nó. Tipo A (4 nós): 2$\times$EPYC 9554 (128 cores), 512\,GB DDR5. Tipo B (1 nó): 1,5\,TB RAM (montagem). Tipo C (1 nó): 2$\times$RTX A6000 (48\,GB VRAM cada).
+    \item CPU: EPYC 9554 --- 64 cores, 3,75\,GHz boost, 256\,MB L3, AVX-512 nativo (Zen 4).
+    \item GPU: RTX A6000 para BEAGLE/CUDA; $\sim$10\,GB VRAM para 500 OTUs $\times$ 50\,000 padrões em dupla precisão.
+    \item Armazenamento 3 tiers: Tier 1 NVMe (scratch rápido), Tier 2 SATA/HDD RAID (warm), Tier 3 cold/archival (tape/nuvem).
+    \item Rede: 25\,GbE suficiente se jobs são independentes por locus; InfiniBand (HDR 200\,Gb/s) apenas para MPI cross-nó (ExaBayes).
+    \item SLURM: partições \texttt{standard} (Tipo A, 7d), \texttt{highmem} (Tipo B, 14d), \texttt{gpu} (Tipo C, 14d), \texttt{quick} (4h); fair-share hierárquico por PI.
+    \item TCO 5 anos: hardware \$163--185k + eletricidade \$7k/ano + resfriamento \$2k/ano + sysadmin 0,25 FTE \$20k/ano + contingência = \textbf{\$343--365k total}; \$2.700--4.900/usuário/ano.
+    \item Software: Rocky Linux 9, Apptainer (Singularity) para containers, Snakemake/Nextflow para pipelines, Lmod para módulos.
+    \item Roadmap de escalabilidade: Fase 1 (workstation única + SLURM) $\to$ Fase 2 (2º nó, NFS) $\to$ Fase 3 (NAS dedicado) $\to$ Fase 4 (cluster heterogêneo) $\to$ cloud bursting contínuo.
+\end{enumerate}
+\end{destaque}
+
+\clearpage
+
+\printbibliography[heading=subbibliography,title={Referências}]
+

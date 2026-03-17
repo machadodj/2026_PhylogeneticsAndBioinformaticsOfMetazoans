@@ -1,0 +1,283 @@
+
+\chapter{Modelos de Substituição na Reconstrução Filogenética}
+
+\section{Introdução}
+
+A reconstrução filogenética a partir de dados de sequências moleculares requer um marco probabilístico explícito para modelar como caracteres mudam ao longo de uma árvore. Este marco é incorporado em modelos de substituição, que especificam as taxas instantâneas de mudança entre estados de caracteres e as frequências estacionárias desses estados. Modelos de substituição fundamentam dois critérios de otimalidade principais na sistemática moderna: máxima verossimilhança (MV) e probabilidade posterior bayesiana. Ambos os critérios compartilham um núcleo probabilístico comum mas diferem em como tratam parâmetros desconhecidos e como resumem inferência.
+
+Este capítulo sintetiza os princípios teóricos, estratégias de implementação, limites interpretativos e desenvolvimentos recentes associados com modelos de substituição em análise filogenética. As fontes primárias são capítulos 11 e 12 de Wheeler (2012), que tratam critérios de otimalidade de verossimilhança e bayesiana respectivamente.
+
+\section{Princípios Teóricos}
+
+\subsection{A Função de Verossimilhança em Sistemática}
+
+A fundação da filogenética baseada em modelos é a função de verossimilhança. Para uma árvore $T$ e dados $D$, a verossimilhança é proporcional à probabilidade dos dados dada a árvore e um conjunto de parâmetros \parencite{edwards1972}:
+
+$$l(T|D) \propto \Pr(D|T)$$
+
+Um método sistemático de MV seleciona a árvore $T$ que maximiza $\Pr(D|T)$. Esta maximização requer especificar um conjunto de \textit{parâmetros de incômodo} $\theta$, definidos como todas as quantidades necessárias para calcular $\Pr(D|T)$ além dos dados e da topologia de árvore \parencite{wheeler2012}. Os três parâmetros de incômodo mais consequentes são: (1) o modelo de transformação de caracteres; (2) parâmetros de ramo (comprimentos de ramo); e (3) a distribuição de taxas de mudança entre caracteres.
+
+\subsection{O Modelo Markov Geral Reversível}
+
+A descrição reversível mais geral de mudança de caráter para $n$ estados é especificada por uma matriz de taxa instantânea $R$ e um vetor de frequência estacionária $\symbf{\pi}$ \parencite{yang1994,tavare1986}. As condições de simetria impostas em $R$ são:
+
+$$\forall i,\; R_{ii} = 0; \quad \forall i,j,\; R_{ij} = R_{ji}; \quad \sum_{i=1}^{n}\sum_{j=1}^{n} \pi_i \cdot \pi_j \cdot R_{ij} = 1$$
+
+Estas matrizes são combinadas na matriz de taxa $Q$ de Tavaré (1986):
+
+$$Q_{ij} = \begin{cases} R_{i,j} \cdot \pi_j & \text{se } i \neq j \\ -\sum_{m=1}^{n} R_{i,m} \cdot \pi_m & \text{se } i = j \end{cases}$$
+
+A probabilidade de mudança entre estados $i$ e $j$ ao longo do tempo $t$ é então:
+
+$$P_{i,j}(t) = \sum_{m=1}^{n} e^{\lambda_m t} \cdot U_{m,i} \cdot U^{-1}_{j,m}$$
+
+onde $\lambda_m$ são os autovalores de $Q$, $U$ é a matriz de autovetores, e $U^{-1}$ sua inversa \parencite{strang2006}. A restrição de reversibilidade no tempo permite computação eficiente de verossimilhanças de árvore \parencite{wheeler2012}.
+
+Esta formulação acomoda no máximo $n-1$ parâmetros de frequência independentes e $\binom{n}{2} - 1$ parâmetros de taxa independentes.
+
+\subsection{Modelos Nomeados como Casos Especiais}
+
+Todos os modelos de substituição em uso atual são restrições do processo reversível geral através de requisitos de simetria adicionais \parencite{wheeler2012}. A hierarquia de menos a mais parametrizado para dados de nucleotídeos é documentada em Swofford et al. (1996) e inclui, entre outros:
+
+\begin{itemize}
+    \item \textbf{JC69} (Jukes e Cantor, 1969): um tipo único de substituição com frequências de base iguais. Este é o modelo mais restringido e o único com zero parâmetros livres (além de comprimentos de ramo).
+    \item \textbf{K2P} (Kimura, 1980): distingue transições de transversões com frequências de base iguais.
+    \item \textbf{HKY85} (Hasegawa et al., 1985): transições versus transversões com frequências de base desiguais.
+    \item \textbf{GTR} (Lanave et al., 1984; Tavaré, 1986): o modelo reversível no tempo mais geral com seis categorias de taxa e quatro frequências de base desiguais.
+\end{itemize}
+
+Modelos outros que GTR têm soluções analíticas para $P_{i,j}(t)$, enquanto GTR requer decomposição numérica de autovalores \parencite{wheeler2012}.
+
+\section{Variação de Taxa Entre Sítios}
+
+\subsection{Sítios Invariáveis}
+
+Dados de sequências moleculares comumente mostram heterogeneidade acentuada em taxas de substituição entre posições. Dois modelos distribucionais são regularmente aplicados para acomodar esta variação.
+
+O parâmetro \textit{proporção de sítios invariáveis} $I$ representa a classe frequentemente observada de posições que nunca mudam \parencite{hasegawa1985}. Um parâmetro separado é adicionado para representar a fração de sítios disponíveis para substituição.
+
+\subsection{Distribuição Gamma Discreta}
+
+A \textit{distribuição gamma discreta} \parencite{yang1994} adiciona classes de taxa governadas por um parâmetro de forma $\alpha$. A função densidade de probabilidade gamma é:
+
+$$g(x; \alpha, \beta) = \frac{\beta^{\alpha} x^{\alpha-1} e^{-\beta x}}{\Gamma(\alpha)}$$
+
+com média $\alpha/\beta$ e variância $\alpha/\beta^2$. Na prática, $\beta$ é definido igual a $\alpha$ de forma que a média é 1. O usuário especifica o número de classes de taxa discreta e estima $\alpha$ para maximizar verossimilhança de árvore \parencite{wheeler2012}. É importante notar que todas as classes de taxa são aplicadas a todo sítio ao invés de atribuir uma única classe a cada posição.
+
+O modelo combinado GTR$+I+\Gamma$ é o modelo mais comumente usado em análises empíricas de nucleotídeos.
+
+\section{Expansão para Cinco Estados: Modelos com Indels}
+
+\subsection{Modelo de Jukes-Cantor de Cinco Estados}
+
+Para análises de homologia dinâmica, o modelo de nucleotídeos de quatro estados pode ser expandido para incluir um quinto estado representando eventos de inserção-deleção (indel) \parencite{wheeler2006,mcguire2001}. Sob o modelo de Jukes-Cantor de cinco estados (JC69+Gaps), a probabilidade de transição é:
+
+$$P_{ij}(t) = \begin{cases} \frac{1}{5} + \frac{4}{5} e^{-\mu t} & \text{se } i = j \\ \frac{1}{5} - \frac{1}{5} e^{-\mu t} & \text{se } i \neq j \end{cases}$$
+
+Esta abordagem trata indels como eventos atômicos e enfatiza tratabilidade computacional sobre realismo mecanístico.
+
+\subsection{Modelos de Nascimento-Morte}
+
+Uma alternativa mais mecanisticamente fundamentada é o modelo de nascimento-morte de Thorne et al. (1991) (TKF91, TKF92), que acopla um processo de Poisson de nascimento-morte com modelos padrão de substituição de quatro nucleotídeos para computar a probabilidade de transformar uma sequência em outra. TKF91 e TKF92 representam o tratamento mais mecanisticamente explícito de indels, onde a probabilidade de $n$ inserções ao longo do tempo $t$ é:
+
+$$p_n(t) = e^{-\mu t}\left[1 - \lambda\beta(t)\right] \left[\lambda\beta(t)\right]^{n-1}$$
+
+onde $\beta(t) = (1 - e^{(\lambda-\mu)t})/(\mu - \lambda e^{(\lambda-\mu)t})$, com $\lambda$ sendo a taxa de inserção e $\mu$ a taxa de deleção.
+
+\section{Formas de Verossimilhança e Suas Relações}
+
+Wheeler (2012) e Barry e Hartigan (1987) distinguem várias formas de verossimilhança relevantes para inferência filogenética:
+
+\begin{enumerate}
+    \item \textbf{Máxima Verossimilhança Média (MVM)}: soma sobre todas as atribuições possíveis de estados de vértice ponderadas por suas probabilidades. Este é o método ``MV'' padrão usado em análises empíricas.
+
+    \item \textbf{Máxima Verossimilhança Mais Parcimoniosa (MVP)}: atribui estados específicos de vértice para maximizar a verossimilhança geral. Probabilidades de ramo são constantes sobre caracteres, então MVP geralmente não seleciona a mesma árvore que parcimônia \parencite{wheeler2012}.
+
+    \item \textbf{Verossimilhança de Caminho Evolutivo (VCE)}: proposta por Farris (1973), esta forma especifica a sequência inteira de estados intermediários entre vértices. A árvore maximizando VCE é precisamente a árvore mais parcimoniosa \parencite{wheeler2012}, um resultado também derivado por Goldman (1990) e Tuffley e Steel (1997).
+
+    \item \textbf{Máxima Verossimilhança Integrada (MVI)}: integra sobre parâmetros de incômodo $\theta$ dada sua distribuição $\Phi(\theta|T)$. Isto corresponde à estimativa MAP bayesiana quando prioris de árvore são planas \parencite{wheeler2012,steel2000}.
+\end{enumerate}
+
+A relação entre estas formas é resumida em Wheeler (2012). O aparente paradoxo entre a reivindicação de consistência de MV de Felsenstein e o resultado de MP-como-MV de Farris dissolve-se uma vez que reconhecemos que os dois autores discutiam diferentes formas de verossimilhança.
+
+\section{Modelagem Proteica e Restrições Estruturais}
+
+\subsection{Matrizes de Substituição de Aminoácidos}
+
+A evolução proteica é mais complexa que evolução de nucleotídeos. Matrizes empíricas de substituição de aminoácidos, tais como PAM e WAG, foram estimadas de grandes bancos de dados de sequências protéicas alinhadas. Estas matrizes capturam tendências evolutivas médias mas assumem estacionaridade e homogeneidade do processo de substituição, que são biologicamente irrealistas.
+
+Mais realistas são modelos de substituição estruturalmente restritos (SCS, do inglês \textit{structurally constrained substitution}), que contabilizam as restrições físicas impostas pelo enovelamento de proteínas nas taxas de substituições de aminoácidos. Modelos SCS frequentemente incorporam evolução dependente de sítio, significando que a matriz de taxa em um sítio depende dos estados de sítios vizinhos ou contatos estruturais. Esta característica dramaticamente aumenta o realismo biológico mas torna a função de verossimilhança padrão intratável porque métodos filogenéticos baseados em MV calculam verossimilhanças sob a assunção de independência de sítios.
+
+\section{Seleção de Modelo}
+
+\subsection{Critérios Clássicos de Seleção de Modelo}
+
+Seleção de modelo tem sido reconhecida como pré-requisito para inferência filogenética precisa. Modelos especificados incorretamente produzem estimativas enviesadas de topologia de árvore e comprimentos de ramo \parencite{buckley2002,sanderson2002,abadi2019}. Os critérios padrão para seleção de modelo incluem:
+
+\begin{itemize}
+    \item \textbf{Teste de Razão de Verossimilhança (TRV).} Quando dois modelos são aninhados, duas vezes a diferença em log-verossimilhança é aproximadamente distribuída como $\chi^2$:
+    $$2(l_{T,T'}) = 2\log(l_T / l_{T'}) = 2(\log l_T - \log l_{T'})$$
+    O limiar de confiança para um grau de liberdade é 1.9207 unidades de log-verossimilhança, correspondendo a uma razão de verossimilhança de 6.826.
+
+    \item \textbf{Critério de Informação de Akaike (AIC).} O AIC \parencite{akaike1974} penaliza parâmetros com um custo fixo:
+    $$\mathrm{AIC} = -2\log l_T + 2p$$
+    Um parâmetro adicional é favorecido apenas se melhora a verossimilhança por ao menos uma unidade de log.
+
+    \item \textbf{Critério de Informação Bayesiano (BIC).} O BIC \parencite{schwarz1978} penaliza parâmetros extras mais fortemente, com a penalidade dependendo do tamanho de dados $n$:
+    $$\mathrm{BIC} = -2\log l_T + p\log n$$
+\end{itemize}
+
+Estes critérios são implementados em software tal como ModelTest e são revistos compreensivamente em Posada e Buckley (2004).
+
+\subsection{Impacto da Seleção de Modelo}
+
+Abadi et al. (2019) mostrou que a seleção de modelo afeta estimativas de comprimento de ramo mais fortemente que inferência de topologia. Além disso, nenhum critério padrão foi designado para selecionar o modelo melhor adequado especificamente para inferência precisa de comprimento de ramo.
+
+\section{Implementação Computacional}
+
+\subsection{Computando Verossimilhança de Árvore: O Algoritmo de Poda de Felsenstein}
+
+Para um único caráter $x$, a verossimilhança de um vértice interno $i$ com vértices descendentes $j$ e $k$ é \parencite{wheeler2012}:
+
+$$L_i(x) = \left(\sum_{x_j} p_{x_i, x_j}(t_j) L_j(x_j)\right) \times \left(\sum_{x_k} p_{x_i, x_k}(t_k) L_k(x_k)\right)$$
+
+Verossimilhanças de caracteres são multiplicadas ao longo de todo conjunto de dados para obter a verossimilhança de árvore. Pesos de ramo são estimados numericamente otimizando a verossimilhança marginal para cada ramo enquanto mantendo todos outros parâmetros constantes, comumente usando o método de Brent (1973) ou Newton-Raphson \parencite{ypma1995}. Porque dados de caracteres são assumidos serem independentes e identicamente distribuídos (i.i.d.), a verossimilhança conjunta de múltiplos caracteres é o produto de seus valores individuais.
+
+\subsection{Cadeia de Markov Monte Carlo para Inferência Bayesiana}
+
+Integração numérica direta do posterior é computacionalmente proibitiva para conjuntos de dados não-triviais. Uma análise GTR de 100 táxons envolve ao menos 205 parâmetros. Métodos de Cadeia de Markov Monte Carlo (MCMC) baseados no algoritmo Metropolis-Hastings \parencite{metropolis1953,hastings1970} fornecem uma alternativa tratável amostrando árvores proporcionalmente às suas probabilidades posteriores.
+
+A razão de aceitação entre uma árvore corrente $T$ e uma árvore proposta $T^*$ é:
+
+$$\alpha = \min\left(1, \frac{\pi(T^{*})}{\pi(T)}\right)$$
+
+onde $\pi(T) = p(\theta) p(T|\theta) p(t_T|\theta, T) p(D|\theta, T, t_T)$ é o numerador do posterior. A razão cancela a probabilidade marginal de dados (o denominador do posterior completo), que é difícil de computar diretamente.
+
+\subsubsection{Metropolis-MCMC Acoplado (MC$^3$)}
+
+A estratégia mais comumente usada é Metropolis-MCMC acoplado (MC$^3$) \parencite{geyer1991}. Múltiplas cadeias rodam em paralelo, cada aquecida a uma temperatura diferente. A cadeia fria (cadeia 0) converge ao posterior; cadeias mais quentes exploram espaço de parâmetros mais amplamente. Cadeias trocam estados periodicamente de acordo com uma segunda razão de aceitação:
+
+$$\alpha = \min\left(1, \frac{\pi_i(T_j) \pi_j(T_i)}{\pi_i(T_i) \pi_j(T_j)} \right)$$
+
+O cronograma de aquecimento é:
+
+$$\pi_j(T) \propto \pi_0(T)^{\frac{1}{1+\lambda(j-2)}}, \quad \lambda > 0$$
+
+\section{Limites de Interpretação de Resultados}
+
+\subsection{Inconsistência Estatística de Parcimônia: A Zona de Felsenstein}
+
+A motivação original para MV em sistemática foi a inconsistência estatística de parcimônia sob certas combinações de parâmetros \parencite{felsenstein1978}. Em uma árvore de quatro táxons onde ramos levando aos táxons $A$ e $B$ são longos (probabilidade de mudança $p$) enquanto o ramo interno e os ramos para $C$ e $D$ são curtos (probabilidade de mudança $q$), parcimônia favorece a topologia incorreta ($AC|BD$) quando:
+
+$$p^2 \geq q(1-q)$$
+
+A região do espaço de parâmetros satisfazendo esta desigualdade é a ``Zona de Felsenstein'' de inconsistência \parencite{wheeler2012}.
+
+\subsection{Viés Anterior de Clado e Probabilidades Posteriores de Clado}
+
+Uma limitação interpretativa crítica da filogenética bayesiana é que uma priori uniforme sobre topologias de árvore não induz uma distribuição uniforme sobre clados de diferentes tamanhos. A probabilidade priori de um clado de tamanho $m$ em uma árvore com $n$ folhas é \parencite{wheeler2012}:
+
+$$\Pr(c_m) = \frac{\left(\prod_{i=2}^{m} (2i-3)\right) \cdot \left(\prod_{i=m+1}^{n} (2i-2m-1)\right)}{\prod_{i=2}^{n} (2i-3)}$$
+
+Pickett e Randle (2005) primeiro demonstraram isto empiricamente. Steel e Pickett (2006) posteriormente provaram que é impossível construir uma priori sobre topologias que induza uma priori uniforme sobre clados. A influência deste viés pode ser extrema: para árvores de 50 táxons, a razão de probabilidade priori entre clados de tamanhos 2 e 25 pode alcançar um fator de $10^{13}$ \parencite{wheeler2012}.
+
+Goloboff e Pol (2005) ilustraram uma consequência particularmente patológica: um táxon com dados completamente faltantes pode ser colocado especificamente em uma árvore (com 55\% de probabilidade de clado posterior) unicamente por causa deste viés anterior, mesmo embora todos seus posicionamentos tenham probabilidade posterior idêntica sob os dados. Yang (2006) estendeu este exemplo para mostrar que valores de suporte de clado aproximando-se a 1 podem ser gerados para grupos ausentes da árvore verdadeira.
+
+Estes resultados têm uma implicação prática direta: probabilidades posteriores de clado de análise bayesiana não podem ser interpretadas diretamente como medidas de suporte filogenético.
+
+\section{Avanços Recentes}
+
+\subsection{Modelos Ocultos de Markov para Análise de Sequência}
+
+Um avanço significativo sobre modelos simples de substituição de Markov é o Modelo Oculto de Markov (MOM), que adiciona uma camada de estados latentes não-observados \parencite{wheeler2012}. Em um MOM, uma sequência de observações é gerada por uma sequência de estados ocultos, cada um dos quais emite observações de acordo com uma probabilidade de emissão e transições para outros estados de acordo com uma probabilidade de transição. A probabilidade de uma sequência $x$ dado um caminho de estado $\pi$, probabilidades de transição $t$, e probabilidades de emissão $e$ é:
+
+$$p(x, \pi|t, e) = p(\pi_0) e_{\pi_0, x_0} \cdot \prod_{i=1}^{n-1} t_{\pi_{i-1}, \pi_i} e_{\pi_i, x_i}$$
+
+Três algoritmos canônicos endereçam as três questões fundamentais de análise de MOM \parencite{wheeler2012}:
+
+\begin{enumerate}
+    \item \textbf{Algoritmo de Viterbi} (Viterbi, 1967): identifica o caminho de estado oculto mais provável $\pi^* = \arg\max_\pi p(x, \pi|t, e)$ usando programação dinâmica em tempo $O(k^2 n)$ para $k$ estados e $n$ observações.
+
+    \item \textbf{Algoritmo Forward-Backward}: computa a probabilidade posterior de cada estado em cada posição usando o produto de probabilidades forward e backward condicionado na probabilidade total de sequência.
+
+    \item \textbf{Algoritmo de Baum-Welch} (Baum et al., 1970): estima parâmetros de transição e emissão iterando o algoritmo Forward-Backward em sequências de treinamento até a melhoria em probabilidade de sequência cair abaixo de um limiar.
+\end{enumerate}
+
+MOMs foram aplicados a alinhamento de sequências pairwise e múltiplos através de MOMs de perfil \parencite{krogh1994}, que modelam famílias de sequências alinhadas com probabilidades de emissão e transição específicas de posição. MOMs de perfil são largamente usados para identificação de família de gene e detecção de motivo funcional.
+
+\subsection{Alinhamento de Sequência Baseado em Verossimilhança}
+
+O reconhecimento que alinhamento de sequência e inferência filogenética devem ser realizados conjuntamente sob um modelo probabilístico representa um avanço conceitual maior. A recursão de alinhamento pairwise sob o modelo JC69+Gaps usa o marco Needleman-Wunsch modificado para somar probabilidades ao invés de minimizar custos \parencite{wheeler2012}:
+
+$$\mathrm{cost}[i][j] = \log\left( e^{-(\mathrm{cost}[i-1][j-1] + \sigma_{i,j})} + e^{-(\mathrm{cost}[i-1][j] + \sigma_{\mathrm{indel}})} + e^{-(\mathrm{cost}[i][j-1] + \sigma_{\mathrm{indel}})} \right)$$
+
+Wheeler (2012) enfatiza a distinção entre \textit{verossimilhança dominante} (o alinhamento único melhor, análogo a MVP) e \textit{verossimilhança total} (a soma sobre todos os alinhamentos, análoga a MVM). O alinhamento dominante pode representar tão pouco quanto um terço da verossimilhança total, sublinhando a importância desta distinção para inferência downstream.
+
+A abordagem de Otimização Direta (DO) de Wheeler (1996, 2006) estende este marco pairwise para o Problema de Alinhamento de Árvore (PAA), onde sequências medianas e topologias de árvore são co-otimizadas sob MV.
+
+\subsection{Modelos de Indel de Nascimento-Morte}
+
+Os modelos TKF91 e TKF92 de Thorne et al. (1991, 1992) representam o tratamento mais mecanisticamente explícito de indels. Estes modelos acoplam um processo de nascimento (taxa de inserção $\lambda$) e morte (taxa de deleção $\mu$) com modelos de substituição de quatro nucleotídeos. Implementações de PAA bayesiana usando TKF91/92 incluem BEAST (Lunter et al., 2005) e BaliPhy (Redelings e Suchard, 2005). O custo computacional é proibitivo: Wheeler (2012) nota que BaliPhy requer centenas de horas em um computador pessoal para analisar 12 sequências proteicas de comprimento 400.
+
+\section{Aprendizado de Máquina em Seleção de Modelo de Substituição}
+
+\subsection{Motivação para Abordagens de AM}
+
+O custo computacional de seleção de modelo baseada em verossimilhança é substancial. Métodos de aprendizado de máquina (AM) podem ``aprender relações complexas de dados de entrada sem calcular verossimilhanças,'' e isto ``facilita a aplicação de aprendizado de máquina a modelos complexos, especialmente cenários nos quais inferência estatística e bayesiana padrão pode ser intratável'' \parencite{mo2024}.
+
+\subsection{Florestas Aleatórias e Redes Neurais Profundas}
+
+ModelTeller (Abadi et al., 2020) usa um regressor de floresta aleatória (FA) treinado em mais de 50 estatísticas sumárias. Estas estatísticas são amplamente categorizadas em quatro grupos: propriedades do alinhamento em si, propriedades de uma aproximação de árvore baseada em distância, parâmetros estimados sob um modelo de substituição rico em parâmetros, e métricas de similaridade de sequência dentro de subconjuntos de táxons. O regressor FA classifica 24 modelos de substituição de nucleotídeos candidatos de acordo com sua precisão predita para estimação de comprimento de ramo.
+
+ModelRevelator (Burgstaller-Muehlbacher et al., 2023) toma uma abordagem diferente. Usa duas redes neurais profundas independentes para realizar seleção de modelo sem calcular verossimilhanças ou reconstruir árvores. A primeira rede, NNmodelfind, é uma rede neural residual que toma como entrada um conjunto de estatísticas sumárias computadas de alinhamentos pairwise. Seleciona entre seis modelos de substituição de nucleotídeos variando em complexidade de JC a GTR. A segunda rede, NNalphafind, é um LSTM bidirecional que toma perfis de composição de base como entrada e prediz se heterogeneidade de taxa deve ser incorporada e, se assim, estima o parâmetro $\alpha$ da distribuição Gamma.
+
+\subsection{Codificação Direta de Alinhamento}
+
+Uma alternativa a estatísticas sumárias é codificar alinhamentos diretamente como matrizes numéricas e alimentá-los em redes neurais com vieses indutivos apropriados. Para árvores de quatro táxons, redes neurais convolucionais (RNCs) foram aplicadas a alinhamentos codificados como inteiros ou one-hot-encoded. Burgstaller-Muehlbacher et al. (2023) mostraram que RNCs analisando imagens de alinhamentos de nucleotídeos podem realizar comparável a predição de modelo baseada em MV.
+
+Mo et al. (2024) notam que Phyloformer (Nesterenko et al., 2022), que usa mecanismos de atenção própria, acomoda tamanhos de entrada variáveis através de design de rede cuidadoso. Esta abordagem oferece um caminho para redes que podem aceitar alinhamentos de comprimento e número de táxons arbitrários enquanto preservam a riqueza representacional de codificação de alinhamento direto.
+
+\section{Redes Neurais de Proteína e Modelos de Linguagem}
+
+\subsection{Modelos de Linguagem de Proteína}
+
+Modelos de linguagem grande (MLGs) treinados em sequências de proteína representam uma abordagem fundamentalmente diferente a codificar informação evolutiva. Modelos de linguagem de proteína (MLPs) tais como ESM-2 e ProtTrans tratam sequências de aminoácidos como sentença em uma linguagem molecular. Eles aprendem dependências estatísticas entre posições de aminoácidos de milhões de sequências, capturando implicitamente restrições co-evolucionárias, contatos estruturais, e conservação evolutiva \parencite{valentini2023}.
+
+Diferentemente de modelos de substituição tradicionais, MLPs não impõem uma estrutura markoviana explícita no processo de substituição. Ao invés, aprendem uma representação de alta-dimensão de espaço de sequência que reflete a distribuição real de sequências de proteína naturais.
+
+Lupo et al. (2022) mostraram que modelos de linguagem de proteína treinados em alinhamentos de sequências múltiplas (ASMs) aprendem relações filogenéticas. Este achado implica que os mecanismos de atenção nestes modelos codificam informação sobre relacionamento evolutivo. Mo et al. (2024) citam este resultado no contexto de estratégias alternativas para representar alinhamentos, notando que modelos de linguagem podem produzir ``redes que podem aceitar tamanhos de entrada variáveis, e são capazes de incorporar relações entre sítios e linhagens simultaneamente.''
+
+\subsection{Phyloformer e Arquiteturas de Atenção}
+
+Phyloformer (Nesterenko et al., 2022) usa atenção própria para inferir distâncias evolutivas pairwise de sequências de aminoácido alinhadas. O modelo codifica pares de sequências através de um mecanismo de atenção que alterna entre atenção no nível de sítio (compartilhando informação através de sítios dentro de cada par) e atenção no nível de par (compartilhando informação através de pares de sequência dentro de cada sítio).
+
+\section{Conclusão}
+
+Modelos de substituição ocupam um papel central em reconstrução filogenética a partir de dados moleculares. Sua fundação teórica situa-se no processo Markov reversível no tempo geral, do qual todos os modelos nomeados são derivados como casos especiais. Implementação requer ambos a computação eficiente de verossimilhanças de árvore via algoritmos de poda e critérios robustos de seleção de modelo que penalizem sobreparametrização. Inferência bayesiana adiciona distribuições prioris sobre todos os parâmetros do modelo, exigindo justificação cuidadosa daquelas prioris e avaliação crítica dos resumos posteriores resultantes.
+
+As limitações interpretativos são substanciais. Probabilidades posteriores de clado estão sujeitas a viés anterior não-uniforme que pode produzir conclusões topológicas fortemente apoiadas mas errôneas. A Zona de Felsenstein de inconsistência de parcimônia motiva análise de MV, mas MV em si não é imune a especificação incorreta de modelo. O tratamento de indels e a escolha de modelo de substituição ambos carregam consequências significativas downstream para inferência.
+
+Avanços recentes centram em modelos probabilísticos mais realistas e abrangentes: MOMs para alinhamento de sequência, modelos de indel de nascimento-morte, extensões a rearranjo genômico e redes filogenéticas, e aplicações de aprendizado de máquina e modelos de linguagem para seleção de modelo e distância estimada. Estes desenvolvimentos expandem o escopo de inferência baseada em modelo enquanto simultaneamente aumentam demandas computacionais. A tensão fundamental entre realismo biológico e tratabilidade computacional permanece o desafio definidor do campo.
+
+\clearpage
+\begin{destaque}
+\textbf{Roteiro de Revisão --- Capítulo 3}
+\begin{enumerate}
+    \item Matriz $Q$ de Tavaré (1986): $Q_{ij}=R_{ij}\pi_j$ ($i\neq j$); $P_{ij}(t)$ via decomposição de autovalores de $Q$ \parencite{tavare1986,yang1994}.
+    \item Hierarquia de modelos: JC69 (0 parâmetros livres) $\to$ K2P (transição/transversão) $\to$ HKY85 ($\pi$ desiguais) $\to$ GTR (6 taxas, 4 freq.) \parencite{swofford1996}.
+    \item Variação de taxa: sítios invariáveis ($I$) + Gamma discreta ($\alpha$, média $=1$); GTR$+I+\Gamma$ é modelo empírico padrão.
+    \item JC69+Gaps (5 estados): $P_{ij}(t)=\frac{1}{5}-\frac{1}{5}e^{-\mu t}$ ($i\neq j$); indels como eventos atômicos \parencite{wheeler2006}.
+    \item Modelos nascimento--morte TKF91/92 (Thorne et al., 1991): acoplam inserção ($\lambda$) / deleção ($\mu$) com substituição; mecanisticamente explícitos mas computacionalmente caros.
+    \item Algoritmo de poda de Felsenstein: $L_i(x)=\left(\sum_{x_j}p_{x_i,x_j}(t_j)L_j(x_j)\right)\!\times\!\left(\sum_{x_k}p_{x_i,x_k}(t_k)L_k(x_k)\right)$; assume i.i.d.\ de caracteres.
+    \item MCMC / MC$^3$ (Metropolis-coupled): cadeia fria converge ao posterior; cadeias quentes exploram; troca por $\alpha=\min(1,\pi_i(T_j)\pi_j(T_i)/\pi_i(T_i)\pi_j(T_j))$.
+    \item Seleção de modelo: TRV ($\chi^2$), AIC ($-2\log l+2p$), BIC ($-2\log l+p\log n$); Abadi et al.\ (2019): seleção afeta comprimentos de ramo mais que topologia.
+    \item Zona de Felsenstein: parcimônia inconsistente quando $p^2\geq q(1-q)$ (ramos longos atraindo).
+    \item Viés anterior de clado: priori uniforme sobre topologias $\neq$ priori uniforme sobre clados; razão priori entre clados de tamanhos 2 e 25 pode atingir $10^{13}$ (Steel \& Pickett, 2006).
+    \item Avanços recentes: MOMs (Viterbi, Forward-Backward, Baum-Welch), alinhamento baseado em verossimilhança (dominante vs.\ total), modelos de linguagem de proteína (ESM-2, Phyloformer).
+\end{enumerate}
+\end{destaque}
+
+\clearpage
+
+\printbibliography[heading=subbibliography,title={Referências}]
+

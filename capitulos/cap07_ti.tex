@@ -1,0 +1,211 @@
+
+\chapter{Tecnologia da Informação Aplicada a Problemas Filogenéticos}
+
+\section*{Resumo}
+
+A inferência filogenética --- a reconstrução de relações evolutivas entre organismos --- foi profundamente moldada por avanços em tecnologia da informação desde sua formalização como disciplina computacional na década de 1960. Esta revisão examina a interação histórica entre hardware de computação, design de software, escolha de linguagens de programação e metodologia filogenética. Começando com as primeiras implementações de algoritmos de parcimônia e verossimilhança em computadores mainframe, a narrativa traça o desenvolvimento de pacotes de software seminais (PHYLIP, Hennig86, PAUP*, POY, TNT, MrBayes, RAxML, BEAST, IQ-TREE e PhyG), a revolução MCMC bayesiana do início dos anos 2000 e o desafio contínuo de dimensionar análises para conjuntos de dados em escala genômica. Debates centrais --- incluindo parcimônia versus verossimilhança, árvores versus redes e a busca por um critério de optimalidade unificado --- são examinados ao lado dos obstáculos computacionais que os limitam. Três contribuições recentes de Wheeler e colaboradores são utilizadas como estudos de caso: o software PhyG para análise de grafos filogenéticos (\textcite{wheeler2024a}), amostragem de Thompson para otimização adaptativa de busca (\textcite{wheeler2024}), e o critério de Comprimento Mínimo de Descrição Filogenética (PMDL) (\textcite{wheeler2025}). A revisão conclui identificando obstáculos persistentes não resolvidos, incluindo a dureza NP da busca em árvores, a incomputabilidade da complexidade algorítmica, a dificuldade em aproximar tradições analíticas cladísticas e baseadas em modelos, e o papel emergente de aprendizado de máquina em filogenética.
+
+\textbf{Palavras-chave:} filogenética, complexidade computacional, busca heurística, redes filogenéticas, comprimento mínimo de descrição, MCMC, verossimilhança máxima, software
+
+\section{Introdução}
+
+A filogenética computacional nasceu de uma síntese entre biologia evolutiva e ciência da computação. Antes da década de 1960, a reconstrução filogenética era predominantemente manual, baseada em características morfológicas e análise de padrões comparativos. Os problemas eram pequenos --- tipicamente dezenas de táxons --- e podiam ser resolvidos por inspeção visual ou cálculos manuais. As primeiras contribuições de Hennig (1950), Remane (1952) e Mayr e Linsley (1954) estabeleceram princípios conceituais, mas sem a velocidade computacional para explorá-los sistematicamente.
+
+A formalização matemática inicial veio de Edwards e Cavalli-Sforza (1964), que aplicaram métodos de máxima verossimilhança a dados genéticos, e de Fitch e Margoliash (1967), que desenvolveram o método da evolução mínima. No entanto, a adoção ampla de métodos computacionais nas análises filogenéticas aguardava pela disponibilidade de software acessível. O catalisador foi Felsenstein (1973), cujo programa PHYLIP (Inferência Filogenética Por Máxima Verossimilhança) e sua sequência de desenvolvimentos forneceram implementações computavelmente viáveis de parcimônia e verossimilhança em mainframes e, mais tarde, em computadores pessoais.
+
+Este capítulo examina a história do design de software filogenético, os debates metodológicos que moldaram as escolhas de implementação, e os obstáculos computacionais que permanecem não resolvidos. O foco está em como tecnologia da informação --- hardware, linguagens de programação e técnicas de busca --- facilitou ou limitou os avanços metodológicos em filogenética.
+
+\section{Panorama Histórico do Software Filogenético}
+
+\subsection{A Era Inicial: Mainframes e o Nascimento de PHYLIP (1973--1985)}
+
+O PHYLIP (\textit{PHYLogeny Inference Package}) de Felsenstein, lançado em 1973 com atualizações significativas em 1978 e 1985, foi o primeiro software filogenético verdadeiramente portável e extensível. Escrito em FORTRAN e depois convertido para C, PHYLIP rodava em mainframes (UNIX, VMS) e, crucialmente, em computadores pessoais quando estes se tornaram disponíveis. A arquitetura modular --- com programas separados para parsimônia (PARS), verossimilhança (DNAML, PROML), distância (NEIGHBOR) e desenho de árvores (DRAWTREE) --- estabeleceu um padrão de design que persiste até hoje.
+
+A genialidade de PHYLIP foi dupla: (1) implementou algoritmos matematicamente rigorosos mas computacionalmente demandantes em linguagem eficiente (C), permitindo aplicação a dados de um tamanho que antes era intratável; e (2) forneceu uma interface de usuário consistente e bem documentada que democratizou a análise filogenética. Pesquisadores sem experiência em programação poderiam agora executar análises complexas.
+
+A limitação de PHYLIP era sua busca em árvores. O algoritmo de parcimônia adotado (`fitch' originalmente, depois refinamentos de busca de ramo-e-limite) era enumerativo e, consequentemente, exponencial no número de táxons. Para dados com mais de 20--30 táxons, a busca exaustiva se tornava computacionalmente proibitiva. Métodos heurísticos (adição sequencial aleatória, busca de vizinhos próximos) foram adotados para acelerar, mas sempre com o custo de possível subotimalidade.
+
+\subsection{Proliferação de Software Especializado (1985--2000)}
+
+Os anos 1980 e 1990 viram uma explosão de novos programas, cada um otimizado para um conjunto diferente de critérios e dados:
+
+\begin{itemize}
+\item \textbf{PAUP* (Phylogenetic Analysis Using Parsimony)} \parencite{swofford1993}: O sucessor comercial intelectual de PHYLIP, desenvolvido por David Swofford. PAUP* implementou algoritmos de busca avançados (busca de ramo-e-limite com poda eficiente, busca de vizinhos próximos com múltiplos pontos de partida) e foi o primeiro para integrar parcimônia e máxima verossimilhança em uma única plataforma. Sua interface gráfica e linguagem de comandos poderosa tornaram-no padrão de ouro para filogenética molecular até o surgimento de MrBayes. A desvantagem: PAUP* era comercial (licença paga) e, por um tempo, a comunidade filogenética foi dividida entre usuários de PHYLIP (grátis, aberto) e PAUP* (pago, mais rápido).
+
+\item \textbf{HENNIG86 e TNT} \parencite{goloboff2008}: Originalmente desenvolvido por James Farris em 1986 e baseado no programa HENNIG de Farris, HENNIG86 era otimizado especificamente para parcimônia e enfatizava algoritmos de busca implícita de enumeração. Seu sucessor, TNT (Tree analysis using New Technology) de Goloboff et al., revolucionou a busca em parcimônia com a implementação de buscas de ramo-e-limite eficiente com poda de custos críticos e uso inteligente de cache de memória para explorar iterativamente a vizinhança de soluções atuais. TNT permanece entre os buscadores de parcimônia mais rápidos e é o padrão para estudos de dados com muitos táxons (>500).
+
+\item \textbf{POY (Phylogenetic Analysis Using Parsimony)} \parencite{wheeler2001}: Um programa distinto voltado para dados que não são alinhados a priori, particularmente sequências de DNA e proteínas onde o alinhamento é incerto. POY utilizava buscas simultâneas em espaço de alinhamento e de árvore, tratando alinhamento como um estado de busca dinâmico variável, não fixo. Essa abordagem foi computacionalmente muito mais cara do que alinhamento fixo + busca em árvore, mas oferecia vantagem teórica de evitar artefatos de alinhamento inicial.
+
+\item \textbf{RAxML (Randomized Axelerated Maximum Likelihood)} \parencite{stamatakis2006}: Lançado em 2006 por Alexandros Stamatakis, RAxML foi um divisor de águas. Implementou busca em máxima verossimilhança com heurísticas de rápida convergência (busca de ramo-e-limite, busca de vizinhos próximos) e, crucialmente, paralelização eficiente para sistemas de memória distribuída (MPI). RAxML poderia rodar em clusters HPC e dimensionar para centenas de cores. Seu algoritmo de busca rápida (com frequente avaliação de função de verossimilhança) e paralelização de permutação de ramos tornaram-no o padrão de fato para análises de verossimilhança em larga escala na era pós-2006. RAxML é escrito em C com extensões MPI, demonstrando como design cuidadoso pode exprimir paralelismo do hardware.
+
+\item \textbf{BEAST (Bayesian Evolutionary Analysis by Sampling Trees)} \parencite{drummond2007}: Representando um paradigma fundamentalmente novo, BEAST era especializado em análise bayesiana de dados hierárquicos, particularmente aqueles com incerteza de datação e com múltiplas linhagens. O software implementou MCMC (Cadeias de Markov Monte Carlo) para amostrar a distribuição posterior conjunta de árvores e parâmetros de modelo. Sua inovação arquitetural foi permitir relajação de priors flexíveis, modelos de substituição complexos, e estruturas de dados hierárquicas (data de calibração, múltiplas loci, múltiplos indivíduos por espécie). BEAST introduziu um novo paradigma computacional: ao invés de procurar por uma árvore ótima global (como em parcimônia ou verossimilhança), MCMC amostrava a distribuição posterior, e a incerteza era capturada naturalmente.
+
+\end{itemize}
+
+\subsection{A Revolução Bayesiana e MCMC (2000--2015)}
+
+MrBayes \parencite{ronquist2003}, desenvolvido por Fredrik Ronquist e John Huelsenbeck, foi o catalisador para adoção generalizada de métodos bayesianos em filogenética molecular. MrBayes implementou MCMC com propostas de soluções inteligentes para o problema de exploração em espaço de árvores (topologia + comprimentos de ramo + parâmetros de modelo). O algoritmo de Metropolis-Hastings foi combinado com movimentos na árvore bem calibrados (movimento de resecção-reconexão) que melhoravam a mistura das cadeias.
+
+A revolução bayesiana teve implicações computacionais profundas. Diferentemente de busca heurística (que tenta encontrar um pico), MCMC tenta amostrar a vizinhança de muitos picos, explorando o espaço de parâmetro de forma mais exaustiva. Isso geralmente exige mais iterações para convergência --- não raramente cadeias com 1 a 10 milhões de gerações. A compensação era que a incerteza filogenética era capturada naturalmente: a distribuição posterior das árvores representava incerteza tanto de análise estocástica quanto de dados.
+
+A desvantagem computacional de MCMC era óbvia: uma análise bayesiana levava tipicamente 10--100$\times$ mais tempo de CPU do que uma análise de máxima verossimilhança comparável, porque o algoritmo tinha de explorar mais do espaço. Para datasets com centenas ou milhares de táxons, análises bayesianas se tornavam impraticáveis em máquinas de processador único. Paralelização de MrBayes em sistemas MPI ajudou, mas não resolveu completamente o problema.
+
+\subsection{Software Moderno: Paradigmas Eficientes (2015--Presente)}
+
+As limitações computacionais de métodos bayesianos complexos, combinadas com a revolução de dados (sequenciamento de próxima geração produzindo milhões de loci), impulsionaram uma nova onda de otimizações.
+
+\textbf{IQ-TREE (Inferred Quotient Tree)} \parencite{minh2020}: Desenvolvido por Bui Quang Minh e colaboradores, IQ-TREE implementou um conjunto de inovações:
+
+\begin{enumerate}
+\item Algoritmo UFBoot de seleção de modelo rápido que testa modelos de substituição sem reespecificar a árvore entre testes, economizando iterações de otimização.
+\item Busca em espaço de modelo com critérios de informação (BIC, AICc) que permitiam seleção de modelo automática.
+\item Algoritmo de cálculo de suporte rápido (aBayes, aLRT, SH-aLRT) que evitava reamostragem.
+\item Paralelização embaraçosamente paralela de análise de múltiplos loci (file-by-file parallelism).
+\item Compilação SIMD (instruções SIMD como AVX2, AVX512) que vetorizavam operações de verossimilhança críticas.
+\end{enumerate}
+
+IQ-TREE rapidamente se tornou o padrão de ouro para análises de verossimilhança filogenética em conjuntos de dados genômicos.
+
+\textbf{RAxML-NG} \parencite{kozlov2019}: Uma reescrita moderna do RAxML clássico, com código refatorado para eficiência de cache, suporte nativo para SIMD avançado (AVX3), e API modular permitindo integração com frameworks de fluxo de trabalho (Nextflow, Snakemake). RAxML-NG mantém o status de RAxML como um dos buscadores de máxima verossimilhança mais rápidos.
+
+\textbf{BEAST 2} \parencite{bouckaert2019}: Uma reescrita completa de BEAST com novo motor MCMC, novos operadores propostos para melhor mistura, e, crucialmente, integração com a biblioteca BEAGLE (Ayres et al., 2019) para cálculo acelerado de verossimilhança em GPU.
+
+\textbf{PhyG} \parencite{wheeler2024a}: Um software inovador para análise de grafos filogenéticos, permitindo representação explícita de eventos de reticulação (hibridação, transferência lateral) que não se ajustam ao modelo padrão de árvore. PhyG implementa busca em espaço de grafo (altamente combinatorialmente complexa) usando heurísticas sofisticadas incluindo amostragem de Thompson.
+
+\section{Debates Centrais Moldados pela Computação}
+
+\subsection{Parcimônia Versus Verossimilhança}
+
+Um dos debates mais antigos em filogenética é se parcimônia (minimizando mudanças evolutivas) ou verossimilhança (maximizando probabilidade dos dados sob um modelo de evolução) é metodologicamente preferível. Este debate tem raízes teóricas profundas, mas também limitações computacionais.
+
+Parcimônia é computacionalmente mais simples: o algoritmo de Fitch de programação dinâmica \parencite{fitch1971} calcula parcimônia em tempo $O(n \cdot m)$ para $n$ táxons e $m$ caracteres. Encontrar a árvore de parcimônia mínima é NP-duro, mas heurísticas de busca rápida (busca de ramo-e-limite em TNT, busca em vizinhança em PAUP*) podem encontrar bons mínimos locais em tempo razoável mesmo para dados grandes.
+
+Verossimilhança é computacionalmente mais cara. O algoritmo de Felsenstein de programação dinâmica para calcular verossimilhança também é $O(n \cdot m)$ por avaliação, mas cada movimento de busca em árvore exige uma reavaliação --- e para redes complexas de modelos de evolução (múltiplas partições, modelos de taxa variável, relógios moleculares), o fator constante é muito maior. Consequentemente, qualquer análise de verossimilhança que não seja um conjunto de dados pequeno exige paralelização significativa ou aceleração de hardware (GPU).
+
+A tendência histórica reflete custo computacional. Nos anos 1980--1990, parcimônia dominava porque dados eram pequenos, máquinas eram lentas, e parcimônia era rápida. Com o advento de máquinas mais rápidas, multiprocessadores e, depois, GPUs, verossimilhança e métodos bayesianos se tornaram praticáveis. Hoje, a maioria dos analistas preferem verossimilhança ou métodos bayesianos, porque capturam incerteza de modelo e dados de forma mais transparente, mas parcimônia persiste em contextos onde eficiência de busca é crítica (dados muito grandes, número alto de táxons).
+
+\subsection{Redes Versus Árvores}
+
+A maioria de filogenética clássica assume uma topologia de árvore: cada espécie moderna desce de um ancestral comum, e as relações formam uma estrutura de árvore bifurcadora. No entanto, reticulação (eventos em que linhagens não descendem em linha reta de um ancestral, mas ao invés recombinação, hibridação ou transferência lateral de genes ocorrem) viola o modelo de árvore.
+
+Métodos de rede filogenética como redes de quase-mediana \parencite{holland2004}, redes de splits \parencite{bryant2004}, e mais recentemente PhyG \parencite{wheeler2024a} representam explicitamente reticulação. A complexidade computacional de inferência de rede é substancialmente maior do que inferência de árvore. Espaço de busca em grafos reticulados é exponencialmente maior, e verossimilhança de grafos é computacionalmente mais cara de avaliar.
+
+A restrição computacional manteve métodos de árvore dominantes por décadas. Apenas recentemente, com hardware mais rápido e heurísticas melhores (Thompson sampling em PhyG), métodos de rede se tornaram práticos para datasets de tamanho moderado. Ainda assim, a maioria de filogenética prática permanece em árvores porque redes são computacionalmente caras e requerem dados muito maiores para resolução estatística de reticulação.
+
+\subsection{Critério de Optimalidade Unificado}
+
+Desde o nascimento de filogenética computacional, o campo debateu: qual critério de optimalidade é correto? Parcimônia minimiza passos evolutivos, máxima verossimilhança maximiza probabilidade sob um modelo, métodos bayesianos amostram distribuições posteriores. Cada um tem justificativa teórica, mas eles são teoricamente inconsistentes e frequentemente fornecem árvores diferentes.
+
+Uma abordagem recente é comprimento mínimo de descrição (MDL) \parencite{wheeler2025}, que formaliza a ideia de que a melhor hipótese filogenética é aquela que fornece a compressão mais eficiente dos dados --- intuitivamente, aquela que captura padrão com menos informação ad hoc. Para filogenética, PMDL (Phylogenetic Minimum Description Length) \parencite{wheeler2025} define um comprimento de descrição que inclui:
+
+\begin{equation}
+\text{PMDL} = \text{(compr. descri. árvore)} + \text{(compr. descr. dados | árvore)}
+\end{equation}
+
+Em princípio, PMDL unifica parcimônia (que minimiza passos) e verossimilhança (que minimiza comprimento de dados residual). A barreira computacional: calcular PMDL exige avaliar a complexidade algorítmica (Kolmogorov) do modelo, que é incomputável em geral. Aproximações heurísticas estão em desenvolvimento, mas PMDL permanece mais uma ideia conceitual do que um método prático de rotina.
+
+\section{Obstáculos Computacionais Não Resolvidos}
+
+\subsection{NP-Dureza da Busca em Árvores}
+
+O problema de encontrar a árvore de parcimônia mínima é NP-duro \parencite{graur1991}. Isso significa que nenhum algoritmo determinístico conhecido consegue resolver a problema em tempo polinomial para instâncias arbitrariamente grandes. Consequentemente, qualquer algoritmo de busca é heurístico: ele pode encontrar uma boa solução, mas não pode garantir otimalidade global.
+
+Isso tem implicações práticas profundas. Quando um analista executa uma análise de parcimônia e encontra $k$ árvores igualmente parcimoniosas, não há nenhuma garantia de que não existem árvores ainda mais parcimoniosamente ótimas fora do espaço de busca explorado. Diferentes pontos de partida, diferentes estratégias de busca, e diferentes parametrizações podem descobrir diferentes conjuntos de árvores ótimas.
+
+Para máxima verossimilhança, a situação é ainda pior: o problema de encontrar a árvore de máxima verossimilhança também é NP-duro (Chor e Tuller), e a função de verossimilhança é multimodal (muitos máximos locais). Heurísticas de busca como ramo-e-limite podem ficar presas em máximos locais. Métodos bayesianos (MCMC) têm a vantagem de exploração estocástica, mas convergência a distribuições posteriores verdadeiras é garantida apenas assintoticamente.
+
+\subsection{Incomputabilidade de Complexidade Algorítmica}
+
+Como mencionado acima, formalizar critérios de optimalidade unificados requer quantificar complexidade algorítmica dos dados (comprimento de descrição de Kolmogorov). No entanto, esta quantidade é incomputável em geral (teorema da parada de Turing). Isso coloca um limite fundamentalmente matemático em qualquer esquema de otimalidade que tente ser universal.
+
+A implicação: nenhum programa de filogenética de propósito geral pode computar uma verdadeira medida de ``melhoria'' universal de uma árvore sobre outra. Qualquer critério de otimalidade (parcimônia, verossimilhança, MDL aproximado) é por necessidade uma heurística ou aproximação parcial.
+
+\subsection{Quadro Conceitual: Cladística Versus Métodos Baseados em Modelos}
+
+Um debate profundo e ainda não resolvido é entre a tradição cladística (foco em sinapomorfias e análise de caracteres discretos) e métodos baseados em modelos (foco em modelos evolutivos probabilísticos de mudança de sequência). Essas tradições têm histórias e filósofos distintos, e seus princípios fundamentais às vezes estão em tensão.
+
+Do ponto de vista computacional, cladística clássica (análise de parcimônia de dados morfológicos) é computacionalmente mais simples: busca heurística em espaço discreto. Métodos baseados em modelos (análise de verossimilhança de sequências de DNA sob modelos de Markov) são mais complexos computacionalmente mas teoricamente mais rigorosos sobre incerteza de modelo.
+
+Uma ponte potencial é a que recentes software como IQ-TREE oferecem: seleção automática de modelo combinada com análise flexível de suporte que não assume um modelo específico. Mas fundamentalmente, os dois quadros conceptuais ainda não foram unificados em um framework teórico único.
+
+\subsection{Papel Emergente de Aprendizado de Máquina}
+
+Aprendizado de máquina (redes neurais profundas, métodos de ensemble) começou a ser aplicado a problemas filogenéticos:
+
+\begin{itemize}
+\item \textbf{Predição de alinhamento:} Redes neurais foram treinadas para prever alinhamentos ótimos direto de sequências brutas, contornando algoritmos de programação dinâmica clássicos.
+\item \textbf{Predição de topologia:} Arquiteturas gráficas de rede neural (graph neural networks, GNNs) podem ser treinadas em árvores conhecidas para prever topologia de dados nuevos.
+\item \textbf{Seleção de modelo:} Modelos de machine learning podem prever qual modelo de substituição é mais apropriado para um dataset dado, potencialmente mais rápido do que testes de razão de verossimilhança.
+\end{itemize}
+
+A vantagem: velocidade. Um modelo de rede neural treinado pode fazer predições em milissegundos, enquanto recálculos clássicos levam minutos. A desvantagem: interpretabilidade e rigor estatístico. Modelos de machine learning são frequentemente ``caixas pretas'' --- não está claro o que foi aprendido ou se o modelo extrapola bem para dados fora do domínio de treinamento. Para filogenética, onde dados são frequentemente únicos e sob pressão evolutiva desconhecida, extrapolação é arriscada.
+
+O papel futuro de aprendizado de máquina é provavelmente como ferramenta de aceleração de pilha (screening rápido de muitos modelos, predição de inicial estimates bons para otimização) antes de refinamento via métodos clássicos, em vez de substituição dos métodos clássicos.
+
+\section{Caso de Estudo: Contribuições Recentes de Wheeler e Colaboradores}
+
+Três contribuições recentes ilustram como design computacional contínua moldando filogenética moderna.
+
+\subsection{PhyG: Análise de Grafo Filogenético}
+
+\textcite{wheeler2024a} apresentaram PhyG, um software para inferência de grafos filogenéticos que representam reticulação explicitamente. A inovação computacional principal de PhyG é a implementação de amostragem de Thompson para exploração de espaço de grafo.
+
+A amostragem de Thompson é um algoritmo de exploração de bandidos multi-armados: na ausência de conhecimento prévio, distribui esforço de busca proporcionalmente àquela promessa de diferentes regiões de espaço de busca baseado em sucesso passado. Em contexto de busca filogenética, isso permite ao PhyG explorar grafos alternativos com estratégia de risco-recompensa adaptativa: regiões de espaço que têm produzido bons grafos recebem mais simulação, enquanto regiões menos promissoras recebem menos.
+
+\subsection{Thompson Sampling para Otimização Adaptativa}
+
+\textcite{wheeler2024} explorou amostragem de Thompson como estratégia geral para busca heurística em filogenética. A abordagem de Thompson é bem conhecida em aprendizado de máquina (contextual banditos, exploração-exploração de tradeoff), mas sua aplicação a busca em árvores filogenéticas é relativamente nova.
+
+A vantagem computacional: Thompson sampling é paralelizável. Diferentes threads ou processos podem manter cópias da distribuição de crenças sobre regiões promissoras de espaço de busca e explorar em paralelo, convergirem periódicamente para compartilhar conhecimento. Isso permite exploração de espaço de busca muito maior do que métodos seriais, e potencialmente encontrar mínimos globais melhores.
+
+\subsection{Comprimento Mínimo de Descrição Filogenética (PMDL)}
+
+\textcite{wheeler2025} formalizaram o critério de comprimento mínimo de descrição para filogenética (PMDL), buscando um critério de optimalidade unificado que concilie parcimônia e verossimilhança. PMDL captura a ideia de que a melhor hipótese filogenética é aquela que explica os dados com menor descrição total (menor complexidade do modelo + menor resíduo de dados).
+
+Implementação computacional de PMDL é desafiadora porque requer aproximações da complexidade algorítmica de modelos (Kolmogorov). Versões heurísticas estão em desenvolvimento, mas o impacto total permanece ser visto.
+
+\section{Discussão: Futuro de Software Filogenético}
+
+A história de software filogenético ilustra princípios gerais de design de software científico:
+
+\begin{enumerate}
+\item \textbf{Otimização de hardware importa:} A escolha de linguagem, paralelização e vetorização de código tem efeitos multiplicativos em desempenho. RAxML, IQ-TREE e PhyG todos otimizam agressivamente para hardware moderno (multicore, SIMD, GPU).
+
+\item \textbf{Restrições computacionais moldam metodologia:} Debates teóricos (parcimônia vs. verossimilhança, árvores vs. redes) não ocorrem em vácuo; praticidade computacional influencia qual método é aceito como padrão.
+
+\item \textbf{Arquitetura modular permite inovação:} PHYLIP estabeleceu o padrão de módulos especializados para diferentes tarefas (parsing, análise, visualização). Este design facilita adoção de novos algoritmos e permite que usuários compussuam análises personalizadas.
+
+\item \textbf{Abertura e reprodutibilidade:} Software de código aberto (PHYLIP, RAxML, IQ-TREE, MrBayes) com documentação completa e acesso ao código-fonte permitiu confiança, validação independente e estímulo de desenvolvimento comunitário. Em contraste, software comercial ou fechado muitas vezes não recebeu a mesma adoção ou inovação.
+
+\end{enumerate}
+
+A próxima geração de software filogenético provavelmente continuará a aproveitar aceleração de hardware (GPUs, TPUs), integração de machine learning para aceleração de pilha heurística, e designs modulares que permitem análises reproduzíveis e rastreáveis via sistemas de fluxo de trabalho (Snakemake, Nextflow). A unificação de critérios de optimalidade e a resolução de debates cladísticos vs. baseados em modelos provavelmente virão de pesquisa teórica antes de inovação computacional.
+
+\section{Conclusão}
+
+Filogenética computacional nasceu de síntese entre biologia evolutiva e ciência da computação. A história de seu desenvolvimento software é história de quatro décadas de otimização computacional, design algorítmico, e resolução de disputas metodológicas através da implementação. Os softwares seminais --- PHYLIP, PAUP*, TNT, RAxML, MrBayes, IQ-TREE, BEAST e PhyG --- cada um moldou a forma como filogenética moderna é praticada, e cada um refletiu compromissos entre rigor teórico, eficiência computacional e usabilidade.
+
+Obstáculos permanecem não resolvidos, particularmente NP-dureza de busca em árvores e a incomputabilidade de critérios ótimos universais. Esses não são deficiências de software particular ou hardware corrente, mas limitações matemáticas fundamentais. Progresso futuro provavelmente virá de síntese de abordagens --- combinando força computacional bruta (hardware melhor) com algoritmos refinados (heurísticas melhores) e, potencialmente, aprendizado de máquina como ferramenta de aceleração, mantendo sempre rigor estatístico e interpretabilidade.
+
+\clearpage
+\begin{destaque}
+\textbf{Roteiro de Revisão --- Capítulo 7}
+\begin{enumerate}\small
+    \item Cronologia de software: PHYLIP (Felsenstein, 1973, FORTRAN$\to$C) $\to$ HENNIG86/TNT (Farris/Goloboff, parcimônia) $\to$ PAUP* (Swofford, parcimônia+MV, comercial) $\to$ POY (Wheeler, alinhamento dinâmico) $\to$ MrBayes (Ronquist \& Huelsenbeck, MCMC bayesiano) $\to$ RAxML (Stamatakis, 2006, MPI) $\to$ BEAST (Drummond, 2007, MCMC hierárquico) $\to$ IQ-TREE (Minh, UFBoot, SIMD) $\to$ RAxML-NG $\to$ BEAST 2 (BEAGLE/GPU) $\to$ PhyG (Wheeler, grafos).
+    \item Parcimônia: algoritmo de Fitch $O(n\cdot m)$; busca NP-dura; TNT = buscador mais rápido ($>$500 táxons).
+    \item MV: algoritmo de Felsenstein $O(n\cdot m)$ por avaliação; fator constante muito maior que parcimônia; requer paralelização/GPU.
+    \item Revolução bayesiana (2000--2015): MrBayes implementou Metropolis-Hastings + movimentos de resecção-reconexão; 10--100$\times$ mais CPU que MV; MC$^3$ com cadeias quentes.
+    \item IQ-TREE: UFBoot, seleção de modelo automática (BIC/AICc), suporte rápido (aBayes, SH-aLRT), SIMD (AVX2/AVX-512), paralelismo por arquivo.
+    \item BEAGLE 3: biblioteca para cálculo de verossimilhança em GPU; speedup até 100$\times$; restrição = memória de GPU.
+    \item Redes filogenéticas: redes de quase-mediana \parencite{holland2004}, Neighbor-Net \parencite{bryant2004}, PhyG \parencite{wheeler2024a}; espaço de busca exponencialmente maior que árvores.
+    \item Thompson sampling (Wheeler, 2024): exploração adaptativa de espaço de busca (bandidos multi-armados); paralelizável; usado em PhyG.
+    \item PMDL (Wheeler \& Varón, 2025): critério de comprimento mínimo de descrição filogenética; unifica parcimônia e verossimilhança; barreira = incomputabilidade da complexidade de Kolmogorov.
+    \item Obstáculos não resolvidos: NP-dureza (nenhuma garantia de ótimo global), incomputabilidade de complexidade algorítmica, tensão cladística vs.\ baseada em modelos.
+    \item ML emergente: RNCs para predição de alinhamento/topologia/modelo; rápido mas ``caixa preta''; papel futuro = aceleração de pilha heurística.
+\end{enumerate}
+\end{destaque}
+
+\clearpage
+
+\printbibliography[heading=subbibliography,title={Referências}]
+
