@@ -1,0 +1,189 @@
+% ============================================================
+% Phylogenomics and Bioinformatics of Metazoans
+% ============================================================
+% LaTeX project for compilation on Overleaf
+% Author: Denis Jacob Machado
+% License: CC-BY-NC v4.0
+% ============================================================
+
+\documentclass[11pt,a4paper,openright,twoside]{book}
+
+% ---- Encoding and language ----
+% Compile with XeLaTeX on Overleaf (Menu -> Compiler -> XeLaTeX)
+% XeLaTeX reads UTF-8 natively: accents, Greek letters, and special
+% symbols work directly in the source code.
+\usepackage{fontspec}          % replaces inputenc + fontenc for XeLaTeX
+
+% ---- Mathematics ----
+% mathtools must be loaded BEFORE unicode-math
+\usepackage{amsmath,amsthm}
+\usepackage{mathtools}
+% Silence harmless warnings from unicode-math about mathtools commands
+\makeatletter
+\ExplSyntaxOn
+\msg_redirect_name:nnn{unicode-math}{colon-redefine}{none}
+\msg_redirect_name:nnn{unicode-math}{mathtools-overbracket}{none}
+\ExplSyntaxOff
+\makeatother
+\usepackage{unicode-math}      % Unicode mathematical symbols (after mathtools)
+% \bm is not needed with unicode-math; use \symbf{} for mathematical bold
+
+% ---- Language ----
+\usepackage{polyglossia}       % replaces babel for XeLaTeX
+\setdefaultlanguage[variant=american]{english}
+
+% ---- Fonts ----
+\setmainfont{Latin Modern Roman}
+\setsansfont{Latin Modern Sans}
+\setmonofont{Latin Modern Mono}
+\setmathfont{Latin Modern Math}
+\usepackage{microtype}
+
+% ---- Tables and figures ----
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{hologo}
+
+% ---- Layout ----
+\usepackage[top=2cm,bottom=2cm,left=2.5cm,right=2cm,headheight=24pt]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE]{\small\nouppercase{\leftmark}}
+\fancyhead[RO]{\small\nouppercase{\rightmark}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ---- References per chapter (biblatex + biber) ----
+\usepackage[
+  backend=biber,
+  style=authoryear-comp,
+  sorting=nyt,
+  maxcitenames=2,
+  maxbibnames=99,
+  uniquelist=false,
+  uniquename=init,
+  giveninits=true,
+  dashed=false,
+  refsection=chapter
+]{biblatex}
+
+% References file (shared between pt_br and en_us)
+\addbibresource{../references.bib}
+
+% ---- Hyperlinks ----
+\usepackage[
+  colorlinks=true,
+  linkcolor=blue!60!black,
+  citecolor=green!50!black,
+  urlcolor=blue!70!black
+]{hyperref}
+% cleveref removed: incompatible with polyglossia and not used in chapters
+
+% ---- Highlight blocks ----
+\usepackage[most]{tcolorbox}
+\newtcolorbox{revise}{
+  colback=blue!5!white,
+  colframe=blue!50!black,
+  fonttitle=\bfseries,
+  title=Chapter Review Outline,
+  sharp corners,
+  boxrule=0.5pt
+}
+
+% ---- Epigraph ----
+\usepackage{epigraph}
+
+% ---- Theorem environments ----
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[chapter]
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[chapter]
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}[chapter]
+
+% ============================================================
+\begin{document}
+
+% ---- Front matter ----
+\frontmatter
+
+% Title page
+\begin{titlepage}
+\centering
+\vspace*{3cm}
+{\Huge\bfseries Study Topics in Phylogenomics and Bioinformatics of Metazoans (Draft in Development)\par}
+\vspace{1.5cm}
+{\Large Denis Jacob Machado\par}
+\vspace{0.5cm}
+{\scriptsize
+    Phyloinformatics Lab (\url{https://phyloinformatics.com}), and\\
+    Department of Bioinformatics and Genomics $\cdot$ College of Computing and Informatics, and\\
+    Center for Intelligent Computing for Health and Environment Risk Prevention (CIPHER).\\
+    \textbf{University of North Carolina at Charlotte, Charlotte, North Carolina, U.S.A.}\\
+    ORCiD: \href{https://orcid.org/0000-0001-9858-4515}{0000-0001-9858-4515}.\\
+    \par
+}
+\vfill
+{\large 2026\par}
+\end{titlepage}
+
+% Copyright page
+\newpage
+\thispagestyle{empty}
+\vspace*{\fill}
+\noindent
+\textcopyright\ 2026 Denis Jacob Machado.\\[0.5em]
+This work is licensed under the Creative Commons
+Attribution-NonCommercial 4.0 International License (CC-BY-NC 4.0).\\[0.5em]
+\url{https://creativecommons.org/licenses/by-nc/4.0/}
+\vspace{2cm}
+
+% Table of Contents
+\tableofcontents
+
+% Preface
+\chapter{Preface}
+
+    This book brings together study material on phylogenomics and bioinformatics of metazoans, ranging from the theoretical-philosophical foundations of phylogenetic systematics to contemporary issues in artificial intelligence, Brazilian legislation, and computational infrastructure. The work is organized into eleven chapters that cover the main topics necessary for understanding and practicing large-scale phylogenomic reconstruction. These chapters correspond to the 11 items listed in the Call for Proposals EDITAL IB/AAcad/19/2025 on ``Phylogenomics and Bioinformatics of Metazoans'', published in the July 4, 2025 edition of the Official Gazette of the State of São Paulo.
+
+    The text emphasizes both the theoretical principles and practical aspects of implementation, including the mathematical formulation of probabilistic methods, the diversity of available molecular data, sequencing strategies, challenges imposed by repetitive elements, and computational infrastructure requirements. The final chapters address the emerging role of artificial intelligence in biomedical science and the legal and ethical aspects of genomic data use, with emphasis on Brazilian legislation and international frameworks.
+
+    Each chapter contains its own bibliographic references, which allows for independent consultation. The chapter order follows a logical progression from fundamentals to applications, but each chapter was written to be reasonably self-contained. A study guide is presented at the end of each chapter.
+
+\vspace{1cm}
+\begin{flushright}
+Denis Jacob Machado\\
+Charlotte, North Carolina, U.S.A., 2026
+\end{flushright}
+
+% ---- Main body ----
+\mainmatter
+
+\include{chapters/cap01_fundamentos}
+\include{chapters/cap02_probabilistica}
+\include{chapters/cap03_modelos}
+\include{chapters/cap04_tipos_dados}
+\include{chapters/cap05_rnaseq}
+\include{chapters/cap06_repetitivos}
+\include{chapters/cap07_ti}
+\include{chapters/cap08_hpc}
+\include{chapters/cap09_gestao_dados}
+\include{chapters/cap10_ia}
+\include{chapters/cap11_legal}
+
+% ---- Back matter ----
+\backmatter
+
+\chapter{Acknowledgments}
+
+    This book used artificial intelligence (AI) to translate original notes from English to Portuguese, for grammatical review in both languages, and to produce the \hologo{LaTeX} project code (Claude--Opus 4.6, Anthropic, \href{https://claude.ai/chats}{https://claude.ai/chats}). The project was compiled on Overleaf (\href{https://www.overleaf.com}{https://www.overleaf.com}).
+
+\end{document}

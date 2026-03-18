@@ -1,0 +1,186 @@
+\chapter{Repetitive Elements, Transposable Elements, and GC Content Bias}
+
+\section{Introduction}
+
+Repetitive sequences constitute a substantial and frequently underestimated fraction of eukaryotic genomes. In the human genome, approximately 50\% of the sequence is composed of repetitive elements \parencite{lander2001,dekonig2011}, with considerably higher proportions in many plant and insect organisms. These elements---including transposable elements, satellite DNA, and segmental duplications---present unique challenges and opportunities for phylogenomic studies. This chapter synthesizes definitions, evolutionary origins, obstacles posed for genomic analyses, and sequencing and bioinformatics strategies for dealing with them.
+
+\section{Definitions of Key Genomic Concepts}
+
+\subsection{Repetitive Elements}
+
+Repetitive elements (REs) are nucleotide sequences that occur in multiple copies throughout a genome. In eukaryotic organisms, estimates suggest that approximately 50\% of the human genome is composed of repetitive sequences \parencite{haubold2006}. At the broadest level, REs can be grouped by their dispersal patterns into two classes: tandem repeats, whose units are organized head-to-tail adjacent to one another, and interspersed repeats, whose units are distributed at different genomic locations.
+
+Tandem repeats include satellite DNA, minisatellites, and microsatellites (also called short tandem repeats, or STRs). Satellite DNA is found in pericentromeric, subtelomeric, and interstitial regions, forming constitutive blocks of heterochromatin essential for structures such as centromeres and telomeres. Interspersed repeats are predominantly transposable elements, which alone represent approximately 45\% of the human genome \parencite{ruizruano2023}.
+
+Functionally, some repetitive elements are essential for genome maintenance. Telomeric repeats TTAGGG protect chromosome ends, while $\alpha$-satellite repeats form the structural basis of centromeres. Beyond structural roles, REs contribute regulatory sequences including promoters, enhancers, splicing sites, and insulator elements that actively reshape cellular transcriptomes \parencite{rebollo2012,chuong2017,lu2020}.
+
+\subsection{Transposable Elements}
+
+Transposable elements (TEs) are a subset of repetitive elements defined by their capacity to change genomic position, or ``transpose.'' \textcite{mcclintock1950} first identified these elements in maize, and now TEs are recognized as nearly ubiquitous components of eukaryotic genomes and among the most abundant encoding sequences in nature \parencite{hayward2022,wells2020}.
+
+The most fundamental classification distinguishes two major classes based on transposition intermediates \parencite{wicker2007}. Class I elements, or retrotransposons, replicate through an RNA intermediate that is reverse-transcribed back to DNA before integration---a ``copy-and-paste'' mechanism. Class II elements, or DNA transposons, move directly as DNA through a ``cut-and-paste'' mechanism mediated by the enzyme transposase.
+
+Class I retrotransposons are further subdivided into long terminal repeat (LTR) retrotransposons, which are structurally related to retroviruses, and non-LTR elements, which include long interspersed nuclear elements (LINEs) and short interspersed nuclear elements (SINEs). In the human genome, the L1 family of LINEs constitutes approximately 17\% of the genomic sequence \parencite{finnegan1989}, while Alu elements---the most abundant SINEs---represent approximately 10--13\% \parencite{batzer2002,dewannieux2003}.
+
+TEs can be classified as autonomous, encoding their own transposition machinery, or non-autonomous, dependent on enzymatic products of other TEs for mobilization. SINEs, for example, do not encode their own reverse transcriptase and are mobilized in trans by L1 machinery.
+
+\subsection{Non-Coding Regions and ``Junk DNA''}
+
+Non-coding DNA refers to genomic sequences that do not encode proteins. In the human genome, protein-coding exons constitute only approximately 1.5--2\% of the total sequence, with the remaining 98--99\% being non-coding. The term ``junk DNA'' was formalized by \textcite{ohno1972}, who argued that large genomes inevitably accumulate sequences---passively propagated over evolutionary time---that do not encode proteins.
+
+It is important to distinguish between ``non-coding'' and ``non-functional,'' a confusion that has been a persistent source of debate, particularly following the ENCODE project \parencite{encode2012,doolittle2013,graur2013}. Non-coding DNA encompasses a broad array of functional elements, including genes for non-coding RNAs (rRNAs, tRNAs, snRNAs, snoRNAs, miRNAs, lncRNAs, piRNAs), regulatory sequences (promoters, enhancers, silencers, insulators), origins of replication, and structural elements such as centromeres and telomeres.
+
+True ``junk DNA'' in the rigorous evolutionary sense refers to sequences without demonstrated biological function, including the majority of pseudogenes and remnants of degraded transposons that evolve at neutral rates. The fraction of the genome under purifying selection---and therefore probably functional---is considerably smaller, perhaps 5--15\%.
+
+\subsection{GC Content Bias}
+
+The term ``GC content bias'' encompasses two related but distinct phenomena: a biological dimension concerning the non-uniform distribution of guanine (G) and cytosine (C) nucleotides across genomes, and a technical dimension concerning systematic errors introduced during high-throughput sequencing.
+
+\subsubsection{Biological Variation in GC Content}
+
+GC content---the proportion of guanine and cytosine bases in a DNA sequence---varies substantially both between and within genomes \parencite{benjamini2012}. In the human genome, GC content is distributed across successive stretches (isochores) that vary from approximately 35\% in GC-poor regions to approximately 60\% in GC-rich regions. Across species, genomic GC content varies from below 25\% to above 75\% and is shaped by a complex interplay of mutation, selection, recombination, and genetic drift.
+
+A major driver of GC content heterogeneity in eukaryotes is GC-biased gene conversion (gBGC), a DNA repair mechanism associated with recombination that preferentially fixes G/C alleles over A/T alleles at heterozygotic sites during meiosis \parencite{galtier2001,eyre-walker1993,duret2009,lassalle2015}. Because gBGC generates substitution patterns indistinguishable from those produced by positive selection favoring higher GC content, it can confound molecular evolutionary and phylogenetic analyses \parencite{romiguier2010}.
+
+The distribution of transposable elements correlates with GC content: SINEs such as Alu tend to accumulate in genomic regions rich in GC, while L1 LINEs are enriched in AT-poor regions \parencite{richard2008}.
+
+\subsubsection{Technical GC Bias in High-Throughput Sequencing}
+
+In the context of high-throughput sequencing, GC content bias refers to the systematic dependence between read coverage and GC content of sequenced fragments \parencite{dohm2008,chen2013,browne2020}. This effect is well documented on Illumina sequencing platforms, where the number of reads mapped to a genomic region depends considerably on its nucleotide composition, with both high-GC and high-AT fragments typically being underrepresented.
+
+Empirical evidence strongly implicates PCR amplification during library preparation as the primary source of this technical bias. The severity of GC bias varies across library preparation protocols and sequencing platforms.
+
+Mitigation strategies include PCR-free library preparation, use of additives such as betaine (for GC-rich regions) or trimethylammonium chloride (for GC-poor regions), selection of less-biased PCR polymerase mixtures, and computational correction methods applied post-sequencing.
+
+\section{Evolutionary Origins of Repetitive DNA}
+
+\subsection{Origins of Transposable Elements}
+
+The deep evolutionary origins of TEs remain debated. The conservation of an RNA recognition motif across various enzymes crucial for TE integration suggests pre-eukaryotic emergence of the central transposition machinery. However, whether TEs originated once in the last universal common ancestor, arose independently multiple times, or spread across lineages through horizontal transfer remains unresolved.
+
+Two factors complicate phylogenetic reconstruction of TE evolutionary history. First, many TE lineages have undergone horizontal transfer between even distantly related species \parencite{schaack2010}, decoupling TE phylogeny from host phylogenies. Second, TEs can exhibit modular or chimeric evolution, in which functional domains are exchanged between distinct superfamilies.
+
+\subsection{Non-LTR Retrotransposons: LINEs and SINEs}
+
+Long interspersed nuclear elements (LINEs) are autonomous non-LTR retrotransposons that encode the enzymatic machinery required for their own retrotransposition. LINE-1 (L1) elements are the dominant autonomous retrotransposon in mammalian genomes, comprising approximately 17\% of the human genome. L1 elements are ancient \parencite{malik2001}, with L1-like clades recognized across vertebrates.
+
+Short interspersed nuclear elements (SINEs) are non-autonomous retrotransposons that depend on enzymes encoded by LINEs for their mobilization \parencite{dewannieux2003}. SINEs are typically derived from small structural RNA genes. Most mammalian SINEs are derived from tRNAs, with the notable exception of Alu elements, which originated from the 7SL RNA gene that encodes the RNA component of the signal recognition particle. Alu elements are restricted to primates and arose approximately 65 million years ago through fusion of two monomeric precursors \parencite{batzer2002}.
+
+\subsection{DNA Transposons}
+
+DNA transposons constitute approximately 3\% of the human genome, with hAT and Mariner/Tc1 superfamilies predominating \parencite{cordaux2009}. Although their transposition is non-replicative, DNA transposons accumulated large numbers of copies through transposition during DNA replication and through homologous recombination-mediated repair of double-strand breaks at excision sites. In the human genome, all known DNA transposon families are considered molecular fossils, with no elements currently active.
+
+\subsection{Tandem Repeats: Satellites, Minisatellites, and Microsatellites}
+
+Satellite DNA are arrangements of sequences repeated in tandem that can span megabases without interruption, typically located in centromeric, pericentromeric, and subtelomeric chromosomal regions \parencite{garrido-ramos2017}. The term ``satellite'' derives from the observation that these sequences, due to their biased base composition, form distinct secondary bands in cesium chloride density-gradient centrifugation.
+
+Evolutionary origins of satellite DNA families are diverse and often lineage-specific \parencite{plohl2012}. Centromeric satellite arrays evolve rapidly, showing little sequence conservation between distantly related species despite conserved centromere function \parencite{henikoff2001,malik2009}.
+
+An intriguing hypothesis for the origin of centromeric repeats proposes that centromeres were derived from telomeres during early eukaryotic chromosome evolution. This model posits that linearization of an ancestral circular chromosome was accompanied by capture of retrotransposons at broken chromosome ends, with subsequent divergence of telomere-like internal repeats giving rise to proto-centromeric sequences.
+
+Satellite DNA undergoes concerted evolution \parencite{dover1982}, by which repetition units within a species are homogenized through recombinational mechanisms (unequal crossing over, gene conversion, rolling-circle amplification), producing low intraspecific but high interspecific sequence divergence.
+
+Microsatellites (also known as simple sequence repeats or short tandem repeats) consist of 1--6 bp motifs repeated in tandem, typically spanning a few hundred base pairs \parencite{ellegren2004}. They are abundant in eukaryotic genomes, comprising approximately 3\% of the human genome. The primary mechanism generating microsatellite length variation is replication slippage (also called slipped-strand misalignment), in which DNA polymerase transiently dissociates during replication of a repetitive template and reanneal out of frame, leading to insertion or deletion of one or more repeat units.
+
+Minisatellites (variable number tandem repeats, VNTRs) have larger repetition units of 10--100 bp and are frequently enriched near telomeres. Their expansion is driven primarily by unequal crossing over and gene conversion rather than replication slippage, reflecting the larger unit length that favors recombination-based mechanisms.
+
+\section{Obstacles Posed by Genomic Repetitions for Genomic Studies}
+
+\subsection{Ambiguity and Multi-Mapping}
+
+The core of de novo assembly is identification of overlaps between reads to form longer contiguous sequences (contigs). When a read originates from a repetitive region, it may match perfectly to multiple locations across the genome. Most assembly algorithms (such as de Bruijn Graphs) depend on the uniqueness of k-mers (sequences of length $k$). If a repetitive element is longer than the k-mer size, the assembler cannot determine which ``copy'' of the repetition a specific read belongs to.
+
+This results in ``collapsed'' assemblies, where multiple distinct genomic loci are incorrectly merged into a single representative sequence, or the assembler simply terminates the contig, leading to high fragmentation.
+
+\subsection{Graph Complexity and Tangles}
+
+Modern assemblers represent genomic data as a graph where nodes are sequences and edges are overlaps. In a repetition-free genome, the graph would ideally be a linear path. However, repetitive DNA introduces ``tangles'' or cycles into the graph.
+
+In a de Bruijn graph, each repetition creates a node with multiple incoming and outgoing edges. Resolution of these paths requires information that spans the entire repetition to ``fill'' flanking unique sequences. If read length ($L$) is shorter than repetition length ($R$), the path through the graph is mathematically non-deterministic without auxiliary information.
+
+\subsection{Structural Variations and Misassembly}
+
+Repetitive regions are hotspots for structural evolution. Highly similar repetitions (for example, paralogous genes) may be confused with allelic variations in diploid organisms. An assembler may erroneously connect two distant unique regions because they share a common repetitive boundary, leading to large-scale inversions or translocations in the final structure.
+
+\section{Specific Challenges of Assembly and Annotation}
+
+Assembly of genomic sequences from short read data represents one of the most significant computational challenges in bioinformatics, primarily due to the presence of repetitive DNA elements \parencite{treangen2011,phillippy2008,chaisson2015}. Repetitive sequences constitute a large fraction of eukaryotic genomes and are the primary source of assembly fragmentation and errors.
+
+The difficulty arises from three fundamental issues: ambiguous mapping, graph-based complexity, and read length limitations.
+
+The essential challenge is a ``puzzle'' where many pieces are identical. Without reads long enough to capture both the repetitive element and ``anchor'' unique sequences on both sides, the physical orientation and copy number of these elements remains computationally unresolvable. This is why the transition from Short-Read Sequencing (Illumina) to Long-Read Sequencing (PacBio, Oxford Nanopore) was revolutionary for achieving ``telomere-to-telomere'' assemblies \parencite{logsdon2020}.
+
+\section{Sequencing and Bioinformatics Solutions}
+
+\subsection{Long-Read Sequencing Technologies}
+
+Third-generation sequencing, or long-read, technologies have transformed the landscape of repetition analysis by producing reads that routinely exceed 10,000 bp and can extend beyond 100,000 bp in ultra-long configurations. Two commercial platforms dominate this space: Pacific Biosciences (PacBio) and Oxford Nanopore Technologies (ONT).
+
+PacBio's SMRT (Single Molecule Real-Time) sequencing, particularly the high-fidelity (HiFi) mode, generates reads with median lengths of 15--20 kb and base-level accuracy exceeding 99.9\% through circular consensus sequencing. HiFi reads have demonstrated very high accuracy for mapping repetition polymorphisms and resolving complex tandem repeat structures. ONT sequencing, in contrast, excels at producing ultra-long reads that can exceed 100 kb, making it particularly valuable for spanning even the largest repetitive arrays.
+
+Each platform offers complementary strengths. HiFi reads provide the accuracy needed for reliable variant calling within repetitions, while ultra-long ONT reads provide the contiguity to span larger and more complex repetitive structures.
+
+\subsection{Bioinformatics Tools for Repetition Identification and Masking}
+
+Before genome annotation can proceed, repetitive elements must be identified and masked to prevent spurious gene predictions and false-positive BLAST alignments.
+
+RepeatMasker is the most widely used tool for this purpose \parencite{smit2013}. It screens input DNA sequences against curated libraries of known repetitions, including the Dfam database of Hidden Markov Models of transposable element \parencite{storer2021}.
+
+RepeatModeler complements RepeatMasker by enabling de novo identification of repetition families from unannotated genome assemblies \parencite{flynn2020}. More recently, the EDTA (Extensive De Novo TE Annotator) pipeline has emerged as a comprehensive alternative that integrates RepeatModeler, LTR\_retriever, and other specialized tools to achieve more complete and accurate transposable element annotation \parencite{ou2019}.
+
+For tandem repetition genotyping from long-read data, several specialized tools have been developed. TRGT (Tandem Repeat Genotyping Tool) was specifically designed for PacBio HiFi data and provides robust genotyping and visualization of tandem repeats at genome-wide scale \parencite{dolzhenko2024}. LongTR uses a clustering strategy combined with partial-order alignment and hidden Markov models to infer consensus haplotypes.
+
+\subsection{Assembly Strategies for Repetition-Rich Genomes}
+
+Assembly of repetition-rich genomes has been revolutionized by the combination of long-read sequencing with modern assembly algorithms. The fundamental insight is that repetitive sequence can be resolved when reads are longer than the repetition unit. Current state-of-the-art assemblers, including hifiasm \parencite{cheng2021}, Verkko \parencite{rautiainen2023}, and LJA, all incorporate strategies for handling complex repetition structures within assembly graphs.
+
+For near telomere-to-telomere assembly of homozygous genomes, current best practice involves using PacBio HiFi reads and ultra-long ONT reads. HiFi reads are used to construct an initial assembly graph consisting of unitigs that contain no long exact repetitions, with possible connections between them determined by repetition structure. Highly repetitive regions become represented as complex subgraphs, or ``tangles,'' which are then resolved using ultra-long ONT reads that span these regions.
+
+The landmark achievement of the Telomere-to-Telomere Consortium in completing the first gap-free human genome assembly (T2T-CHM13) demonstrated that this combined approach could resolve even the most recalcitrant repetition regions \parencite{rhie2021b,nurk2022}, including centromeric satellite arrays, rDNA clusters, and segmental duplications.
+
+\subsection{Pangenome Approaches to Repetition Variation}
+
+A single linear reference genome cannot capture the full spectrum of repetition variation present in a population. The Human Pangenome Reference Consortium \parencite{wang2022} addresses this limitation by constructing graph-based pangenome references that encode population-level diversity, including variation in repetitive regions \parencite{liao2023}.
+
+Pangenome graphs are particularly powerful for resolution of variable number tandem repeats (VNTRs), which have hypervariable repeat number and composition. The Repetition-Pangenome-Graph (RPGG) data structure was developed to encode both population diversity and internal repetition structure of VNTR loci from multi-haplotype-resolved assemblies, enabling accurate VNTR composition estimation even from short-read data.
+
+\subsection{Combination of Strategies}
+
+Given the complexity of dealing with repetitions, an increasingly adopted strategy involves combining multiple sequencing technologies and bioinformatics tools. For example:
+
+\begin{enumerate}
+\item PacBio HiFi sequencing for accuracy and reliable repetition variant calling
+\item Ultra-long ONT sequencing for repetition structure contiguity
+\item Strand-seq mapping for haplotype phasing resolution
+\item Masking tools such as RepeatMasker for annotation
+\item Genotyping tools such as TRGT for tandem repeat characterization
+\item Pangenome construction to capture population-level variation
+\end{enumerate}
+
+\section{Implications for Phylogenomics}
+
+Repetitive elements present unique challenges and opportunities for phylogenomic studies. While aligned matrices traditionally exclude repetitive regions due to alignment ambiguity, recent work has demonstrated that repetitions---particularly transposable elements---can provide informative phylogenomic signal when treated appropriately.
+
+The structure, copy number, and sequence of repetitions evolve under complex selective and demographic pressures, reflecting the evolutionary history of lineages. Understanding the dynamics of repetitive element and developing methods for incorporating repetition signal into phylogenetic analysis remains a productive area of investigation.
+
+\clearpage
+\begin{revise}
+\begin{enumerate}
+    \item Human genome: $\sim$50\% repetitive; $\sim$45\% TEs; protein-coding exons only $\sim$1.5--2\% \parencite{lander2001,dekonig2011}.
+    \item TE classification: Class I (retrotransposons, ``copy-and-paste'' via RNA): LTR (retrovirally related), LINEs (L1 $\approx$ 17\% human genome), SINEs (Alu $\approx$ 10--13\%, derived from 7SL RNA, $\sim$65 Mya, restricted to primates). Class II (DNA transposons, ``cut-and-paste''): hAT, Mariner/Tc1; $\sim$3\% of human genome; all fossils in humans.
+    \item Autonomous vs.\ non-autonomous: SINEs depend on L1 machinery in trans.
+    \item Satellite DNA: tandem repeats megabases long (centromeres, telomeres); concerted evolution (Dover, 1982) via unequal crossing over and gene conversion.
+    \item Microsatellites (STRs, 1--6\,bp): $\sim$3\% human genome; variation by replication slippage. Minisatellites (VNTRs, 10--100\,bp): enriched near telomeres; expansion by recombination.
+    \item Biological GC bias: gBGC (GC-biased gene conversion) generates patterns indistinguishable from positive selection \parencite{galtier2001}; SINEs accumulate in GC-rich regions, LINEs in AT-poor regions.
+    \item Technical GC bias: coverage depends on GC composition on Illumina; primary source = PCR amplification; mitigation: PCR-free library, betaine, computational correction.
+    \item Assembly obstacles: ambiguous k-mers $\to$ repetition collapse; tangles in de Bruijn graph; if $L_{\text{read}} < R_{\text{repetition}}$, path non-deterministic.
+    \item Long-read solutions: PacBio HiFi (15--20\,kb, $>$99.9\% accuracy, variant calling) + ONT ultra-long ($>$100\,kb, contiguity); T2T-CHM13 assembly \parencite{nurk2022}.
+    \item Tools: RepeatMasker (Dfam HMMs), RepeatModeler (de novo), EDTA (integrated LTR\_retriever), TRGT (tandem genotyping, PacBio HiFi).
+    \item Pangenome: graph-based reference (HPRC) captures population variation in repetitions; RPGG for VNTRs.
+\end{enumerate}
+\end{revise}
+
+\clearpage
+
+\printbibliography[heading=subbibliography,title={References}]
+

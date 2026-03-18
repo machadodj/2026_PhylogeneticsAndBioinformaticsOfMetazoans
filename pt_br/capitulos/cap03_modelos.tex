@@ -11,6 +11,8 @@ Este capítulo sintetiza os princípios teóricos, estratégias de implementaç�
 
 \subsection{A Função de Verossimilhança em Sistemática}
 
+Note que esta seção já foi explicada no capítulo anterior, ande detalhes adicionais são fornecidos para auxiliar a compreender as equações. Aqui, algumas informações são repetidas para auxiliar o estudo do material em detrimento do número de páginas.
+
 A fundação da filogenética baseada em modelos é a função de verossimilhança. Para uma árvore $T$ e dados $D$, a verossimilhança é proporcional à probabilidade dos dados dada a árvore e um conjunto de parâmetros \parencite{edwards1972}:
 
 $$l(T|D) \propto \Pr(D|T)$$
@@ -18,6 +20,8 @@ $$l(T|D) \propto \Pr(D|T)$$
 Um método sistemático de MV seleciona a árvore $T$ que maximiza $\Pr(D|T)$. Esta maximização requer especificar um conjunto de \textit{parâmetros de incômodo} $\theta$, definidos como todas as quantidades necessárias para calcular $\Pr(D|T)$ além dos dados e da topologia de árvore \parencite{wheeler2012}. Os três parâmetros de incômodo mais consequentes são: (1) o modelo de transformação de caracteres; (2) parâmetros de ramo (comprimentos de ramo); e (3) a distribuição de taxas de mudança entre caracteres.
 
 \subsection{O Modelo Markov Geral Reversível}
+
+Note que esta seção já foi explicada no capítulo anterior, ande detalhes adicionais são fornecidos para auxiliar a compreender as equações. Aqui, algumas informações são repetidas para auxiliar o estudo do material em detrimento do número de páginas.
 
 A descrição reversível mais geral de mudança de caráter para $n$ estados é especificada por uma matriz de taxa instantânea $R$ e um vetor de frequência estacionária $\symbf{\pi}$ \parencite{yang1994,tavare1986}. As condições de simetria impostas em $R$ são:
 
@@ -56,15 +60,38 @@ Dados de sequências moleculares comumente mostram heterogeneidade acentuada em 
 
 O parâmetro \textit{proporção de sítios invariáveis} $I$ representa a classe frequentemente observada de posições que nunca mudam \parencite{hasegawa1985}. Um parâmetro separado é adicionado para representar a fração de sítios disponíveis para substituição.
 
-\subsection{Distribuição Gamma Discreta}
+\subsection{Heterogeneidade de Taxas e a Distribuição Gamma Discreta}
 
-A \textit{distribuição gamma discreta} \parencite{yang1994} adiciona classes de taxa governadas por um parâmetro de forma $\alpha$. A função densidade de probabilidade gamma é:
+Para lidar com o fato de que diferentes posições em uma sequência evoluem a velocidades distintas, utiliza-se a \textit{distribuição gamma discreta} \parencite{yang1994}. Este modelo adiciona classes de taxa governadas por um único parâmetro de forma, $\alpha$, que define o grau de variação entre os sítios.
 
-$$g(x; \alpha, \beta) = \frac{\beta^{\alpha} x^{\alpha-1} e^{-\beta x}}{\Gamma(\alpha)}$$
+A função densidade de probabilidade (PDF) da distribuição gamma é definida como:
 
-com média $\alpha/\beta$ e variância $\alpha/\beta^2$. Na prática, $\beta$ é definido igual a $\alpha$ de forma que a média é 1. O usuário especifica o número de classes de taxa discreta e estima $\alpha$ para maximizar verossimilhança de árvore \parencite{wheeler2012}. É importante notar que todas as classes de taxa são aplicadas a todo sítio ao invés de atribuir uma única classe a cada posição.
+\begin{equation}
+g(x; \alpha, \beta) = \frac{\beta^{\alpha} x^{\alpha-1} e^{-\beta x}}{\Gamma(\alpha)}
+\end{equation}
 
-O modelo combinado GTR$+I+\Gamma$ é o modelo mais comumente usado em análises empíricas de nucleotídeos.
+Onde:
+\begin{itemize}
+    \item $x$: representa a taxa de substituição.
+    \item $\alpha$ (alpha): o parâmetro de forma (\textit{shape parameter}). Quanto menor o valor de $\alpha$, maior é a heterogeneidade (muitos sítios lentos e poucos "hotspots" rápidos).
+    \item $\beta$ (beta): o parâmetro de escala. Na prática filogenética, define-se $\beta = \alpha$ para garantir que a média da distribuição seja 1 ($\alpha/\beta = 1$), mantendo a interpretação das unidades de comprimento de ramo como o número esperado de substituições por sítio.
+    \item $\Gamma(\alpha)$ (Gamma de alpha): a função Gamma, que atua como uma constante de normalização para que a área sob a curva seja igual a 1.
+\end{itemize}
+
+\textbf{Implementação via discretização:}
+
+Como integrar sobre uma distribuição contínua é computacionalmente proibitivo, a curva é dividida em $k$ classes (geralmente 4 a 8) de áreas iguais. A taxa média de cada partição é usada como um multiplicador para os comprimentos de ramo da árvore. 
+
+É fundamental notar que este é um modelo de \textbf{mistura de taxas}: não sabemos \textit{a priori} qual classe de taxa pertence a qual sítio. Portanto, a verossimilhança de um sítio $i$ é calculada como a média ponderada das verossimilhanças sob todas as $k$ classes de taxa:
+
+\begin{equation}
+L_i = \sum_{j=1}^{k} \frac{1}{k} L_i(r_j)
+\end{equation}
+
+Onde $r_j$ é a taxa representativa da $j$-ésima classe. Este método permite capturar a sinalização filogenética de sítios conservados e variáveis simultaneamente sem aumentar drasticamente o número de parâmetros do modelo.
+
+%%%%%%%%%%%%%%
+
 
 \section{Expansão para Cinco Estados: Modelos com Indels}
 

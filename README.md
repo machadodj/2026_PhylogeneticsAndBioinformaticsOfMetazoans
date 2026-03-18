@@ -1,3 +1,33 @@
+_Português (Brasil)_
+
+# Study Topics in Metazoan Phylogenomics and Bioinformatics
+
+- Author: [Denis Jacob Machado](https://orcid.org/0000-0001-9858-4515)
+- Affiliations at the University of North Carolina at Charlotte (UNC Charlotte):
+    1. [Phyloinformatics Lab](https://phyloinformatics.com/)
+    2. Department of Bioinformatics and Genomics (BiG), College of Computing and Informatics (CCI)
+    3. Center for Intelligent Computing to Prevent Health and Environmental Risks (CIPHER)
+
+## About
+
+This book compiles study materials on metazoan phylogenomics and bioinformatics, ranging from the theoretical-philosophical foundations of phylogenetic systematics to contemporary issues in artificial intelligence, Brazilian legislation, and computational infrastructure. The work is organized into eleven chapters covering the core topics necessary for understanding and practicing large-scale phylogenomic reconstruction. These chapters correspond to the 11 items listed in the public notice EDITAL IB/AAcad/19/2025 regarding "Metazoan Phylogenomics and Bioinformatics," published in the July 4, 2025 edition of the Official Gazette of the State of São Paulo (Diário Oficial do Estado de São Paulo).
+
+## Main Topics
+
+The text emphasizes both theoretical principles and practical implementation aspects, including the mathematical formulation of probabilistic methods, the diversity of available molecular data, sequencing strategies, challenges posed by repetitive elements, and computational infrastructure requirements. The final chapters address the emerging role of artificial intelligence in biomedical science and the legal and ethical aspects of genomic data usage, with an emphasis on Brazilian legislation and international frameworks.
+
+## Chapter Organization
+
+Each chapter contains its own bibliographic references, allowing for independent consultation. The sequence of chapters follows a logical progression from fundamentals to applications, though each chapter is written to be reasonably self-contained. A study guide is provided at the end of each chapter.
+
+## License
+
+This work is licensed under a [Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)](https://creativecommons.org/licenses/by-nc/4.0/) License.
+
+---
+
+_English (U.S.A.)_
+
 # Tópicos de Estudo em Filogenômica e Bioinformática de Metazoários
 
 - Autor: [Denis Jacob Machado](https://orcid.org/0000-0001-9858-4515)

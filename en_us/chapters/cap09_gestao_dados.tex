@@ -1,0 +1,286 @@
+\chapter{Omics Data Management}
+
+\section*{Abstract}
+
+Computational analyses are now central to virtually all omics research, yet the computational component is frequently the weakest link in scientific reproducibility. This chapter examines the theoretical foundations of reproducibility, the FAIR principles (Findable, Accessible, Interoperable, Reusable) for research data and software management, and practical implementation of these principles in phylogenomics and multi-omics contexts. Special attention is given to technical computing limitations---hardware-dependent behavior, memory and storage constraints, the cloud computing paradox---that affect reproducibility even when best practices are followed. We provide a practical checklist for making phylogenomic projects FAIR and discuss connections between HPC system design and FAIR compliance.
+
+\section{Introduction: The Reproducibility Problem in Computational Biology}
+
+Computational analyses are now central to virtually all omics research, yet the computational component is frequently the weakest link in scientific reproducibility. The problem has multiple interacting dimensions.
+
+\subsection{Software Opacity and Fragility}
+
+Many bioinformatics tools are poorly documented, version-sensitive, and distributed without containerized environments, meaning that installing the same tool six months later on a different operating system may produce different results---or fail entirely. \textcite{martindelico2024} evaluated FAIRness across research software in life sciences and found that reproducibility and verifiability of computational components remain systemically deficient. \textcite{zafeiropoulos2021} documented this from the facility side: their HPC system accumulated over 200 software packages with frequent and non-periodic versioning and broken dependency chains, motivating their transition to containerized pipelines.
+
+\subsection{Parameter and Configuration Sensitivity}
+
+\textcite{powers2022} demonstrated that something as apparently routine as thread allocation per task or the choice of compression level in GATK can materially change runtime and, in the case of scatter-gather configurations, potentially introduce artifacts. These configuration decisions are rarely reported in methods sections.
+
+\subsection{Neglect in Data Management}
+
+Raw sequenced data, intermediate files, and final results are frequently stored in ad hoc directory structures without metadata, without versioning, and without data lifecycle policy. When a student graduates, their analysis history may be effectively lost.
+
+\subsection{Scale of the Problem}
+
+\textcite{kim2018} conducted a case study in reproducibility in bioinformatics and found that even well-documented analyses could not be reliably replicated due to environment differences and dependency issues. This is not a marginal concern---it affects the fundamental reliability of published results.
+
+\section{The FAIR Principles: A Framework for Data Stewardship}
+
+\subsection{Origin and Scope}
+
+The FAIR Guiding Principles were formalized by \textcite{wilkinson2016} as a set of guidelines to improve Findability, Accessibility, Interoperability, and Reusability of digital assets---including data, metadata, and the infrastructure that supports them. A key emphasis of the original paper is \textit{machine actionability}: the ability of computational systems to find, access, interoperate with, and reuse data with minimal or no human intervention, motivated by the accelerating volume and complexity of research data.
+
+\subsection{The Fifteen Sub-Principles}
+
+\subsubsection{Findable (F)}
+
+Data must be discoverable by both humans and machines.
+
+\begin{itemize}
+\item F1: (Meta)data are assigned globally unique and persistent identifiers (\textit{e.g.}, DOIs, accession numbers).
+\item F2: Data are described with rich metadata.
+\item F3: Metadata explicitly include the identifier of the data they describe.
+\item F4: (Meta)data are registered or indexed in a searchable resource (\textit{e.g.}, NCBI, ENA, Zenodo).
+\end{itemize}
+
+\subsubsection{Accessible (A)}
+
+Once found, data must be retrievable under clear conditions.
+
+\begin{itemize}
+\item A1: (Meta)data are retrievable by their identifier using a standardized communication protocol (\textit{e.g.}, HTTP, FTP).
+\item A1.1: The protocol is open, free, and universally implementable.
+\item A1.2: The protocol allows for authentication and authorization where necessary.
+\item A2: Metadata remain accessible even when the data themselves are no longer available. This is critical for long-term scientific preservation.
+\end{itemize}
+
+\subsubsection{Interoperable (I)}
+
+Data must be integrable with other data and compatible with applications and workflows.
+
+\begin{itemize}
+\item I1: (Meta)data use a formal, accessible, shared, and broadly applicable language for knowledge representation (\textit{e.g.}, RDF, OWL, standardized ontologies).
+\item I2: (Meta)data use vocabularies that themselves follow the FAIR principles.
+\item I3: (Meta)data include qualified references to other (meta)data, enabling construction of knowledge graphs.
+\end{itemize}
+
+\subsubsection{Reusable (R)}
+
+Data must be well-described so they can be replicated and combined in different contexts.
+
+\begin{itemize}
+\item R1: (Meta)data are richly described with a plurality of accurate and relevant attributes.
+\item R1.1: (Meta)data are released with a clear and accessible data use license (\textit{e.g.}, CC-BY, CC0).
+\item R1.2: (Meta)data are associated with detailed provenance (who generated the data, how, when, with what parameters).
+\item R1.3: (Meta)data conform to relevant community domain standards (\textit{e.g.}, MIGS/MIMS for genomics, ISA-Tab for multi-omics).
+\end{itemize}
+
+\subsection{FAIR Applies to Three Entities}
+
+The principles address three distinct types of entities: \textbf{data} (or any digital object), \textbf{metadata} (information about a digital object), and \textbf{infrastructure} (systems that host, index, and serve these objects). For example, principle F4 requires that both metadata and data be registered in a searchable resource---the infrastructure component. This three-way scope is important because many researchers treat FAIR as merely a data labeling exercise, when in fact it demands corresponding investments in infrastructure and metadata services.
+
+\section{FAIR Beyond Data: Principles for Research Software}
+
+The original FAIR principles target data and metadata. Recognizing that research software is equally critical and equally fragile, \textcite{barker2022} proposed FAIR4RS---an adaptation of FAIR principles for research software. The key adaptations include:
+
+\begin{itemize}
+\item Software should have persistent identifiers (such as DOIs via Zenodo or Software Heritage).
+\item Software should be described with rich metadata including dependencies, runtime environment, and version history.
+\item Software should use formats and standards accepted by the community, interoperate with other tools, and be released under clear licenses.
+\end{itemize}
+
+\textcite{martindelico2024} operationalized this with FAIRsoft, providing a practical evaluation framework that assesses research software across these dimensions. Periodic evaluations of bioinformatics tools revealed persistent gaps in documentation, licensing, and source code availability.
+
+For omics research, the implication is direct: a phylogenomic pipeline is only as reproducible as its least FAIR component. If IQ-TREE is well-versioned and deposited in Bioconda but your custom filtering script lives unversioned on a lab desktop, the overall analysis is not reproducible.
+
+\section{Implementing FAIR in Omics Data Management}
+
+\subsection{Data Repositories and Identifiers}
+
+In genomics and phylogenomics, primary repositories already impose portions of the FAIR principles:
+
+\begin{itemize}
+\item \textbf{NCBI SRA / ENA / DDBJ} for raw sequenced reads---accession numbers serve as persistent identifiers (F1); metadata fields capture organism, sequencing platform, and study design (F2, R1); and the International Nucleotide Sequence Database Collaboration ensures global indexing (F4).
+
+\item \textbf{TreeBASE / Dryad / Zenodo} for phylogenetic trees, alignments, and supplementary data---DOIs provide persistence (F1), and Zenodo integration with GitHub enables archival of versioned software.
+
+\item \textbf{NCBI GenBank / UniProt / Ensembl} for assembled sequences and annotations.
+\end{itemize}
+
+The gap is typically not at the repository level but at the lab level: researchers frequently fail to deposit intermediate analysis products (filtered alignments, partition schemes, model selection outputs, bootstrap trees) that would be necessary to truly reproduce a phylogenomic study.
+
+\subsection{Metadata: The Perennial Weak Link}
+
+Rich metadata is the critical link in FAIR, yet it remains the most neglected aspect in practice. For phylogenomics, essential metadata that is frequently missing includes:
+
+\begin{itemize}
+\item Exact software versions and command-line parameters for each pipeline step.
+\item Alignment masking or filtering criteria (\textit{e.g.}, Gblocks settings, trimAl thresholds).
+\item Model selection results (which substitution model was chosen per locus, and by which criterion).
+\item Description of the computational environment (operating system, library versions, container image hash).
+\item Provenance linkage between raw data, intermediate products, and final results.
+\end{itemize}
+
+\textcite{niehues2024} demonstrated a practical approach to this problem by wrapping a multi-omics analysis workflow as a FAIR Digital Object, embedding metadata, data, and computational workflow together in a single reusable package. They used RO-Crate as the packaging format, Snakemake as the workflow engine, and Git for version control---providing a concrete model for how phylogenomic labs could structure their own analyses.
+
+\subsection{Workflow Managers as FAIR Enablers}
+
+Workflow managers serve a dual purpose: they enforce reproducibility by codifying analysis steps, and they generate machine-readable provenance metadata as a side effect of execution. The two dominant tools in bioinformatics are:
+
+\begin{itemize}
+\item \textbf{Snakemake} \parencite{molder2021}: Python-based, integrates with Conda and Singularity/Apptainer, generates execution DAGs and logs.
+
+\item \textbf{Nextflow} \parencite{di2017}: Groovy-based, designed for portability across HPC, cloud, and local environments; the nf-core community \parencite{ewels2020} provides curated, peer-reviewed bioinformatics pipelines.
+\end{itemize}
+
+Both produce records of what was executed, with what parameters, in what order, and on what data---directly addressing FAIR principles R1.2 (provenance) and R1.3 (community standards).
+
+\subsection{Containers as Reproducibility Infrastructure}
+
+Containers freeze a software environment into a portable image. In the context of FAIR:
+
+\begin{itemize}
+\item \textbf{Singularity/Apptainer} is preferred for HPC because it executes without root privilege and integrates with SLURM. \textcite{zafeiropoulos2021} adopted Singularity as their standard container format for its compatibility with Docker images and suitability for multi-user HPC environments.
+
+\item \textbf{Docker} is more common in cloud and development contexts; nf-core pipelines ship as Docker images.
+
+\item Container image hashes (SHA256 digests) serve as persistent identifiers for the exact computational environment, satisfying F1 for software environments.
+\end{itemize}
+
+\section{Technical Computing Limitations and Their Impact on Reproducibility}
+
+\subsection{Hardware-Dependent Behavior}
+
+Computational results in bioinformatics are not always bit-for-bit identical across different hardware, even with identical software. Sources of non-determinism include:
+
+\begin{itemize}
+\item \textbf{Floating-point arithmetic:} Different CPU architectures (Intel vs. AMD, different SIMD instruction sets such as AVX2 vs. AVX-512) may produce slightly different floating-point results, which can propagate through likelihood calculations in phylogenetic inference. \textcite{powers2022} demonstrated that the Genomics Kernel Library (GKL) in GATK uses AVX-512 instructions for PairHMM and Smith-Waterman kernels, reducing HaplotypeCaller runtime from 35 hours to under 1 hour---but this acceleration is architecture-dependent.
+
+\item \textbf{Thread-order non-determinism:} Multi-threaded programs that reduce results across threads (\textit{e.g.}, summing log-likelihoods) may accumulate floating-point values in different orders depending on thread scheduling, producing slightly different sums. IQ-TREE, RAxML-NG, and BEAST all exhibit this behavior to varying degrees.
+
+\item \textbf{Random seed sensitivity:} Heuristic tree search algorithms depend on initial trees generated from random seeds. Reporting and fixing the random seed is essential for reproducibility.
+\end{itemize}
+
+\subsection{Memory and Storage Constraints}
+
+As documented by \textcite{zafeiropoulos2021}, storage is the most universal and persistent constraint across all types of bioinformatics analysis. Pipeline tools generate unpredictably large intermediate files, causing job failures when quotas are reached. This has direct reproducibility implications: if a job fails mid-way and is restarted with different parameters or on a different data subset, the final result may differ from what would have been produced by an uninterrupted execution.
+
+\textcite{ghedira2024} further noted that in resource-limited environments, lack of adequate storage may force researchers to prematurely delete intermediate files, losing the provenance chain necessary for reproducibility.
+
+\subsection{The Cloud Computing Paradox}
+
+Cloud computing (AWS, GCP, Azure) offers elasticity and avoids hardware maintenance, but introduces its own reproducibility challenges:
+
+\begin{itemize}
+\item Instance types change over time; a VM configuration available today may not exist in two years.
+\item Spot/preemptible instances can be terminated mid-computation.
+\item Data egress costs may discourage sharing of large datasets.
+\item Software environments in cloud VMs are ephemeral unless containerized.
+\end{itemize}
+
+\textcite{langmead2018} reviewed cloud computing for genomics and argued that a hybrid approach---owning base infrastructure and bursting to cloud during peaks---provides the best balance of cost, control, and reproducibility. However, this requires disciplined use of containers and workflow managers to ensure that results are consistent across local and cloud environments.
+
+\section{Practical Checklist: Making a Phylogenomic Project FAIR}
+
+The following checklist translates FAIR principles into concrete actions for a typical phylogenomic study:
+
+\subsection{Before Analysis}
+
+\begin{itemize}
+\item [ ] Register your project in a repository (\textit{e.g.}, OSF, Zenodo) and obtain a DOI.
+\item [ ] Deposit raw sequenced reads in NCBI SRA or ENA before beginning analysis.
+\item [ ] Define your computational environment in a container (Singularity/Docker) or Conda \texttt{environment.yml} file.
+\item [ ] Write your pipeline in a workflow manager (Snakemake or Nextflow) rather than an ad hoc series of shell scripts.
+\end{itemize}
+
+\subsection{During Analysis}
+
+\begin{itemize}
+\item [ ] Record all software versions, parameters, and random seeds in version-controlled configuration files with Git.
+\item [ ] Use SLURM accounting database (\texttt{sacct}) to log computational resource usage.
+\item [ ] Store intermediate files in a structured directory hierarchy with descriptive naming conventions.
+\item [ ] Use checksums (MD5 or SHA256) on key input and output files to verify data integrity.
+\end{itemize}
+
+\subsection{After Analysis}
+
+\begin{itemize}
+\item [ ] Deposit alignments, trees, model selection results, and partition schemes in a public repository (Dryad, Zenodo, TreeBASE).
+\item [ ] Include a \texttt{README.md} or metadata file describing the provenance of each deposited file.
+\item [ ] Release your analysis pipeline (Snakemake/Nextflow + container definition) under an open-source license on GitHub/GitLab.
+\item [ ] Archive the repository in Zenodo to obtain a DOI for the software.
+\item [ ] Apply a clear data license (CC-BY or CC0) to all deposited data.
+\end{itemize}
+
+\section{Key Concepts for Further Study}
+
+\subsection{Ontologies and Controlled Vocabularies in Omics}
+
+FAIR interoperability (I1, I2) requires shared vocabularies. Key resources include:
+
+\begin{itemize}
+\item \textbf{Gene Ontology (GO):} Standardized terms for gene function across species.
+\item \textbf{Sequence Ontology (SO):} Terms for sequence features and annotations.
+\item \textbf{Environment Ontology (ENVO):} Terms for environmental contexts (relevant for metagenomics/metabarcoding).
+\item \textbf{EDAM Ontology:} A comprehensive ontology of bioinformatics operations, data types, formats, and topics---directly relevant for describing computational workflows.
+\end{itemize}
+
+\subsection{Data Management Plans (DMPs)}
+
+Funding agencies (NIH, NSF, ERC, UKRI) increasingly require DMPs that specify how data will be handled, shared, and preserved. The NIH 2023 Data Management and Sharing Policy explicitly references FAIR principles. A DMP should address: what data will be generated, what metadata standards will be used, where data will be deposited, who will have access, and how long data will be preserved.
+
+\subsection{The Distinction Between Open and FAIR}
+
+FAIR does not require data to be open or free. Principle A1.2 explicitly allows for authentication and authorization. Sensitive data (\textit{e.g.}, human genomic data under IRB/ethics restrictions) can be FAIR---discoverable and described with rich metadata---while remaining access-controlled. Metadata should always be open (A2), even if the data themselves are restricted.
+
+\subsection{Computational Provenance Standards}
+
+\begin{itemize}
+\item \textbf{W3C PROV:} A general-purpose provenance model.
+\item \textbf{RO-Crate:} A lightweight approach to packaging research data with metadata, used by \textcite{niehues2024} for multi-omics workflows.
+\item \textbf{CWLProv / WES:} Standards for recording provenance from workflow executions in the Common Workflow Language ecosystem.
+\end{itemize}
+
+\section{Connections to HPC System Design}
+
+The FAIR principles and HPC system design considerations from our companion chapter (\textit{Design of High-Performance Computing Systems for Phylogenomics}) intersect at several points:
+
+\begin{itemize}
+\item \textbf{Storage tiering} (\S{}4 of companion) directly supports FAIR data lifecycle management: scratch for active analysis, warm storage for intermediate results with metadata, cold storage/repositories for FAIR-compliant and archived deposits.
+
+\item \textbf{SLURM accounting} (\S{}8 of companion) generates computational provenance automatically---job IDs, resource usage, wall times, and exit codes are logged and can be attached as metadata to analysis results.
+
+\item \textbf{Containerization} (\S{}9 of companion) is simultaneously an HPC software management strategy and a FAIR reproducibility mechanism.
+
+\item \textbf{Training} (\S{}10 of companion) is essential for both HPC use and FAIR adoption; researchers who do not understand SLURM will not write reproducible job scripts, and researchers who do not understand FAIR will not deposit metadata.
+
+\item \textbf{Workflow managers} (\S{}9 of companion) enforce efficient resource utilization on HPC (allowing SLURM to schedule tasks optimally) and FAIR compliance (generating machine-readable provenance records).
+\end{itemize}
+
+\section{Conclusion}
+
+Reproducibility in omics research is not a purely theoretical exercise. It has direct practical implications for scientific trust, the ability of other researchers to build upon your work, and the long-term validity of discoveries. The FAIR principles provide a framework for transforming historical neglect in data management into systematic practice. Implementation requires investment in infrastructure (repositories, indexing, file systems with lifecycle management), documentation (rich metadata, community standards), and researcher behavior (use of workflow managers, code versioning, data deposition).
+
+For phylogenomics specifically, adoption of FAIR practices---from deposition of raw reads through deposition of alignments and final trees---transforms an individual study into a reusable contribution to collective phylogenetic science. Each carefully documented and deposited analysis becomes a starting point for future research, comparison, or validation. This is the future of phylogenomics---not studies in vacuo, but synthesis of accumulated knowledge, enabled by rigorous data management.
+
+\clearpage
+\begin{revise}
+\begin{enumerate}
+    \item Reproducibility problem: software opacity, parameter/configuration sensitivity (Powers et al., 2022), data management neglect, loss of history when students graduate.
+    \item FAIR (Wilkinson et al., 2016): Findable, Accessible, Interoperable, Reusable; emphasis on \textbf{machine actionability}; applies to data, metadata \textit{and} infrastructure.
+    \item 15 sub-principles: F1 (persistent IDs: DOIs), F2 (rich metadata), F3 (ID in metadata), F4 (indexed/searchable); A1 (standardized protocol), A1.1 (open), A1.2 (authentication), A2 (metadata persist without data); I1 (formal language: RDF/OWL), I2 (FAIR vocabularies), I3 (qualified references); R1 (rich attributes), R1.1 (clear license: CC-BY/CC0), R1.2 (provenance), R1.3 (community standards: MIGS/MIMS).
+    \item FAIR $\neq$ open: A1.2 allows access control; metadata always open (A2).
+    \item FAIR4RS (Barker et al., 2022): adaptation for research software; DOIs via Zenodo/Software Heritage; metadata for dependencies and environment.
+    \item Repositories: NCBI SRA/ENA/DDBJ (raw reads), TreeBASE/Dryad/Zenodo (trees/alignments), GenBank/UniProt/Ensembl (assembled sequences).
+    \item Workflow managers: Snakemake (Python, Conda/Singularity, DAGs) and Nextflow (Groovy, nf-core); generate provenance automatically (R1.2, R1.3).
+    \item Containers: Apptainer (rootless, SLURM integration) for HPC; Docker for cloud; SHA256 hash = persistent ID for environment.
+    \item Technical reproducibility limitations: floating-point arithmetic (AVX2 vs.\ AVX-512), thread-order non-determinism, random seed sensitivity.
+    \item Cloud paradox: elasticity but instance types change, spot may be terminated, egress costs, ephemeral environments; solution = hybrid approach \parencite{langmead2018}.
+    \item Key ontologies: GO (gene function), SO (sequence features), ENVO (environments), EDAM (bioinformatics operations). Provenance: W3C PROV, RO-Crate, CWLProv.
+\end{enumerate}
+\end{revise}
+
+\clearpage
+
+\printbibliography[heading=subbibliography,title={References}]
+

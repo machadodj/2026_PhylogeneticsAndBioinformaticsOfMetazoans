@@ -1,0 +1,300 @@
+\chapter{Design of High-Performance Computing Systems for Phylogenomics}
+
+\section*{Abstract}
+
+Modern phylogenomic analyses involve hundreds to thousands of loci extracted from genome-scale data. Each locus must be individually aligned, trimmed, and subjected to gene tree estimation before downstream species tree inference. This scaling expansion, driven by targeted capture sequencing, transcriptomics, and whole-genome approaches, has rendered desktop-scale computing inadequate for most research groups. This chapter examines design and implementation of high-performance computing (HPC) systems specifically optimized for phylogenomics, covering from workload profiling audit through financial optimization, resource allocation strategy, and multi-user management. We present a cluster proposal tailored for a university bioinformatics department and discuss general principles applicable to laboratories ranging in scale from simple workstations to regional clusters.
+
+\section{Introduction}
+
+A single IQ-TREE analysis on a partitioned alignment of several hundred loci can consume tens of thousands of CPU hours. Bayesian analyses with BEAST or MrBayes add further orders of magnitude when MCMC convergence requires extended chain lengths. Furthermore, questions about whether standard clade support metrics (bootstrap, SH-aLRT, aBayes) are calibrated with respect to alignment sensitivity --- a question actively being investigated --- demand large-scale replication across alternative alignments and parameter configurations. Such studies are computationally infeasible without dedicated HPC resources.
+
+General university research clusters, while valuable, often have scheduling policies optimized for fairness at campus scale and not for the specific characteristics of phylogenomic workloads. A dedicated departmental cluster enables optimization of hardware heterogeneity, storage topology, and scheduling policies specifically for phylogenomics.
+
+\section{Computational Profile of Phylogenomic Workflows}
+
+The design of an HPC system for phylogenomics must be informed by careful analysis of computational bottlenecks at each pipeline stage. Phylogenomic workflows are heterogeneous: some stages are memory-limited, others are CPU or I/O constrained, and some are increasingly well-suited for GPU acceleration.
+
+\subsection{Phase 1: Quality Control and Read Pre-processing}
+
+Tools such as \textit{fastp} \parencite{chen2018} and Trimmomatic \parencite{bolger2014} perform adapter removal, quality trimming, and read filtering. These tasks are predominantly I/O-bound, with modest CPU requirements. \textit{fastp} is notable for its multi-threaded I/O handling and typically saturates at 4--8 threads. The key bottleneck is storage throughput: a single Illumina HiSeq/NovaSeq lane can produce 100--400 GB of compressed FASTQ data, and QC operations involve reading and rewriting these files in their entirety.
+
+\textbf{Resource Profile:} I/O-limited; 4--8 CPU cores per job; 4--16 GB of RAM; high-throughput scratch storage critical.
+
+\subsection{Phase 2: Assembly, Mapping, and Locus Extraction}
+
+Depending on study design, reads may be assembled \textit{de novo} (\textit{e.g.}, SPAdes, Trinity) or mapped to a reference (\textit{e.g.}, BWA-MEM2, HybPiper for targeted capture data). \textit{De novo} assembly, particularly with Trinity for transcriptomic data, is both CPU-intensive and memory-hungry, with peak RAM usage frequently exceeding 100 GB for moderate-sized datasets. Reference-based approaches are more modest but still benefit from fast storage for BAM file I/O.
+
+\textbf{Resource Profile:} CPU- and memory-intensive; 16--32 cores; 64--256 GB of RAM; fast scratch storage.
+
+\subsection{Phase 3: Orthology Inference}
+
+Tools such as OrthoFinder \parencite{emms2019} perform all-vs-all DIAMOND/BLAST searches followed by MCL clustering. The DIAMOND search phase is embarrassingly parallel and benefits from high core counts, while the MCL clustering phase is memory-intensive for large proteome sets (>50 species).
+
+\textbf{Resource Profile:} CPU-intensive (parallelizable); 16--64 cores; 32--128 GB of RAM.
+
+\subsection{Phase 4: Multiple Sequence Alignment}
+
+MAFFT \parencite{katoh2013}, MUSCLE, and other alignment tools are CPU-bound, with most implementations threading efficiently to 4--16 cores. However, because a typical phylogenomic dataset involves hundreds to thousands of individual loci, the dominant parallelism strategy is to run many independent alignment jobs concurrently rather than allocate many cores to a single alignment. This makes alignment an ideal workload for SLURM job arrays.
+
+\textbf{Resource Profile:} CPU-bound; 4--16 cores per individual alignment; 2--8 GB of RAM per alignment; high job throughput via arrays.
+
+\subsection{Phase 5: Alignment Trimming and Filtering}
+
+Tools such as trimAl \parencite{capella2009} and BMGE \parencite{criscuolo2010} are lightweight, typically completing in seconds per locus. The primary consideration is I/O latency rather than computational power.
+
+\textbf{Resource Profile:} Minimal CPU/RAM; I/O-latency-sensitive.
+
+\subsection{Phase 6: Gene Tree Estimation (Maximum Likelihood)}
+
+Maximum likelihood tree inference with IQ-TREE \parencite{minh2020} or RAxML-NG \parencite{kozlov2019} is the most CPU-intensive phase of the pipeline for ML-based approaches. Both tools implement efficient multi-threaded likelihood evaluation using vectorized SIMD kernels (AVX2/AVX-512). IQ-TREE 2 demonstrates high parallelism efficiency, achieving near-linear scaling to 4 cores and useful speedups to 8--16 cores for individual analyses. For phylogenomic studies, the optimal strategy is often to infer gene trees in parallel (one per locus), with each tree search allocated 4--8 cores.
+
+\textbf{Resource Profile:} CPU-bound; benefits from high clock speed and AVX-512; 4--16 cores per gene tree; 2--16 GB of RAM; high job throughput via SLURM arrays.
+
+\subsection{Phase 7: Gene Tree Estimation (Bayesian)}
+
+Bayesian inference with MrBayes \parencite{ronquist2012} or BEAST/BEAST2 \parencite{bouckaert2019} is substantially more expensive than ML inference due to MCMC sampling requirements. The BEAGLE library \parencite{ayres2019} provides GPU-accelerated likelihood computation, achieving speedups of up to 100$\times$ for large datasets on NVIDIA GPUs. BEAGLE 3 includes OpenCL and CPU-threaded implementations, but the CUDA-based implementation on modern NVIDIA hardware remains the performance leader. GPU memory is the primary constraint: double-precision nucleotide analyses with four rate categories require approximately 2 GB of GPU memory per 1,000 OTUs and 10,000 unique site patterns.
+
+\textbf{Resource Profile:} GPU-accelerated via BEAGLE/CUDA; 24--48 GB of GPU memory recommended; moderate CPU for non-BEAGLE code paths.
+
+\subsection{Phase 8: Species Tree Inference and Concordance Analysis}
+
+Summary coalescent methods such as ASTRAL-III \parencite{zhang2018} are fast and memory-efficient, typically completing in minutes even for datasets with hundreds of loci and species. Concatenation-based (supermatrix) approaches using IQ-TREE or RAxML-NG on the complete partitioned alignment are more demanding and represent a second major computational bottleneck. Concordance factor analysis (gCF, sCF) in IQ-TREE requires re-evaluation of all gene trees against the species tree and is moderately CPU-intensive.
+
+\textbf{Resource Profile:} Variable; ASTRAL is lightweight; concatenated ML is CPU-intensive (similar to Phase 6 but on larger data); concordance analysis is moderate.
+
+\section{Proposed Hardware Architecture}
+
+\subsection{Design Philosophy}
+
+The cluster follows a heterogeneous design philosophy: rather than purchasing uniform nodes, we propose three distinct node types optimized for different computational profiles. This approach maximizes cost-effectiveness by avoiding over-provisioning of expensive resources (GPUs, large RAM) on nodes where they are not needed.
+
+\subsection{Recommended Components}
+
+\begin{table}[htbp]
+\centering
+\caption{Recommended Hardware Components for Phylogenomic Cluster}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrllll}
+\hline
+\textbf{Component} & \textbf{Qty} & \textbf{CPU} & \textbf{RAM} & \textbf{Storage} & \textbf{GPU} \\
+\hline
+Compute Node (Type A) & 4 & 2$\times$ EPYC 9554 (64C) & 512 GB DDR5 & 2$\times$ 2TB NVMe & --- \\
+High-Memory Node (Type B) & 1 & 2$\times$ EPYC 9554 (64C) & 1.5 TB DDR5 & 4$\times$ 4TB NVMe & --- \\
+GPU Node (Type C) & 1 & 1$\times$ EPYC 9454 (48C) & 256 GB DDR5 & 2$\times$ 2TB NVMe & 2$\times$ RTX A6000 (48GB) \\
+Management/Login Node & 1 & 1$\times$ EPYC 9124 (16C) & 64 GB DDR5 & 2$\times$ 1TB NVMe (RAID 1) & --- \\
+NAS Server & 1 & 1$\times$ Xeon entry & 64 GB ECC & 12$\times$ 18TB HDD (RAID6) + 2$\times$ 4TB NVMe & --- \\
+Networking (25GbE Switch) & 1 & --- & --- & --- & --- \\
+UPS + Rack + Cabling & 1 & --- & --- & --- & --- \\
+\hline
+\multicolumn{6}{l}{\textbf{Estimated Total Cost: \$163,000--\$185,000}} \\
+\hline
+\end{tabular}%
+}
+\end{table}
+
+\subsection{CPU Selection Rationale}
+
+The AMD EPYC 9554 (64 cores, 3.75 GHz boost, 256 MB L3 cache) provides excellent balance of core count, clock speed, and cache size for phylogenomic workloads. Both IQ-TREE and RAxML-NG use vectorized AVX2/AVX-512 likelihood kernels, and the Zen 4 architecture in the EPYC 9004 series provides native AVX-512 support. The large L3 cache is particularly beneficial for tree search operations, which exhibit irregular memory access patterns when traversing likelihood arrays across tree internal nodes. The dual-socket configuration yields 128 cores per Type A node (512 total across four nodes), enabling simultaneous execution of 32--64 gene tree jobs per node at 4--8 cores each.
+
+\subsection{GPU Selection Rationale}
+
+The NVIDIA RTX A6000 provides 48 GB of GDDR6 memory per card, which is critical for BEAGLE-accelerated Bayesian analyses. GPU memory is the binding constraint for BEAGLE: a nucleotide analysis with 500 OTUs and 50,000 unique site patterns in double precision requires approximately 10 GB of GPU memory. Two RTX A6000 cards enable simultaneous analysis of multiple partitions or independent MCMC chains, and BEAST can partition datasets across multiple BEAGLE instances, one per GPU.
+
+\subsection{Storage Architecture}
+
+The proposed storage architecture follows a three-tier design:
+
+\begin{enumerate}
+\item \textbf{Tier 1 --- NVMe SSD (fast scratch):} Use for active analysis directories. Raw read processing, assembly, and alignment are I/O-intensive. NVMe units (ideally in RAID-0 or ZFS stripe for throughput) prevent storage from becoming a bottleneck. Aim for at least 4--8 TB of fast scratch per node.
+
+\item \textbf{Tier 2 --- SATA SSD or HDD RAID (warm storage):} Intermediate results, completed alignments, and tree files that need to be accessible but are not under active computation. 20--50 TB is a reasonable starting point.
+
+\item \textbf{Tier 3 --- Cold/archival (tape, cloud cold-tier):} Raw sequenced reads (FASTQ) after QC and assembly. These are large but rarely re-accessed. Compressed storage here is cost-effective.
+\end{enumerate}
+
+\subsection{Network Fabric}
+
+For a multi-node cluster, if your workflow parallelizes \textit{across} nodes (\textit{e.g.}, MPI-based analyses like ExaBayes; \textcite{aberer2014}), you need low-latency interconnect. InfiniBand (HDR, 200 Gb/s) is the gold standard. If cross-node MPI jobs are rare, 25 GbE or even 10 GbE is sufficient and much more affordable.
+
+For most phylogenomic labs, InfiniBand can be entirely avoided. The dominant parallelism pattern is ``many independent jobs across loci,'' which requires a job scheduler --- not MPI.
+
+\subsection{Financial Optimization: Total Cost of Ownership}
+
+Hardware purchase price is only ~40--60\% of the total cost of 5 years of ownership. The remainder is electricity, cooling, maintenance, and staff time.
+
+\subsubsection{Electricity and Cooling}
+
+A dual-socket server with high-end CPUs consumes 800--1500 W under load. At an average U.S. institutional rate of ~\$0.10/kWh, a single node running 1 kW continuously costs ~\$876/year in electricity alone --- before cooling overhead. Cooling typically adds 30--60\% to electricity cost (expressed as Power Usage Effectiveness, PUE). A well-designed server room achieves PUE ~1.3--1.5; a repurposed office closet can reach 2.0+.
+
+\subsubsection{Buy vs. Cloud}
+
+For sustained and predictable workloads (daily pipeline runs, always-active shared resource), owned hardware almost always beats cloud computing in cost per compute-hour after year 1--2. For bursty workloads (occasional large assembly, annual grant deadline crunch), cloud instances (AWS, Google Cloud, Azure) avoid idle hardware costs. AWS Spot / GCP Preemptible instances are 60--90\% cheaper than on-demand and tolerable for embarrassingly parallel phylogenomic jobs that checkpoint well.
+
+A hybrid approach is increasingly the recommended strategy for academic genomics labs: own a modest base system for daily work, burst to cloud during peaks.
+
+\subsubsection{5-Year Total Cost of Ownership Projection}
+
+\begin{table}[htbp]
+\centering
+\caption{5-Year Total Cost of Ownership Projection}
+\begin{tabular}{lrr}
+\hline
+\textbf{Category} & \textbf{Year 1} & \textbf{Years 2--5 (annual)} \\
+\hline
+Hardware acquisition & \$163,000--\$185,000 & --- \\
+Electricity (~8 kW sustained) & \$7,000 & \$7,000 \\
+Cooling (supplemental, est.) & \$2,000 & \$2,000 \\
+System administration (0.25 FTE) & \$20,000 & \$20,000 \\
+Warranty/replacement fund & --- & \$5,000 \\
+Cloud burst (contingency) & \$3,000 & \$3,000 \\
+\hline
+\textbf{TOTAL} & \textbf{\$195,000--\$217,000} & \textbf{\$37,000/yr} \\
+\hline
+\multicolumn{3}{l}{\textbf{5-Year Total Cost: ~\$343,000--\$365,000}} \\
+\multicolumn{3}{l}{\textbf{Cost per user per year (15--25 users): \$2,700--\$4,900}} \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Software Stack and Environment Management}
+
+\subsection{Operating System and Job Scheduling}
+
+All nodes will run Rocky Linux 9 (RHEL-compatible), which provides long-term stability and broad compatibility with bioinformatics software. The SLURM workload manager \parencite{slurm2023} will handle job scheduling, resource allocation, and accounting.
+
+SLURM is the dominant scheduler in academic HPC and provides native support for GPU-aware scheduling (GRES), job arrays (essential for phylogenomic batch processing), fair-share scheduling across user groups, and detailed accounting for resource usage reporting.
+
+\subsection{Containerization and Reproducibility}
+
+Software environments will be managed via Apptainer containers (formerly Singularity) and the Lmod environment module system. Apptainer containers allow users to package complete software stacks (including specific versions of IQ-TREE, RAxML-NG, BEAST, MAFFT, etc.) in portable and reproducible images that can be shared and archived alongside publications.
+
+Unlike Docker, Apptainer runs unprivileged and integrates natively with SLURM, making it suitable for shared HPC environments. Pre-built container images for common phylogenomic workflows will be maintained by the system administration team.
+
+\subsection{Pipeline Orchestration}
+
+Users will be encouraged to implement reproducible workflows using Snakemake \parencite{molder2021} or Nextflow, both integrating with SLURM to automatically decompose phylogenomic pipelines into parallelizable job steps. A departmental Snakemake template for standard phylogenomic workflows (QC $\rightarrow$ assembly $\rightarrow$ orthology $\rightarrow$ alignment $\rightarrow$ trimming $\rightarrow$ gene trees $\rightarrow$ species tree) will be provided as a starting point.
+
+\section{Resource Allocation Strategy}
+
+\subsection{SLURM Partition Design}
+
+The cluster will be divided into SLURM partitions that map to hardware topology and computational profiles identified above:
+
+\begin{table}[htbp]
+\centering
+\caption{Recommended SLURM Partitions}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llll}
+\hline
+\textbf{Partition} & \textbf{Nodes} & \textbf{Max Walltime} & \textbf{Use Case} \\
+\hline
+standard & Type A (4 nodes) & 7 days & ML tree search, alignment \\
+highmem & Type B (1 node) & 14 days & \textit{De novo} assembly, large concatenated analyses \\
+gpu & Type C (1 node) & 14 days & BEAST/MrBayes with BEAGLE \\
+quick & All Type A & 4 hours & QC, trimming, ASTRAL, testing \\
+\hline
+\end{tabular}%
+}
+\end{table}
+
+\subsection{Fair-Share Scheduling}
+
+SLURM's fair-share scheduling algorithm will be configured with hierarchical accounts corresponding to research groups. Each PI will receive a baseline allocation (\textit{e.g.}, 40\% of cluster capacity for primary phylogenomics group, with remainder divided among collaborating groups). Fair-share decay ensures that groups that have recently consumed disproportionate resources are deprioritized in the queue, preventing any single project from monopolizing the cluster.
+
+\subsection{Resource Limits and Accountability}
+
+Per-user CPU and memory limits will be enforced via SLURM fair-share scheduling. Without these, a single user running 10,000 IQ-TREE jobs will starve all others. Maximum wall-time limits per partition prevent zombie jobs from hoarding resources. SLURM accounting (\texttt{sacct}) will be used to monitor usage, justify hardware purchases in grant reports, and identify bottlenecks.
+
+\section{Recommended Resource Requirements by Analysis Type}
+
+\begin{table}[htbp]
+\centering
+\caption{Recommended Resource Requests by Analysis Type}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lllll}
+\hline
+\textbf{Task} & \textbf{Cores} & \textbf{RAM} & \textbf{Partition} & \textbf{Notes} \\
+\hline
+fastp (per sample) & 4--8 & 8 GB & quick & Job array; ~5 min/sample \\
+MAFFT L-INS-i (per locus) & 4 & 4 GB & quick & Job array; sec--min/locus \\
+IQ-TREE gene tree & 4--8 & 4 GB & standard & Job array; 10 min--hrs/locus \\
+IQ-TREE concat. (partitioned) & 32--64 & 64--128 GB & standard & Single large job; hrs--days \\
+RAxML-NG (partitioned) & 32--64 & 64--128 GB & standard & Consider MPI for >64 cores \\
+Trinity assembly & 32 & 256--1024 GB & highmem & Requires Type B node \\
+BEAST + BEAGLE (per chain) & 4--8 + 1 GPU & 32 GB + 48GB VRAM & gpu & Use \texttt{-{}-gres=gpu:1} \\
+ASTRAL-III & 1--4 & 16 GB & quick & Usually < 30 minutes \\
+\hline
+\end{tabular}%
+}
+\end{table}
+
+\section{Multi-User Management}
+
+\subsection{Account Structure}
+
+User accounts will be managed through LDAP, integrated with the university's existing identity management system. SLURM accounts will follow a hierarchical structure: a top-level ``phylogenomics'' account with sub-accounts for each PI group. Graduate students and postdocs will be added to their PI's sub-account, inheriting fair-share allocations and partition access.
+
+\subsection{Storage Quotas}
+
+Each user will receive a 50 GB home directory (backed up nightly) and 2 TB scratch allocation on the NAS. Group-level shared directories will be provisioned at 10--20 TB per PI, depending on active project needs. Scratch directories unused for more than 60 days will be marked for archival. An automated monthly report will notify users of storage consumption and approaching quota limits.
+
+\subsection{Security and Access Control}
+
+SSH key-based authentication will be required for all access. Two-factor authentication will be enforced for administrative operations. User data will be segregated by Unix group permissions, and sensitive datasets can be placed in restricted directories accessible only to authorized users. All nodes will be behind the departmental firewall, with access only via VPN or campus network.
+
+\subsection{Training and Documentation}
+
+A departmental wiki will provide documentation covering SLURM job submission, container usage, example SLURM scripts for common phylogenomic tasks, and resource allocation best practices. Bi-annual workshops will be offered for new graduate students. Power users will be designated as ``cluster champions'' to provide peer-level support and contribute to documentation.
+
+\section{Monitoring and Alerts}
+
+You cannot optimize what you do not measure.
+
+\begin{itemize}
+\item \textbf{Resource Monitoring:} Deploy a lightweight stack such as Prometheus + Grafana or simply use SLURM's built-in accounting plus summaries of \texttt{squeue}/\texttt{sacct}. Track CPU utilization, memory high-water marks, disk I/O throughput, and GPU utilization over time.
+
+\item \textbf{Thermal and Hardware Health:} Use IPMI/iDRAC/iLO (available on all server-grade hardware) to monitor temperatures, fan speeds, and disk health. Configure email alerts for SMART disk warnings and thermal throttling events.
+
+\item \textbf{Job Efficiency Audits:} Periodically review completed jobs. Users who request 500 GB of RAM but use 30 GB, or request 64 cores but run single-threaded, waste scheduler resources. Provide feedback --- most users simply copy-paste job scripts without adjusting parameters.
+\end{itemize}
+
+\section{Scalability Roadmap: Think in Phases}
+
+Most labs cannot (and should not) build a complete cluster on day one. A sensible progression:
+
+\begin{enumerate}
+\item \textbf{Phase 1 --- Single high-spec workstation} (dual-socket, 256--512 GB RAM, 64--128 cores, NVMe scratch, 1 GPU). Install SLURM even here. This handles the majority of phylogenomic workflows for a 3--5 user lab.
+
+\item \textbf{Phase 2 --- Add second node} when CPU contention becomes chronic. Connect via 10/25 GbE, share data via NFS.
+
+\item \textbf{Phase 3 --- Dedicated storage server} when data volumes exceed local disks. Centralize warm and cold storage.
+
+\item \textbf{Phase 4 --- Heterogeneous cluster} with specialized nodes (high-memory, GPU, high-clock) as grants and workloads justify.
+
+\item \textbf{Ongoing --- Cloud bursting} for transient peak demand instead of over-provisioning permanent hardware.
+\end{enumerate}
+
+\section{Conclusion}
+
+Well-designed HPC systems for phylogenomics amplify the analytical capacity of research groups by orders of magnitude. The investment --- initial capital, electricity, staff --- is significant, but returns quickly in the form of more analyses per researcher, more trained students, and higher-quality publications. For laboratories operating in institutions with limited central HPC support, a dedicated departmental cluster is often the most pragmatic path to sustained analytical productivity.
+
+\clearpage
+\begin{revise}
+\begin{enumerate}
+    \item 8 workflow phases: (1) QC/pre-proc.\ (I/O, fastp 4--8 cores), (2) assembly/mapping (CPU+RAM, Trinity >100\,GB), (3) orthology (OrthoFinder, parallel DIAMOND), (4) alignment (MAFFT, SLURM arrays), (5) trimming (trimAl/BMGE, lightweight), (6) ML gene tree (IQ-TREE/RAxML-NG, AVX-512, 4--8 cores/locus), (7) Bayesian gene tree (BEAST+BEAGLE/GPU, 24--48\,GB VRAM), (8) species tree (lightweight ASTRAL; heavy concatenation).
+    \item Heterogeneous design: 3 node types. Type A (4 nodes): 2$\times$EPYC 9554 (128 cores), 512\,GB DDR5. Type B (1 node): 1.5\,TB RAM (assembly). Type C (1 node): 2$\times$RTX A6000 (48\,GB VRAM each).
+    \item CPU: EPYC 9554 --- 64 cores, 3.75\,GHz boost, 256\,MB L3, native AVX-512 (Zen 4).
+    \item GPU: RTX A6000 for BEAGLE/CUDA; ~10\,GB VRAM for 500 OTUs $\times$ 50,000 patterns in double precision.
+    \item 3-tier storage: Tier 1 NVMe (fast scratch), Tier 2 SATA/HDD RAID (warm), Tier 3 cold/archival (tape/cloud).
+    \item Network: 25\,GbE sufficient if jobs are independent per-locus; InfiniBand (HDR 200\,Gb/s) only for cross-node MPI (ExaBayes).
+    \item SLURM: partitions \texttt{standard} (Type A, 7d), \texttt{highmem} (Type B, 14d), \texttt{gpu} (Type C, 14d), \texttt{quick} (4h); hierarchical fair-share per PI.
+    \item 5-year TCO: hardware \$163--185k + electricity \$7k/yr + cooling \$2k/yr + sysadmin 0.25 FTE \$20k/yr + contingency = \textbf{\$343--365k total}; \$2,700--4,900/user/yr.
+    \item Software: Rocky Linux 9, Apptainer (Singularity) for containers, Snakemake/Nextflow for pipelines, Lmod for modules.
+    \item Scalability roadmap: Phase 1 (single workstation + SLURM) $\to$ Phase 2 (2nd node, NFS) $\to$ Phase 3 (dedicated NAS) $\to$ Phase 4 (heterogeneous cluster) $\to$ ongoing cloud bursting.
+\end{enumerate}
+\end{revise}
+
+\clearpage
+
+\printbibliography[heading=subbibliography,title={References}]
+

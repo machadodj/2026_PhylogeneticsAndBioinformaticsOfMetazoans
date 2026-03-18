@@ -1,0 +1,209 @@
+\chapter{Information Technology Applied to Phylogenetic Problems}
+
+\section*{Abstract}
+
+Phylogenetic inference --- the reconstruction of evolutionary relationships among organisms --- has been profoundly shaped by advances in information technology since its formalization as a computational discipline in the 1960s. This review examines the historical interaction between computing hardware, software design, programming language choice, and phylogenetic methodology. Beginning with the first implementations of parsimony and likelihood algorithms on mainframe computers, the narrative traces the development of seminal software packages (PHYLIP, Hennig86, PAUP*, POY, TNT, MrBayes, RAxML, BEAST, IQ-TREE, and PhyG), the Bayesian MCMC revolution of the early 2000s, and the ongoing challenge of scaling analyses to genome-scale datasets. Central debates --- including parsimony versus likelihood, trees versus networks, and the search for a unified optimality criterion --- are examined alongside the computational obstacles that constrain them. Three recent contributions from Wheeler and collaborators are used as case studies: the PhyG software for phylogenetic graph analysis (\textcite{wheeler2024a}), Thompson sampling for adaptive search optimization (\textcite{wheeler2024}), and the Phylogenetic Minimum Description Length (PMDL) criterion (\textcite{wheeler2025}). The review concludes by identifying persistent unresolved obstacles, including NP-hardness of tree search, incomputability of algorithmic complexity, the difficulty in bridging cladistic and model-based analytical traditions, and the emerging role of machine learning in phylogenetics.
+
+\textbf{Keywords:} phylogenetics, computational complexity, heuristic search, phylogenetic networks, minimum description length, MCMC, maximum likelihood, software
+
+\section{Introduction}
+
+Computational phylogenetics emerged from a synthesis between evolutionary biology and computer science. Before the 1960s, phylogenetic reconstruction was predominantly manual, based on morphological characters and comparative pattern analysis. The problems were small --- typically tens of taxa --- and could be solved by visual inspection or hand calculations. Early contributions from Hennig (1950), Remane (1952), and Mayr and Linsley (1954) established conceptual principles, but lacked the computational speed to explore them systematically.
+
+Initial mathematical formalization came from Edwards and Cavalli-Sforza (1964), who applied maximum likelihood methods to genetic data, and from Fitch and Margoliash (1967), who developed the minimum evolution method. However, widespread adoption of computational methods in phylogenetic analyses awaited the availability of accessible software. The catalyst was Felsenstein (1973), whose program PHYLIP (Phylogenetic Inference by Maximum Likelihood) and its sequence of developments provided computationally viable implementations of parsimony and likelihood on mainframes and, later, on personal computers.
+
+This chapter examines the history of phylogenetic software design, the methodological debates that shaped implementation choices, and the computational obstacles that remain unresolved. The focus is on how information technology --- hardware, programming languages, and search techniques --- has either facilitated or constrained methodological advances in phylogenetics.
+
+\section{Historical Overview of Phylogenetic Software}
+
+\subsection{The Early Era: Mainframes and the Birth of PHYLIP (1973--1985)}
+
+Felsenstein's PHYLIP (\textit{PHYLogeny Inference Package}), released in 1973 with significant updates in 1978 and 1985, was the first truly portable and extensible phylogenetic software. Written in FORTRAN and later converted to C, PHYLIP ran on mainframes (UNIX, VMS) and, crucially, on personal computers once they became available. The modular architecture --- with separate programs for parsimony (PARS), likelihood (DNAML, PROML), distance (NEIGHBOR), and tree drawing (DRAWTREE) --- established a design standard that persists to this day.
+
+PHYLIP's genius was twofold: (1) it implemented mathematically rigorous but computationally demanding algorithms in efficient language (C), allowing application to data sizes that were previously intractable; and (2) it provided a consistent and well-documented user interface that democratized phylogenetic analysis. Researchers without programming experience could now execute complex analyses.
+
+PHYLIP's limitation was its tree search. The parsimony algorithm employed (`fitch' originally, later refined branch-and-bound search) was enumerative and consequently exponential in the number of taxa. For data with more than 20--30 taxa, exhaustive search became computationally prohibitive. Heuristic methods (random sequential addition, nearest-neighbor search) were adopted for speed, but always with the cost of possible suboptimality.
+
+\subsection{Proliferation of Specialized Software (1985--2000)}
+
+The 1980s and 1990s saw an explosion of new programs, each optimized for a different set of criteria and data:
+
+\begin{itemize}
+\item \textbf{PAUP* (Phylogenetic Analysis Using Parsimony)} \parencite{swofford1993}: The intellectual commercial successor to PHYLIP, developed by David Swofford. PAUP* implemented advanced search algorithms (branch-and-bound search with efficient pruning, nearest-neighbor search with multiple starting points) and was the first to integrate parsimony and maximum likelihood in a single platform. Its graphical interface and powerful command language made it the gold standard for molecular phylogenetics until the emergence of MrBayes. The downside: PAUP* was commercial (paid license) and, for a time, the phylogenetic community was divided between PHYLIP users (free, open) and PAUP* users (paid, faster).
+
+\item \textbf{HENNIG86 and TNT} \parencite{goloboff2008}: Originally developed by James Farris in 1986 and based on Farris's earlier HENNIG program, HENNIG86 was optimized specifically for parsimony and emphasized algorithms for implicit tree enumeration. Its successor, TNT (Tree analysis using New Technology) by Goloboff et al., revolutionized parsimony search with the implementation of efficient branch-and-bound search with critical cost pruning and intelligent use of memory caching to iteratively explore the neighborhood of current solutions. TNT remains among the fastest parsimony searchers and is the standard for studies with many taxa (>500).
+
+\item \textbf{POY (Phylogenetic Analysis Using Parsimony)} \parencite{wheeler2001}: A distinct program aimed at data that are not aligned a priori, particularly DNA and protein sequences where alignment is uncertain. POY employed simultaneous searches in both alignment and tree space, treating alignment as a variable dynamic search state, not fixed. This approach was computationally much more expensive than fixed alignment plus tree search, but offered the theoretical advantage of avoiding artifacts from initial alignment.
+
+\item \textbf{RAxML (Randomized Axelerated Maximum Likelihood)} \parencite{stamatakis2006}: Released in 2006 by Alexandros Stamatakis, RAxML was a game changer. It implemented maximum likelihood search with rapid convergence heuristics (branch-and-bound search, nearest-neighbor search) and, crucially, efficient parallelization for distributed memory systems (MPI). RAxML could run on HPC clusters and scale to hundreds of cores. Its rapid search algorithm (with frequent likelihood function evaluation) and branch rearrangement parallelization made it the de facto standard for large-scale likelihood analyses in the post-2006 era. RAxML is written in C with MPI extensions, demonstrating how careful design can harness hardware parallelism.
+
+\item \textbf{BEAST (Bayesian Evolutionary Analysis by Sampling Trees)} \parencite{drummond2007}: Representing a fundamentally new paradigm, BEAST was specialized for Bayesian analysis of hierarchical data, particularly those with dating uncertainty and multiple lineages. The software implemented MCMC (Markov Chain Monte Carlo) to sample the joint posterior distribution of trees and model parameters. Its architectural innovation was enabling flexible prior relaxation, complex substitution models, and hierarchical data structures (calibration dates, multiple loci, multiple individuals per species). BEAST introduced a new computational paradigm: instead of searching for a global optimal tree (as in parsimony or likelihood), MCMC sampled the posterior distribution, and uncertainty was captured naturally.
+
+\end{itemize}
+
+\subsection{The Bayesian Revolution and MCMC (2000--2015)}
+
+MrBayes \parencite{ronquist2003}, developed by Fredrik Ronquist and John Huelsenbeck, was the catalyst for widespread adoption of Bayesian methods in molecular phylogenetics. MrBayes implemented MCMC with intelligent proposal solutions to the problem of exploration in tree space (topology plus branch lengths plus model parameters). The Metropolis-Hastings algorithm was combined with well-calibrated tree moves (subtree pruning and regrafting) that improved chain mixing.
+
+The Bayesian revolution had profound computational implications. Unlike heuristic search (which attempts to find one peak), MCMC attempts to sample the neighborhood of many peaks, exploring parameter space more exhaustively. This typically requires more iterations for convergence --- not infrequently chains with 1 to 10 million generations. The tradeoff was that phylogenetic uncertainty was captured naturally: the posterior distribution of trees represented uncertainty from both stochastic analysis and data.
+
+The computational disadvantage of MCMC was obvious: a Bayesian analysis typically took 10--100$\times$ more CPU time than a comparable maximum likelihood analysis, because the algorithm had to explore more of the space. For datasets with hundreds or thousands of taxa, Bayesian analyses became impractical on single-processor machines. Parallelization of MrBayes on MPI systems helped, but did not fully resolve the problem.
+
+\subsection{Modern Software: Efficient Paradigms (2015--Present)}
+
+The computational limitations of complex Bayesian methods, combined with the data revolution (next-generation sequencing producing millions of loci), drove a new wave of optimizations.
+
+\textbf{IQ-TREE (Inferred Quotient Tree)} \parencite{minh2020}: Developed by Bui Quang Minh and collaborators, IQ-TREE implemented a suite of innovations:
+
+\begin{enumerate}
+\item UFBoot fast model selection algorithm that tests substitution models without respecifying the tree between tests, saving optimization iterations.
+\item Model space search with information criteria (BIC, AICc) enabling automatic model selection.
+\item Fast support calculation algorithm (aBayes, aLRT, SH-aLRT) that avoided resampling.
+\item Embarrassingly parallel analysis of multiple loci (file-by-file parallelism).
+\item SIMD compilation (SIMD instructions such as AVX2, AVX512) that vectorized critical likelihood operations.
+\end{enumerate}
+
+IQ-TREE quickly became the gold standard for phylogenetic likelihood analyses on genomic datasets.
+
+\textbf{RAxML-NG} \parencite{kozlov2019}: A modern rewrite of classic RAxML, with code refactored for cache efficiency, native support for advanced SIMD (AVX3), and modular API enabling integration with workflow frameworks (Nextflow, Snakemake). RAxML-NG maintains RAxML's status as one of the fastest maximum likelihood searchers.
+
+\textbf{BEAST 2} \parencite{bouckaert2019}: A complete rewrite of BEAST with new MCMC engine, new proposed operators for better mixing, and, crucially, integration with the BEAGLE library (Ayres et al., 2019) for GPU-accelerated likelihood calculation.
+
+\textbf{PhyG} \parencite{wheeler2024a}: Innovative software for phylogenetic graph analysis, enabling explicit representation of reticulation events (hybridization, lateral transfer) that do not fit the standard tree model. PhyG implements search in graph space (highly combinatorially complex) using sophisticated heuristics including Thompson sampling.
+
+\section{Central Debates Shaped by Computation}
+
+\subsection{Parsimony Versus Likelihood}
+
+One of the oldest debates in phylogenetics is whether parsimony (minimizing evolutionary change) or likelihood (maximizing probability of data under an evolutionary model) is methodologically preferable. This debate has deep theoretical roots, but also computational limitations.
+
+Parsimony is computationally simpler: Fitch's dynamic programming algorithm \parencite{fitch1971} computes parsimony in time $O(n \cdot m)$ for $n$ taxa and $m$ characters. Finding the minimum parsimony tree is NP-hard, but rapid search heuristics (branch-and-bound search in TNT, neighborhood search in PAUP*) can find good local minima in reasonable time even for large data.
+
+Likelihood is computationally more expensive. Felsenstein's dynamic programming algorithm for computing likelihood is also $O(n \cdot m)$ per evaluation, but each tree search move requires reevaluation --- and for complex networks of evolutionary models (multiple partitions, variable-rate models, molecular clocks), the constant factor is much larger. Consequently, any likelihood analysis that is not a small dataset requires significant parallelization or hardware acceleration (GPU).
+
+The historical trend reflects computational cost. In the 1980s--1990s, parsimony dominated because data were small, machines were slow, and parsimony was fast. With the advent of faster machines, multiprocessors, and later GPUs, likelihood and Bayesian methods became practical. Today, most analysts prefer likelihood or Bayesian methods, because they capture model and data uncertainty more transparently, but parsimony persists in contexts where search efficiency is critical (very large data, high number of taxa).
+
+\subsection{Networks Versus Trees}
+
+Most classical phylogenetics assumes a tree topology: each modern species descends from a common ancestor, and relationships form a bifurcating tree structure. However, reticulation (events where lineages do not descend linearly from an ancestor but instead recombination, hybridization, or lateral gene transfer occur) violates the tree model.
+
+Phylogenetic network methods such as quasi-median networks \parencite{holland2004}, split networks \parencite{bryant2004}, and more recently PhyG \parencite{wheeler2024a} explicitly represent reticulation. The computational complexity of network inference is substantially higher than tree inference. Search space in reticulated graphs is exponentially larger, and network likelihood is computationally more expensive to evaluate.
+
+The computational constraint kept tree methods dominant for decades. Only recently, with faster hardware and better heuristics (Thompson sampling in PhyG), have network methods become practical for moderately-sized datasets. Nevertheless, most practical phylogenetics remains in trees because networks are computationally expensive and require much larger datasets for statistical resolution of reticulation.
+
+\subsection{Unified Optimality Criterion}
+
+Since the birth of computational phylogenetics, the field has debated: which optimality criterion is correct? Parsimony minimizes evolutionary steps, maximum likelihood maximizes probability under a model, Bayesian methods sample posterior distributions. Each has theoretical justification, but they are theoretically inconsistent and frequently yield different trees.
+
+A recent approach is minimum description length (MDL) \parencite{wheeler2025}, which formalizes the idea that the best phylogenetic hypothesis is one that provides the most efficient compression of the data --- intuitively, one that captures pattern with the least ad hoc information. For phylogenetics, PMDL (Phylogenetic Minimum Description Length) \parencite{wheeler2025} defines a description length that includes:
+
+\begin{equation}
+\text{PMDL} = \text{(desc. length tree)} + \text{(desc. length data | tree)}
+\end{equation}
+
+In principle, PMDL unifies parsimony (which minimizes steps) and likelihood (which minimizes residual data length). The computational barrier: computing PMDL requires evaluating the algorithmic complexity (Kolmogorov) of the model, which is incomputable in general. Heuristic approximations are under development, but PMDL remains more of a conceptual idea than a practical routine method.
+
+\section{Unresolved Computational Obstacles}
+
+\subsection{NP-Hardness of Tree Search}
+
+The problem of finding the minimum parsimony tree is NP-hard \parencite{graur1991}. This means that no known deterministic algorithm can solve the problem in polynomial time for arbitrarily large instances. Consequently, any search algorithm is heuristic: it can find a good solution, but cannot guarantee global optimality.
+
+This has profound practical implications. When an analyst runs a parsimony analysis and finds $k$ equally parsimonious trees, there is no guarantee that no even more parsimoniously optimal trees exist outside the explored search space. Different starting points, different search strategies, and different parameterizations may discover different sets of optimal trees.
+
+For maximum likelihood, the situation is even worse: the problem of finding the maximum likelihood tree is also NP-hard (Chor and Tuller), and the likelihood function is multimodal (many local maxima). Search heuristics such as branch-and-bound can get stuck in local maxima. Bayesian methods (MCMC) have the advantage of stochastic exploration, but convergence to true posterior distributions is guaranteed only asymptotically.
+
+\subsection{Incomputability of Algorithmic Complexity}
+
+As mentioned above, formalizing unified optimality criteria requires quantifying algorithmic complexity of data (Kolmogorov description length). However, this quantity is incomputable in general (Turing's halting theorem). This places a fundamental mathematical limit on any optimality scheme that attempts to be universal.
+
+The implication: no general-purpose phylogenetic program can compute a true universal measure of ``improvement'' of one tree over another. Any optimality criterion (parsimony, likelihood, approximate MDL) is of necessity a heuristic or partial approximation.
+
+\subsection{Conceptual Framework: Cladistics Versus Model-Based Methods}
+
+A profound and still-unresolved debate is between the cladistic tradition (focus on synapomorphies and analysis of discrete characters) and model-based methods (focus on probabilistic evolutionary models of sequence change). These traditions have distinct histories and philosophers, and their fundamental principles are sometimes in tension.
+
+From a computational perspective, classical cladistics (parsimony analysis of morphological data) is computationally simpler: heuristic search in discrete space. Model-based methods (likelihood analysis of DNA sequences under Markov models) are computationally more complex but theoretically more rigorous about model uncertainty.
+
+A potential bridge is that offered by recent software such as IQ-TREE: automatic model selection combined with flexible support analysis that does not assume a specific model. But fundamentally, the two conceptual frameworks have not yet been unified in a single theoretical framework.
+
+\subsection{Emerging Role of Machine Learning}
+
+Machine learning (deep neural networks, ensemble methods) has begun to be applied to phylogenetic problems:
+
+\begin{itemize}
+\item \textbf{Alignment prediction:} Neural networks have been trained to predict optimal alignments directly from raw sequences, bypassing classical dynamic programming algorithms.
+\item \textbf{Topology prediction:} Graph neural network architectures (graph neural networks, GNNs) can be trained on known trees to predict topology from new data.
+\item \textbf{Model selection:} Machine learning models can predict which substitution model is most appropriate for a given dataset, potentially faster than likelihood ratio tests.
+\end{itemize}
+
+The advantage: speed. A trained neural network model can make predictions in milliseconds, while classical recalculations take minutes. The disadvantage: interpretability and statistical rigor. Machine learning models are often ``black boxes'' --- it is unclear what was learned or whether the model extrapolates well to data outside the training domain. For phylogenetics, where data are often unique and under unknown evolutionary pressure, extrapolation is risky.
+
+The future role of machine learning is probably as a stack acceleration tool (rapid screening of many models, prediction of good initial estimates for optimization) before refinement via classical methods, rather than replacement of classical methods.
+
+\section{Case Study: Recent Contributions from Wheeler and Collaborators}
+
+Three recent contributions illustrate how computational design continues to shape modern phylogenetics.
+
+\subsection{PhyG: Phylogenetic Graph Analysis}
+
+\textcite{wheeler2024a} presented PhyG, software for phylogenetic graph inference that explicitly represents reticulation. PhyG's principal computational innovation is the implementation of Thompson sampling for graph space exploration.
+
+Thompson sampling is a multi-armed bandit exploration algorithm: in the absence of prior knowledge, it distributes search effort proportional to the promise of different search space regions based on past success. In phylogenetic search context, this allows PhyG to explore alternative graphs with an adaptive risk-reward strategy: regions of space that have produced good graphs receive more simulation, while less promising regions receive less.
+
+\subsection{Thompson Sampling for Adaptive Optimization}
+
+\textcite{wheeler2024} explored Thompson sampling as a general strategy for heuristic search in phylogenetics. The Thompson approach is well known in machine learning (contextual bandits, exploration-exploitation tradeoff), but its application to phylogenetic tree search is relatively novel.
+
+The computational advantage: Thompson sampling is parallelizable. Different threads or processes can maintain copies of the belief distribution about promising regions of search space and explore in parallel, periodically converging to share knowledge. This enables exploration of much larger search space than serial methods, and potentially finds better global minima.
+
+\subsection{Phylogenetic Minimum Description Length (PMDL)}
+
+\textcite{wheeler2025} formalized the minimum description length criterion for phylogenetics (PMDL), seeking a unified optimality criterion that reconciles parsimony and likelihood. PMDL captures the idea that the best phylogenetic hypothesis is one that explains the data with minimal total description (lower model complexity plus lower data residual).
+
+Computational implementation of PMDL is challenging because it requires approximations of algorithmic complexity of models (Kolmogorov). Heuristic versions are under development, but full impact remains to be seen.
+
+\section{Discussion: Future of Phylogenetic Software}
+
+The history of phylogenetic software illustrates general principles of scientific software design:
+
+\begin{enumerate}
+\item \textbf{Hardware optimization matters:} The choice of language, parallelization, and code vectorization have multiplicative effects on performance. RAxML, IQ-TREE, and PhyG all aggressively optimize for modern hardware (multicore, SIMD, GPU).
+
+\item \textbf{Computational constraints shape methodology:} Theoretical debates (parsimony vs. likelihood, trees vs. networks) do not occur in a vacuum; computational practicality influences which method is accepted as standard.
+
+\item \textbf{Modular architecture enables innovation:} PHYLIP established the standard of specialized modules for different tasks (parsing, analysis, visualization). This design facilitates adoption of new algorithms and allows users to compose customized analyses.
+
+\item \textbf{Openness and reproducibility:} Open-source software (PHYLIP, RAxML, IQ-TREE, MrBayes) with complete documentation and source code access enabled confidence, independent validation, and stimulation of community development. In contrast, commercial or closed software often did not receive the same adoption or innovation drive.
+
+\end{enumerate}
+
+The next generation of phylogenetic software will likely continue to leverage hardware acceleration (GPUs, TPUs), machine learning integration for stack acceleration heuristics, and modular designs enabling reproducible and traceable analyses via workflow systems (Snakemake, Nextflow). Unification of optimality criteria and resolution of cladistic versus model-based debates will probably come from theoretical research before computational innovation.
+
+\section{Conclusion}
+
+Computational phylogenetics emerged from synthesis between evolutionary biology and computer science. The history of its software development is a history of four decades of computational optimization, algorithmic design, and resolution of methodological disputes through implementation. The seminal softwares --- PHYLIP, PAUP*, TNT, RAxML, MrBayes, IQ-TREE, BEAST, and PhyG --- each shaped how modern phylogenetics is practiced, and each reflected compromises between theoretical rigor, computational efficiency, and usability.
+
+Obstacles remain unresolved, particularly NP-hardness of tree search and incomputability of universal optimal criteria. These are not deficiencies of particular software or current hardware, but fundamental mathematical limitations. Future progress will probably come from synthesis of approaches --- combining brute-force computational power (better hardware) with refined algorithms (better heuristics) and, potentially, machine learning as an acceleration tool, while always maintaining statistical rigor and interpretability.
+
+\clearpage
+\begin{revise}
+\begin{enumerate}
+    \item Software chronology: PHYLIP (Felsenstein, 1973, FORTRAN$\to$C) $\to$ HENNIG86/TNT (Farris/Goloboff, parsimony) $\to$ PAUP* (Swofford, parsimony+ML, commercial) $\to$ POY (Wheeler, dynamic alignment) $\to$ MrBayes (Ronquist \& Huelsenbeck, Bayesian MCMC) $\to$ RAxML (Stamatakis, 2006, MPI) $\to$ BEAST (Drummond, 2007, hierarchical MCMC) $\to$ IQ-TREE (Minh, UFBoot, SIMD) $\to$ RAxML-NG $\to$ BEAST 2 (BEAGLE/GPU) $\to$ PhyG (Wheeler, graphs).
+    \item Parsimony: Fitch algorithm $O(n\cdot m)$; search NP-hard; TNT = fastest searcher ($>$500 taxa).
+    \item ML: Felsenstein algorithm $O(n\cdot m)$ per evaluation; constant factor much larger than parsimony; requires parallelization/GPU.
+    \item Bayesian Revolution (2000--2015): MrBayes implemented Metropolis-Hastings + subtree pruning and regrafting moves; 10--100$\times$ more CPU than ML; MC$^3$ with hot chains.
+    \item IQ-TREE: UFBoot, automatic model selection (BIC/AICc), fast support (aBayes, SH-aLRT), SIMD (AVX2/AVX-512), file-by-file parallelism.
+    \item BEAGLE 3: library for GPU likelihood calculation; speedup up to 100$\times$; constraint = GPU memory.
+    \item Phylogenetic networks: quasi-median networks \parencite{holland2004}, Neighbor-Net \parencite{bryant2004}, PhyG \parencite{wheeler2024a}; search space exponentially larger than trees.
+    \item Thompson sampling (Wheeler, 2024): adaptive exploration of search space (multi-armed bandits); parallelizable; used in PhyG.
+    \item PMDL (Wheeler \& Varón, 2025): Phylogenetic Minimum Description Length criterion; unifies parsimony and likelihood; barrier = incomputability of Kolmogorov complexity.
+    \item Unresolved obstacles: NP-hardness (no guarantee of global optimum), incomputability of algorithmic complexity, tension between cladistic vs.\ model-based traditions.
+    \item Emerging ML: neural networks for alignment/topology/model prediction; fast but ``black box''; future role = heuristic stack acceleration.
+\end{enumerate}
+\end{revise}
+
+\clearpage
+
+\printbibliography[heading=subbibliography,title={References}]
+

@@ -1,0 +1,430 @@
+\chapter{Probabilistic Inference Methods for Phylogenomic Reconstruction}
+
+\section{Introduction}
+
+The reconstruction of phylogenetic relationships from genomic data sits at the intersection of evolutionary biology, statistics, and computational science. Over the past three decades, the dominant analytical paradigm in phylogenetics has shifted from parsimony-based methods to probabilistic approaches---maximum likelihood (ML) and Bayesian inference (BI). This shift has been driven by the explosion of molecular sequence data, the development of increasingly sophisticated models of sequence evolution, and the availability of computational power that would have seemed fantastic to systematists of the 1990s.
+
+As Wheeler (2012) reminds us, ``there is not a single answer to `which is the best method?' any more than there is a single answer to `which is the best tree?' A criterion must be specified in both cases'' \parencite{wheeler2012}. The choice of a probabilistic framework is itself a hypothesis about how inference should proceed---and it is one that has been vigorously contested on theoretical, philosophical, and practical grounds.
+
+\section{Theoretical Foundations of Probability in Phylogenetics}
+
+\subsection{The Likelihood Function}
+
+The likelihood of a tree $T$ given data $D$ is proportional to the probability of the data given the tree \parencite{edwards1972}:
+
+$$l(T|D) \propto \Pr(D|T)$$
+
+A systematic ML method selects the tree $T$ that maximizes $\Pr(D|T)$. This maximization requires specifying a set of \textit{nuisance parameters} $\theta$, defined as all quantities necessary to calculate $\Pr(D|T)$ beyond the data and tree topology \parencite{wheeler2012}. The three most consequential nuisance parameters are: (1) the character transformation model; (2) branch parameters (branch lengths); and (3) the distribution of rates of change across characters.
+
+\subsection{The General Markov Model}
+
+The most general reversible description of character change for $n$ states is specified by an instantaneous rate matrix $R$ and a stationary frequency vector $\symbf{\pi}$. The symmetry conditions imposed on $R$ are:
+
+$$\forall i,\; R_{ii} = 0; \quad \forall i,j,\; R_{ij} = R_{ji}; \quad \sum_{i=1}^{n}\sum_{j=1}^{n} \pi_i \cdot \pi_j \cdot R_{ij} = 1$$
+
+\textbf{Here is how we would read this equation, step-by-step:}
+
+\begin{itemize}
+    \item \textbf{Part 1:} ``For all $i$, ar-sub-ii equals zero;''
+    \item \textbf{Part 2:} ``For all $i$ and $j$, ar-sub-ij equals ar-sub-ji;''
+    \item \textbf{Part 3:} ``The double summation, with $i$ and $j$ from 1 to $n$, of pi-sub-i times pi-sub-j times ar-sub-ij equals 1.''
+\end{itemize}
+
+\textbf{See some pronunciation and context observations:}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabular}{lp{10cm}}
+\toprule
+\textbf{Symbol} & \textbf{Description and Pronunciation} \\
+\midrule
+$\forall$ & Read as ``for all'' or ``for any''. \\
+$R_{ii}, R_{ij}$ & Pronounced as the letter and subscripts (``ar-ii'' or ``ar-ij''). \\
+$\pi_i$ & The sound of $\pi$ in English is always ``pi'', never ``pie''. \\
+$\sum \sum$ & Called the ``double summation''. \\
+$n$ & Read simply as the letter ``en''. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+These matrices are combined in the rate matrix $Q$:
+
+$$Q_{ij} = \begin{cases} R_{i,j} \cdot \pi_j & \text{if } i \neq j \\ -\sum_{m=1}^{n} R_{i,m} \cdot \pi_m & \text{if } i = j \end{cases}$$
+
+The probability of change between states $i$ and $j$ in time $t$ is:
+
+$$P_{i,j}(t) = \sum_{m=1}^{n} e^{\lambda_m t} \cdot U_{m,i} \cdot U^{-1}_{j,m}$$
+
+where $\lambda_m$ (lambda-sub-$m$) are the eigenvalues of $Q$, $U$ is the matrix of eigenvectors, and $U^{-1}$ is its inverse.
+
+\section{Classification of Maximum Likelihood Methods}
+
+\subsection{The Concept of Nuisance Parameters}
+
+Wheeler (2012) presents a hierarchical classification of likelihood methods used in systematics. The key idea is that each method differs in \textit{how it treats nuisance parameters and ancestral state assignments}. This is a fundamental point frequently neglected: different formulations of what exactly is being maximized---averages over states (AML), best states at nodes (MPL), or best complete evolutionary paths (EPL)---lead to genuinely different methods with distinct properties.
+
+\subsection{Integrated Maximum Likelihood (IML)}
+
+If we knew the distribution of nuisance parameters, $\Phi(\theta|T)$, we could integrate them out of the parameter space $\Theta$:
+
+$$p(D|T) = \int p(D|T, \theta) d\Phi(\theta|T)$$
+
+\textbf{Here is how we would read this equation, step-by-step:}
+
+\begin{itemize}
+    \item \textbf{Left Side:} ``The probability pee ($p$) of dee ($D$) given tee ($T$) equals...''
+    \item \textbf{Right Side:} ``The integral of the probability pee ($p$) of dee ($D$) given tee ($T$) and theta ($\theta$), with respect to the measure phi ($\Phi$) of theta ($\theta$) given tee ($T$).''
+    \item \textbf{Fluent Reading:} ``The probability of D given T is the integral of the likelihood of D given T and theta ($\theta$), integrated over the prior distribution (or measure) of theta ($\theta$) given T.''
+\end{itemize}
+
+\vspace{0.5cm}
+
+\textbf{Some pronunciation and context observations:}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabular}{lp{10cm}}
+\hline
+\textbf{Symbol} & \textbf{Description and Pronunciation} \\ \hline
+$p(A|B)$ & The vertical bar ``$|$'' is always read as \textbf{``given''}. \\
+$\int$ & Read as \textbf{``integral''}. \\
+$\theta$ & Greek letter \textbf{``theta''}. \\
+$\Phi$ & Greek letter \textbf{``phi''} (uppercase). \\
+$d\Phi$ & The ``$d$'' indicates the differential, read as \textbf{``with respect to''} or \textbf{``in the measure of''}. \\ \hline
+\end{tabular}
+\end{center}
+
+The tree that maximizes this integrated probability is the \textbf{Integrated Maximum Likelihood} (IML) tree. This is the theoretically most satisfactory approach because it accounts for our uncertainty in the nuisance parameters rather than choosing a single ``best'' set.
+
+\subsection{Maximum A Posteriori (MAP)}
+
+If we also have a \textbf{prior distribution over trees}, $p(T)$, we can ask: which tree has the highest posterior probability? Székely and Steel (1999) showed that the method with the greatest expectation of returning the true tree selects the tree maximizing $p(T) \times \Pr(D|T)$. This is the \textbf{Maximum A Posteriori} (MAP) tree---the Bayesian estimate.
+
+Here is the important connection: when all tree priors are \textbf{equal} (a flat, non-informative prior), the MAP tree is identical to the IML tree. As Wheeler notes, ``the use of non-uniform tree priors (such as empirical or Yule) breaks this identity'' \parencite{wheeler2012}.
+
+\subsection{Relative Maximum Likelihood (RML) and Its Three Variants}
+
+In practice, we rarely know the distribution of nuisance parameters. Rather than integrating them, we \textbf{optimize}: we choose $\theta$ to maximize $p(D|T, \theta)$. This is called \textbf{Relative Maximum Likelihood} (RML), and it is ``in general, the methodology used in empirical analyses'' \parencite{wheeler2012}.
+
+\subsubsection{Average Maximum Likelihood (AML)}
+
+This is the most commonly used approach. It \textbf{sums over all possible vertex state assignments}, weighted by their probabilities. When people refer to ``ML'' in typical phylogenetic analyses, they generally mean AML---and Wheeler notes that ``for the remainder of this discussion, when we speak of ML methods, we will be referring to AML'' \parencite{wheeler2012}.
+
+In AML, ancestral states are nuisance parameters. We do not really care which state an ancestor had; we care about the likelihood of the \textit{tree and the data}. The statistically correct way to remove unknown quantities from a probability calculation is to \textbf{marginalize} (that is, sum or integrate) over them, not optimize them.
+
+\subsubsection{Most Parsimonious Likelihood (MPL)}
+
+Also suggested by Barry and Hartigan (1987), MPL \textbf{assigns specific vertex states} (along with other parameters) such that the overall likelihood of the tree is maximized. The name suggests a connection to parsimony, and indeed the idea of selecting ``better'' ancestral states sounds similar. However, there is a detail: in MPL, the \textbf{branch probabilities are the same across all characters}, so ``MPL will not (in general) choose the same tree as parsimony'' \parencite{wheeler2012}.
+
+MPL differs from AML in that it optimizes over ancestral states. It chooses the single best assignment. In statistics, replacing an integral with an optimization is known as taking a ``plug-in'' or point estimator, and it tends to \textbf{overestimate the evidence} for a particular tree.
+
+\subsubsection{Evolutionary Path Likelihood (EPL)}
+
+Originally proposed by Farris (1973), EPL goes beyond MPL. Instead of only specifying ancestral vertex states, EPL specifies \textbf{the entire sequence of intermediate character states between vertices} such that the overall likelihood of the tree is maximized. Think of it as maximizing the likelihood along each single ``path'' of evolution in the tree.
+
+A remarkable result: the tree that maximizes EPL \textbf{is precisely the most parsimonious tree}. Wheeler states this directly:
+
+\begin{quote}
+``The tree that maximizes this form of likelihood is precisely the most parsimonious tree. This result holds for a broad and robust set of assumptions (there is no requirement for low or homogeneous rates of character change, for example)'' \parencite{wheeler2012}
+\end{quote}
+
+\section{The Bayesian Perspective}
+
+\subsection{Bayes' Theorem and Posterior Inference}
+
+Bayesian inference in phylogenetics reformulates tree inference using Bayes' Theorem. The posterior probability of a topology $T$ given data $D$, substitution parameters $\theta$, and branch weights $t_T$ is:
+
+$$p(T|D, \theta, t_T) = \frac{p(T) \cdot p(D|T, \theta, t_T)}{\sum_{T_j \in \tau} p(T_j) \cdot p(D|T_j, \theta, t_T)}$$
+
+\textbf{Here is how we would read this equation, step-by-step:}
+
+\begin{itemize}
+    \item \textbf{Left Side:} ``The probability pee ($p$) of tee ($T$) given dee ($D$), theta ($\theta$) and tee sub-tee ($t_T$) equals...''
+    \item \textbf{Numerator:} ``The prior probability of tee ($T$) times the likelihood of dee ($D$) given tee ($T$), theta ($\theta$) and tee sub-tee ($t_T$)...''
+    \item \textbf{Denominator:} ``...divided by the summation, for all topologies tee-j ($T_j$) belonging to the set tau ($\tau$), of the probability of tee-sub-j ($T_j$) times the likelihood of dee ($D$) given tee-sub-j ($T_j$), theta ($\theta$) and tee sub-tee ($t_T$).''
+    \item \textbf{Fluent Reading:} ``The posterior of tree $T$ is the product of its prior and its likelihood, normalized by the summation of the probabilities of all possible topologies in tree space $\tau$.''
+\end{itemize}
+
+\vspace{0.5cm}
+
+\textbf{Some pronunciation and context observations:}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabular}{lp{10cm}}
+\hline
+\textbf{Symbol} & \textbf{Description and Pronunciation} \\ \hline
+$p(T)$ & Often called the \textbf{``prior''} of the topology. \\
+$t_T$ & Read as \textbf{``tee sub-tee''}, represents the branch lengths of tree $T$. \\
+$\sum_{T_j \in \tau}$ & Read as \textbf{``summation for each tee-j belonging to tau''}. \\
+$\tau$ & Greek letter \textbf{``tau''}, here representing the set of all possible topologies. \\
+$\frac{A}{B}$ & Aloud, we say the numerator and use the expression \textbf{``over''} or \textbf{``divided by''} for the denominator (in this case, $A$ over $B$ or $A$ divided by $B$). \\ \hline
+\end{tabular}
+\end{center}
+
+Integration over nuisance parameters removes the conditionality on them:
+
+$$p(T|D) = \frac{\iint p(\theta), p(T|\theta), p(t_T|\theta, T), p(D|\theta, T, t_T)\; dt_T, d\theta}{\sum_{T_j \in \tau} \iint p(\theta), p(T_j|\theta), p(t_{T_j}|\theta, T_j), p(D|\theta, T_j, t_{T_j})\; dt_{T_j}, d\theta}$$
+
+\textbf{Here is how we would read this equation, step-by-step:}
+
+\begin{itemize}
+    \item \textbf{Left Side:} ``The posterior probability of tree ($T$) given only the data ($D$).''
+    \item \textbf{Numerator:} ``The double integral over parameters theta ($\theta$) and branch weights ($t_T$) of the joint probability of all model components.''
+    \item \textbf{Denominator:} ``The summation, for all possible trees ($T_j$), of the same double integral performed in the numerator.''
+    \item \textbf{Fluent Reading:} ``The probability of topology $T$ is its likelihood marginalized over all possible values of parameters and branch lengths, normalized by the sum of the marginal likelihoods of all other topologies.''
+\end{itemize}
+
+\vspace{0.5cm}
+
+\textbf{Some pronunciation and context observations:}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabular}{lp{10cm}}
+\hline
+\textbf{Symbol} & \textbf{Description and Pronunciation} \\ \hline
+$\iint$ & Read as \textbf{``double integral''}. Represents integration over multiple parameters simultaneously. \\
+$dt_T, d\theta$ & Indicate the variables of integration. We read as \textbf{``with respect to tee-sub-tee and theta''}. \\
+Marginalization & The process of using integrals to ``remove'' nuisance parameters ($\theta, t_T$) and focus only on what matters ($T$). \\
+$p(T|D)$ & Note that $\theta$ and $t_T$ disappeared from the left side; this happens because they were \textbf{``integrated''} out of the equation. \\ \hline
+\end{tabular}
+\end{center}
+
+\subsection{Bayesian Convergence and the Bernstein--von Mises Theorem}
+
+A fundamental theoretical guarantee often cited in Bayesian analysis is that, given sufficient data, the posterior distribution will converge to the ``truth''. This is formalized by the \textbf{Bernstein--von Mises Theorem} (BvM). The BvM Theorem states that under specific regularity conditions, as the amount of data (in phylogenetics, the sequence length $n$) approaches infinity, the posterior distribution converges to a multivariate normal distribution centered at the true parameter values (or the maximum likelihood estimator), with variance shrinking to zero \parencite{vandervaart1998}.
+
+However, it is critical to recognize that this convergence guarantee is both \textbf{asymptotic} and \textbf{conditional}:
+
+\begin{itemize}
+    \item \textbf{Asymptotic.} Applies strictly only in the limit as $n \to \infty$. For any finite alignment (which is all we have), the guarantee is an approximation whose quality depends on how large $n$ is relative to the problem's complexity.
+    \item \textbf{Conditional.} The standard formulation of the BvM Theorem requires that the true data-generating mechanism (i.e., the actual biological process that produced the sequences) lies perfectly within the space of predefined models being explored. If the true model $M_{\text{true}}$ is not an element of the model space $\mathcal{M}$, the fundamental guarantees of the standard BvM Theorem do not apply directly.
+\end{itemize}
+
+\subsection{Discrete Topologies and BHV Tree Space}
+
+An additional subtlety frequently neglected: the classical BvM Theorem applies to continuous parameters in Euclidean space. Tree topologies, however, are \textbf{discrete combinatorial objects}. The phylogenetic parameter space is not a smooth manifold. It is, instead, a collection of orthants (one per topology) glued together along their boundaries, forming the Billera--Holmes--Vogtmann (BHV) tree space \parencite{billera2001}.
+
+The BvM Theorem can be applied to continuous parameters (branch lengths, substitution model parameters) \textit{conditional on a fixed topology}, but the convergence of posterior probability over topologies is a separate and more difficult problem. For the discrete topology itself, convergence behavior depends on additional conditions, including whether the true topology is identifiable under the assumed model, and whether the data provides sufficient signal to distinguish among competing topologies.
+
+\begin{tcolorbox}[
+    colback=green!5!white,
+    colframe=green!50!black,
+    title=\textbf{Explaining It Simply: The Problem with Trees},
+    arc=2mm, % Corner rounding
+    boxrule=0.5pt
+]
+Imagine you are trying to map the path of a road. In ordinary geometry, you can move smoothly in any direction. But in phylogenetics, changing the structure of a tree (the ``topology'') is like jumping from one universe to another.
+
+Each possible tree is like a separate room. You can move freely within the room (adjusting branch sizes), but to change who is ``related'' to whom, you need to cross a narrow door that connects these rooms. The \textbf{BHV tree space} is the mathematical name for that ``maze of rooms'' glued together. The challenge is that the normal rules of probability work well within each room, but become much more complicated when we try to decide which room the data should really be in.
+\end{tcolorbox}
+
+\begin{tcolorbox}[
+    colback=red!5!white,
+    colframe=red!75!black,
+    title=\textbf{Practical Consequences for Research},
+    arc=2mm
+]
+\begin{itemize}
+    \item \textbf{The Convergence Problem (MCMC):} Because tree space is a ``maze of rooms'', algorithms (like those in MrBayes or BEAST) often get ``stuck'' in one room (a topology) that looks good, but cannot find the door to an even better room. This is why we require millions of generations and the use of multiple cold and hot chains (MCMCMC).
+    \item \textbf{Non-Euclidean Uncertainty:} You cannot simply take the ``average'' of two different trees to get an average tree. In practice, we use the \textit{Majority Rule Consensus} or \textit{Maximum Clade Credibility Trees} because arithmetic averaging does not make sense in discrete spaces.
+    \item \textbf{Phylogenetic Signal vs. Noise:} If the ``truth'' lies exactly on the boundary between two rooms (e.g., a very fast radiation where the internal branch is nearly zero), the model may oscillate infinitely between topologies, generating low support (low posterior values) not from error, but from the very geometry of space itself.
+\end{itemize}
+\end{tcolorbox}
+
+\section{Model Misspecification}
+
+\subsection{Convergence to the Best Wrong Answer}
+
+In phylogenetics, we can state with confidence that the model is \textit{always} misspecified to some degree. Biological sequence evolution is a profoundly complex process driven by heterogeneous mutation rates, natural selection operating at multiple levels, incomplete lineage sorting, horizontal gene transfer, changing population dynamics, and context-dependent substitution processes. Standard Markov models of sequence evolution (\textit{e.g.}, GTR+$\Gamma$) are mathematically tractable abstractions.
+
+When the model is misspecified ($M_{\text{true}} \notin \mathcal{M}$), we must ask: to what does the Bayesian posterior distribution converge as sequence length increases?
+
+Under model misspecification, the posterior distribution does not converge to absolute truth. Instead, as $n \to \infty$, the posterior probability concentrates on the parameter values within the model space explored that minimize the Kullback--Leibler (KL) divergence from the true data-generating distribution. Formally, convergence is to:
+
+$$M^* = \arg\min_{M \in \mathcal{M}} D_{KL}(P_{\text{true}} \| P_M)$$
+
+\textbf{Here is how we would read this equation, step-by-step:}
+
+\begin{itemize}
+    \item \textbf{Left Side:} ``M-star ($M^*$) equals the argument of the minimum...''
+    \item \textbf{Right Side:} ``...over the set of models M ($\mathcal{M}$), of the Kullback--Leibler Divergence ($D_{KL}$) between the true distribution ($P_{\text{true}}$) and the model distribution ($P_M$).''
+    \item \textbf{Fluent Reading:} ``The ideal model $M^*$ is the one, within our set of possible models, that minimizes the information loss (KL Divergence) relative to the reality of the data.''
+\end{itemize}
+
+\vspace{0.5cm}
+
+\textbf{Some pronunciation and context observations:}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabular}{lp{10cm}}
+\hline
+\textbf{Symbol} & \textbf{Description and Pronunciation} \\ \hline
+$M^*$ & The asterisk indicates the \textbf{optimal} value or solution of the problem. \\
+$\arg\min$ & We do not want the minimum value of the distance, but rather \textbf{which model} generates that minimum. \\
+$\mathcal{M}$ & Calligraphic letter representing the \textbf{search space} (all the models you are testing). \\
+$D_{KL}(P|Q)$ & The \textbf{Kullback--Leibler Divergence}. Measures the ``distance'' (or extra surprise) between two distributions. \\ \hline
+\end{tabular}
+\end{center}
+
+This $M^*$ is sometimes called the ``pseudo-true'' parameter value: the best approximation to truth available within the wrong model family.
+
+\subsection{Topological Consequence}
+
+For \textbf{continuous} parameters (branch lengths, substitution rates), convergence to the KL minimizer may produce values that are ``close enough'' to be biologically useful, even if not exactly correct. But for tree topology (a \textbf{discrete} parameter), the consequences of misspecification are more prominent.
+
+A misspecified model may cause the posterior to concentrate on a topology that \textbf{is not the true tree}, and this concentration may occur with arbitrarily high posterior probability as $n \to \infty$. This is the mechanism underlying the well-documented phenomenon of posterior probability inflation: Bayesian posteriors may assign probability approaching 1.0 to incorrect clades when the model is wrong \parencite{suzuki2002,cummings2003,yang2007}.
+
+In phylogenomics, where massive datasets produce steep likelihood surfaces, this failure mode becomes especially dangerous: more data does not correct the error but instead increases the confidence with which the wrong answer is delivered \parencite{kumar2012}.
+
+\section{Finite Data and Inescapable Priors}
+
+Although asymptotic theorems are valuable for understanding theoretical properties of estimators, \textbf{empirical systematics deals exclusively with finite data}. The sequence length $n$ of any physical alignment is always a finite integer.
+
+Because \textbf{we operate permanently in a finite data regime}, the asymptotic state where perfect likelihood dominates the prior is never strictly reached.
+
+This equation explains the asymptotic state we spoke of above:
+
+\begin{equation*}
+    \lim_{t \to \infty} P_t = \pi
+\end{equation*}
+
+\textbf{Here is how we would read this definition, step-by-step:}
+
+\begin{itemize}
+    \item \textbf{Expression:} ``The limit of pee-sub-tee ($P_t$), as time tee ($t$) approaches infinity, equals pi ($\pi$).''
+    \item \textbf{Technical Meaning:} ``The distribution of the system converges to its stationary (or asymptotic) state $\pi$, regardless of where the system started.''
+    \item \textbf{Fluent Reading:} ``As time passes indefinitely, the configuration of the system stabilizes in a stable equilibrium distribution.''
+\end{itemize}
+
+\vspace{0.5cm}
+
+\textbf{Some pronunciation and context observations:}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabular}{lp{10cm}}
+\hline
+\textbf{Symbol} & \textbf{Description and Pronunciation} \\ \hline
+$\lim_{t \to \infty}$ & Read as \textbf{``limit with tee approaching infinity''}. Represents long-term behavior. \\
+$P_t$ & The probability distribution at instant $t$. \\
+$\pi$ & In phylogenetics, represents the \textbf{equilibrium frequencies} of bases (A, C, G, T) or amino acids. \\
+$\to$ & The arrow is read as \textbf{``approaches''} or \textbf{``goes to''}. \\ \hline
+\end{tabular}
+\end{center}
+
+Now, having explained the asymptotic state we referred to earlier, we can return to the proportionality of Bayes' Theorem:
+
+$$P(\tau, \theta|X) \propto P(X|\tau, \theta) \, P(\tau, \theta)$$
+
+\textbf{Here is how we would read this equation, step-by-step:}
+
+\begin{itemize}
+    \item \textbf{Left Side:} ``The posterior probability of tau ($\tau$) and theta ($\theta$) given xi ($X$) is proportional to...''
+    \item \textbf{Right Side:} ``...the likelihood of xi ($X$) given tau ($\tau$) and theta ($\theta$), times the prior probability of tau ($\tau$) and theta ($\theta$).''
+    \item \textbf{Fluent Reading:} ``The posterior is proportional to the product of the likelihood and the prior.''
+\end{itemize}
+
+\vspace{0.5cm}
+
+\textbf{Some pronunciation and context observations:}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabular}{lp{10cm}}
+\hline
+\textbf{Symbol} & \textbf{Description and Pronunciation} \\ \hline
+$\propto$ & Read as \textbf{``proportional to''}. Replaces the equals sign when we omit the denominator. \\
+$\tau$ & Greek letter \textbf{``tau''}. In phylogenetics, almost always represents the \textbf{tree topology}. \\
+$\theta$ & Greek letter \textbf{``theta''}. Represents the \textbf{model parameters} (such as substitution rates). \\
+$X$ & Represents the \textbf{observed data} (the DNA or amino acid sequences). \\ \hline
+\end{tabular}
+\end{center}
+
+The posterior is always a mathematical compromise between the information contained in the data (the likelihood) and the information specified before the data were observed (the prior). As $n$ grows, the likelihood surface becomes steeper and exerts much more leverage, flattening the relative impact of the prior. However, because $n$ is finite, the likelihood never achieves infinite precision.
+
+Consequently, \textbf{the prior distribution is strictly \textit{always} part of the final answer}.
+
+\subsection{Persistent Influence of the Prior}
+
+The influence of the prior (or ``\textit{prior}'') is not uniform across all parameters. For substitution model parameters (\textit{e.g.}, rate matrix entries and base frequencies), moderate amounts of data typically dominate reasonable priors, and the practical effect of the prior becomes negligible. These are parameters for which data are highly informative, the parameter space is low-dimensional, and different reasonable priors converge on similar posteriors.
+
+However, for other parameters listed below, \textit{the prior} can persist tenaciously:
+
+\begin{itemize}
+    \item \textbf{Tree topology.} The prior over topologies is a probability distribution over a combinatorially vast discrete space. For $n = 50$ taxa, there are approximately $2.8 \times 10^{76}$ unrooted bifurcating trees. A uniform prior assigns infinitesimal probability to each topology, and different structural priors (uniform vs. Yule vs. birth-death) assign different probabilities to different tree shapes. In regions of the tree where the data lack strong signal---rapid radiations, short internodes, saturated substitutions---the posterior over competing topologies will depend strongly on whatever prior was specified.
+
+    \item \textbf{Branch lengths close to zero.} Short internodes, which characterize rapid radiations and the ``anomaly zone'' of phylogenomics, are precisely the branches where data provide the minimum signal and priors have the maximum influence. Brown \textit{et al}. (2010) demonstrated that the standard exponential branch-length prior in MrBayes can produce inflated posterior probabilities and unreliable branch-length estimates, not from a software bug, but because the prior was inadvertently informative in ways that interacted poorly with the data. Rannala \textit{et al}. (2012) confirmed that branch-length priors can have substantial effects on tree posterior probabilities even with moderately large datasets.
+
+    \item \textbf{Divergence times.} In molecular clock analyses, the prior on branch rates (\textit{e.g.}, lognormal, exponential, or uniform) can shift estimated divergence dates by tens of millions of years. Wheeler (2012) suggests that ``given our lack of knowledge, sampling, lineage, environmental, and locus-specific (among a myriad of other known and unknown) effects, the uniform distribution would seem as appropriate as lognormal or exponential''. However, a uniform prior on rates is itself a strong statement, assigning equal prior probability to biologically absurd rates and plausible ones. Every prior says \textit{something}, and ``I don't know'' is not a probability distribution.
+\end{itemize}
+
+\section{Responsible Practices for Working with Priors and Models}
+
+If priors always matter and models are always wrong, the question is not whether these limitations can be eliminated (they cannot). Instead, the question becomes how to work responsibly within them.
+
+\subsection{Sensitivity Analysis}
+
+The most important practical answer is to vary both priors and models and examine how results change. If a clade is supported under one prior but not another, or under one model but not another, the data are not strong enough to support that clade independent of the method. This logic parallels Wheeler's (2012, Section 10.11) recommendation for sensitivity analysis under different cost regimes in parsimony. Conclusions robust to analytical assumptions are more reliable than those that are not.
+
+\subsection{Model Adequacy Testing}
+
+Rather than assuming the chosen model is ``close enough'', researchers should explicitly test whether the model fits the data, using tools such as posterior predictive simulations and model adequacy assessments. If the model fails its own goodness-of-fit test, the posterior it produces is conditional on an inadequate assumption, and no amount of data will rescue it.
+
+\begin{tcolorbox}[
+    colback=red!5!white,
+    colframe=red!75!black,
+    title=\textbf{The Problem of Model Adequacy},
+    arc=2mm
+]
+\begin{itemize}
+    \item \textbf{Selection vs. Adequacy:} Selecting a model is like choosing the shoe that fits best among three small options. Adequacy is measuring whether your foot really fits in any of them. If all are small, the ``best'' will still hurt your foot.
+    \item \textbf{Posterior Predictive Simulations (PPS):} This is a ``sanity check''. The software uses results from your analysis to generate synthetic (fictional) data. If data simulated by the model are completely different from your real DNA data, the model did not ``understand'' the biological process.
+    \item \textbf{The Danger of Data Quantity:} There is a myth that having large amounts of data (phylogenomics) corrects bad models. Quite the opposite! If the model is wrong, more data only gives it more confidence to arrive at the \textbf{wrong answer} with high posterior probability.
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Honest Reporting of Uncertainty}
+
+A posterior probability of 1.0 for a clade means ``this clade is overwhelmingly supported \textbf{given} the model and priors.'' It does not mean that ``this clade is certainly correct.'' Reporting clade support alongside concordance factors that quantify what proportion of the genome really supports a clade will provide a more honest picture of the evidence than posterior probabilities alone.
+
+\begin{tcolorbox}[
+    colback=green!5!white,
+    colframe=green!50!black,
+    title=\textbf{Posterior 1.0 vs. Biological Reality},
+    arc=2mm
+]
+\begin{itemize}
+    \item \textbf{The Illusion of 1.0:} In large datasets (phylogenomics), the posterior probability often ``inflates'' to 1.0. This happens because the Bayesian model accumulates so much mathematical evidence that it becomes ``mathematically certain'', even though the model itself oversimplifies biology.
+    \item \textbf{Conflicting Signal:} The genome is not a single unit. Different genes may have different histories (due to incomplete lineage sorting or hybridization). A posterior of 1.0 may hide the fact that, for example, 40\% of your gene data support a different tree.
+    \item \textbf{Concordance Factors (CF):} Unlike the posterior, CFs (such as the \textit{Gene Concordance Factor}) tell you: ``Of all the genes we examined, how many actually show this clade?''. If the posterior is 1.0 but the CF is 0.2, you know the support is mathematically strong, but there is massive underlying biological conflict.
+\end{itemize}
+\end{tcolorbox}
+
+\section{Conclusion}
+
+Probabilistic phylogenetic inference is a mathematically rigorous and practically powerful tool, but its results must be interpreted with a clear understanding of its mathematical limits. The convergence of posteriors to the ``truth'' is an asymptotic guarantee applicable to continuous parameters conditional on the unrealistic assumption of perfect model specification. This guarantee does not extend directly to discrete tree topologies. In biological reality, models are always approximations, meaning that under misspecification, inference converges to the best approximation available within the wrong model family. In the case of tree topology, this may mean convergence to an incorrect tree with high confidence.
+
+Furthermore, the finite nature of any genomic data ensures that prior assumptions remain permanently an active ingredient in the posterior distributions we calculate, with their influence persisting most strongly precisely where we need reliability: on short branches, in rapid radiations, and in divergence time estimates. As our collective understanding of Bayesian methods evolves over time, they may or may not remain popular and considered a flexible and informative tool. However, they must be used with the intellectual honesty they demand: testing model adequacy, conducting sensitivity analyses, and reporting uncertainty in ways that distinguish what the data say from what the assumptions contribute.
+
+\clearpage
+\begin{revise}
+\begin{enumerate}
+    \item Likelihood: $l(T|D) \propto \Pr(D|T)$; nuisance parameters $\theta$: substitution model, branch lengths, rate distribution \parencite{edwards1972,wheeler2012}.
+    \item Four forms of likelihood (Wheeler, 2012): \textbf{AML} (sum over ancestral states---the standard ``ML''), \textbf{MPL} (optimize states at nodes), \textbf{EPL} (Farris, 1973---specifies complete evolutionary path; $\text{EPL}_{\max} \equiv$ parsimony) and \textbf{IML} (integrates over $\theta$; = MAP with flat prior).
+    \item Bernstein--von Mises Theorem (BvM): posterior $\to$ normal centered at truth when $n\to\infty$ --- but \textbf{asymptotic} and \textbf{conditional} on true model $\in \mathcal{M}$.
+    \item Topologies are discrete objects; BHV tree space (Billera--Holmes--Vogtmann, 2001) is not smooth manifold; BvM for topologies is separate problem.
+    \item Misspecification ($M_{\text{true}} \notin \mathcal{M}$): posterior converges to KL minimizer $M^* = \arg\min D_{KL}(P_{\text{true}} \| P_M)$, not to truth.
+    \item Consequence: more data $\Rightarrow$ greater certainty in the \textbf{wrong answer} (posterior probability inflation) \parencite{suzuki2002,kumar2012}.
+    \item Prior is \textbf{always} active ingredient with finite data; influence persists in: topologies (combinatorial space $\sim 2{,}8\times 10^{76}$ for 50 taxa), short branches (rapid radiations) and divergence times.
+    \item Standard exponential prior on branch lengths in MrBayes can inflate posteriors (Brown et al., 2010; Rannala et al., 2012).
+    \item Responsible practices: sensitivity analysis (vary priors and models), model adequacy testing (posterior predictive simulations), honest reporting of uncertainty (concordance factors).
+\end{enumerate}
+\end{revise}
+
+\clearpage
+
+\printbibliography[heading=subbibliography,title={References}]
+

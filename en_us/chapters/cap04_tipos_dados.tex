@@ -1,0 +1,391 @@
+\chapter{Diversity of Data Types and Sequencing Strategies for Phylogenomic Reconstruction}
+
+In recent years, an explosion of sequencing methodologies and selective DNA enrichment has made it possible to generate phylogenomic data from practically any organism. However, the choice of the appropriate data type for a given project represents a crucial decision that affects the quality, cost, and applicability of the results. This chapter reviews a comprehensive range of sequencing strategies and data acquisition approaches, comparing their strengths and limitations in specific phylogenomic contexts.
+
+\section{Whole Genome Sequencing (Short Read)}
+
+Whole genome sequencing with short reads offers complete representation of genomic content, including coding, non-coding, regulatory, and repetitive regions. This approach is particularly valuable for deep and intermediate phylogenomic analyses.
+
+\subsection{General Characteristics}
+
+\begin{description}
+\item[Category:] Complete genome
+\item[Locus Type:] All (coding, non-coding, regulatory, repetitive)
+\item[Typical Number of Loci:] Entire genome; tens of thousands of extractable gene regions
+\item[Optimal Phylogenetic Scale:] All scales; best for deep and intermediate
+\item[DNA Quality:] High (high molecular weight DNA preferred for good assembly)
+\item[DNA Quantity:] Moderate to high (\(\geq 500\) ng typical)
+\item[Tissue:] Any tissue with sufficient DNA
+\item[Museum/Herbarium Specimen Compatibility:] Poor (fragmented DNA resulting in poor assembly)
+\item[Relative Cost:] High (U\$50--200+ per sample at useful depth)
+\item[Bioinformatic Complexity:] Very high (assembly, annotation, orthology pipelines)
+\item[Orthology Assessment Difficulty:] Moderate to high (paralogy from whole genome duplications and copy number variation)
+\item[Matrix Completeness Tendency:] High if genomes well assembled; variable otherwise
+\item[Cross-study Combinability:] Moderate (depends on assembly quality and gene prediction consistency)
+\item[Broad Taxonomic Resource:] Broad: prokaryotes, fungi, animals, plants; Earth BioGenome Project expanding rapidly
+\item[Suitability for Non-model Organisms:] Excellent in principle; cost and assembly complexity limit adoption in high-N studies
+\end{description}
+
+\subsection{Strengths and Limitations}
+
+The main advantages of this approach include complete genomic representation, possibility of synteny and gene family analyses, and archival value. Limitations include high cost at adequate depth for assembly, large genomes still being challenging, and substantial bioinformatic burden.
+
+\textcite{delsuc2005, jarvis2014, lewin2018, lozano-fernandez2022}
+
+\section{Whole Genome Sequencing (Long Read: PacBio HiFi / ONT)}
+
+Long read technologies enable assemblies with chromosome-level quality, resolving complex structural variants and repeat evolution.
+
+\subsection{General Characteristics}
+
+\begin{description}
+\item[Category:] Complete genome
+\item[Locus Type:] All (including repetitive, structural variants)
+\item[Typical Number of Loci:] Entire genome; chromosome-level assemblies achievable
+\item[Optimal Phylogenetic Scale:] All scales; enables structural variation and repeat evolution analysis
+\item[DNA Quality:] Very high (ultra-HMW DNA required, \(>20\) kb)
+\item[DNA Quantity:] High (\(>1\) $\mu$g for PacBio HiFi; \(>400\) ng for ONT ligation)
+\item[Tissue:] Fresh or liquid nitrogen frozen tissue strongly preferred
+\item[Museum/Herbarium Specimen Compatibility:] Very poor (long reads require intact DNA)
+\item[Relative Cost:] Very high (U\$200--1000+ per sample)
+\item[Bioinformatic Complexity:] Very high (assembly + polishing + annotation)
+\item[Orthology Assessment Difficulty:] Moderate to high (similar to short WGS once assembled)
+\item[Matrix Completeness Tendency:] Very high (chromosome-level assemblies reduce missing data)
+\item[Cross-study Combinability:] Moderate (assembly quality improves combinability)
+\item[Broad Taxonomic Range:] Growing rapidly: Vertebrate Genomes Project, Darwin Tree of Life, i5K
+\item[Suitability for Non-model Organisms:] Excellent for quality but prohibitively expensive for most population-level studies
+\end{description}
+
+\subsection{Strengths and Limitations}
+
+Chromosome-level assemblies resolve repeats, structural variants, and complex rearrangements with superior representation of genomic architecture. The main limitations are higher cost, more demanding tissue requirements, and impracticality of museum/herbarium material.
+
+\textcite{rhie2021, guiglielmoni2024, formenti2022}
+
+\section{Transcriptomics (RNA-seq)}
+
+RNA-seq captures exons of expressed protein-coding genes, offering efficient access to hundreds or thousands of nuclear single-copy loci. However, RNA quality and tissue requirements limit specimen sources.
+
+\subsection{General Characteristics}
+
+\begin{description}
+\item[Category:] Reduced representation (expression-dependent)
+\item[Locus Type:] Coding exons (expressed genes only)
+\item[Typical Number of Loci:] 1,000--20,000+ genes depending on tissue/condition
+\item[Optimal Phylogenetic Scale:] Intermediate to deep (>50 Mya); limited at shallow scales
+\item[RNA Quality:] High quality required (RIN $\geq$7 preferred)
+\item[RNA Quantity:] Moderate (\(\geq 100\) ng total RNA)
+\item[Tissue:] Fresh or RNAlater-preserved tissue; tissue type affects gene recovery
+\item[Museum/Herbarium Specimen Compatibility:] Very poor (RNA degrades rapidly)
+\item[Relative Cost:] Moderate (U\$30--100 per sample)
+\item[Bioinformatic Complexity:] High (de novo assembly, isoform resolution, orthology inference)
+\item[Orthology Assessment Difficulty:] High (paralogy, alternative splicing, tissue-specific expression)
+\item[Matrix Completeness Tendency:] Variable; depends on tissue overlap between samples
+\item[Cross-study Combinability:] Low to moderate (tissue must match between studies)
+\item[Broad Taxonomic Range:] Broad: 1KP (plants), i5K (insects), many vertebrate datasets
+\item[Suitability for Non-model Organisms:] Excellent for gene discovery; limited by RNA preservation requirements
+\end{description}
+
+\subsection{Strengths and Limitations}
+
+The approach recovers large number of coding loci, does not require probe design, and possesses integrated functional annotation. Limitations include strict RNA/tissue quality requirements, creation of missing data by tissue-specific expression, and orthology complicated by paralogy and alternative splicing.
+
+\textcite{dunn2008, misof2014, onetp2019, figuet2014}
+
+\section{Ultraconserved Elements (UCEs)}
+
+UCEs combine conserved cores (predominantly non-coding) with variable flanking regions, offering excellent cross-study combinability.
+
+\subsection{General Characteristics}
+
+\begin{description}
+\item[Category:] Target capture (probe-based enrichment)
+\item[Locus Type:] Mixed: conserved core (mostly non-coding) + variable flanking regions
+\item[Typical Number of Loci:] 500--5,000+ loci depending on probe set and divergence
+\item[Optimal Phylogenetic Scale:] Broad: deep to moderately shallow (\(\sim 5\)--500+ Mya)
+\item[DNA Quality:] Moderate (tolerates moderate degradation)
+\item[DNA Quantity:] Low to moderate (as low as 10--50 ng with optimized protocols)
+\item[Tissue:] Any tissue; dry specimens, ethanol-preserved, silica-gel-dried work
+\item[Museum/Herbarium Specimen Compatibility:] Good (one of the best approaches for museum/herbarium specimens with degraded DNA)
+\item[Relative Cost:] Low to moderate (U\$15--50 per sample once probes purchased)
+\item[Bioinformatic Complexity:] Moderate (PHYLUCE pipeline well established)
+\item[Orthology Assessment Difficulty:] Low (UCEs generally single-copy and highly conserved)
+\item[Matrix Completeness Tendency:] High (standardized probe sets recover consistent loci across taxa)
+\item[Cross-study Combinability:] Very high (same probe set $\rightarrow$ directly combinable)
+\item[Broad Taxonomic Range:] Vertebrates, arthropods, mollusks, nematodes, cnidarians, annelids; expanding to many animal clades
+\item[Suitability for Non-model Organisms:] Excellent: works with degraded DNA, low input, broad probe sets available
+\end{description}
+
+\subsection{Strengths and Limitations}
+
+Cross-study combinability is excellent, works with museum/degraded DNA, cost per sample is low after probe purchase, and bioinformatic pipeline well tested. Limitations include short alignments per locus, predominantly non-coding (limits functional interpretation), and probe sets must be developed per major clade.
+
+\textcite{faircloth2012, mccormack2013, zhang2019, branstetter2017}
+
+\section{Anchored Hybrid Enrichment (AHE)}
+
+AHE combines conserved anchor regions (often exonic) with variable flankers (intronic/intergenic), balancing conserved and variable regions.
+
+\subsection{General Characteristics}
+
+\begin{description}
+\item[Category:] Target capture (probe-based enrichment)
+\item[Locus Type:] Mixed: conserved anchor regions + variable flankers
+\item[Typical Number of Loci:] 300--600+ loci (vertebrate kits); expandable with custom designs
+\item[Optimal Phylogenetic Scale:] Broad: deep to shallow (\(\sim 1\)--500+ Mya)
+\item[DNA Quality:] Moderate (tolerates moderate degradation)
+\item[DNA Quantity:] Low to moderate (\(\sim 50\)--250 ng)
+\item[Tissue:] Any tissue with extractable DNA
+\item[Museum/Herbarium Specimen Compatibility:] Good (degraded DNA compatible with optimized protocols)
+\item[Relative Cost:] Moderate (U\$50--100 per sample through FSU center; includes library prep)
+\item[Bioinformatic Complexity:] Moderate (pipeline established through Center for Anchored Phylogenomics)
+\item[Orthology Assessment Difficulty:] Low to moderate (anchor loci selected for single-copy status)
+\item[Matrix Completeness Tendency:] High (standardized enrichment $\rightarrow$ consistent recovery)
+\item[Cross-study Combinability:] High (consistent probe sets within clades)
+\item[Broad Taxonomic Range:] Vertebrates well developed; arthropods, plants, fungi; kits for >dozen clades
+\item[Suitability for Non-model Organisms:] Excellent: broad probe design philosophy
+\end{description}
+
+\subsection{Strengths and Limitations}
+
+Loci longer than UCEs on average result in more signal per locus. Good balance of conserved and variable regions. Commercial pipeline available. Limitations include centralization at FSU, proprietary probe designs, and cost per sample higher than UCE when self-processed.
+
+\textcite{lemmon2012, prum2015, hime2021, breinholt2018}
+
+\section{Angiosperms353 / Universal Probe Sets}
+
+This universal set of 353 target genes was developed specifically for application across the diversity of angiosperms, with excellent herbarium specimen compatibility.
+
+\subsection{General Characteristics}
+
+\begin{description}
+\item[Category:] Target capture (universal probe set)
+\item[Locus Type:] Protein-coding nuclear genes (low copy)
+\item[Typical Number of Loci:] 353 target genes (+ recoverable flanking regions)
+\item[Optimal Phylogenetic Scale:] Broad: ordinal to population level in angiosperms
+\item[DNA Quality:] Moderate (herbarium specimens tested successfully)
+\item[DNA Quantity:] Low to moderate (as low as \(\sim 10\) ng with degraded DNA protocols)
+\item[Tissue:] Any tissue; silica-dried leaves, herbarium leaves work well
+\item[Museum/Herbarium Specimen Compatibility:] Excellent (specifically tested and validated with herbarium material >100 years old)
+\item[Relative Cost:] Low to moderate (U\$15--40 per sample)
+\item[Bioinformatic Complexity:] Moderate (HybPiper pipeline well documented and widely adopted)
+\item[Orthology Assessment Difficulty:] Moderate (low-copy genes selected; WGD in many angiosperm lineages complicates paralogy detection)
+\item[Matrix Completeness Tendency:] High (universal design ensures broad recovery; \(\sim 200\)--350 genes typically recovered)
+\item[Cross-study Combinability:] Very high (universal set designed for cross-study combinability)
+\item[Broad Taxonomic Range:] Angiosperms (flowering plants) universally; also tested in gymnosperms and some bryophytes
+\item[Suitability for Non-model Organisms:] Excellent for plants: no custom probe design necessary, ready-to-use kit
+\end{description}
+
+\subsection{Strengths and Limitations}
+
+Universal across all flowering plants, no custom probe design necessary, excellent herbarium compatibility, and botanical community standard. Limitations include restriction to angiosperms, 353 loci may be insufficient for shallow-scale resolution in some groups, and paralogy in polyploid lineages.
+
+\textcite{johnson2019, baker2021a, baker2021b, zuntini2024}
+
+\section{Custom Exon Capture / Lineage-Specific}
+
+Allows optimized probe design for specific clades, capturing chosen coding exons.
+
+\subsection{General Characteristics}
+
+\begin{description}
+\item[Category:] Target capture (probe-based enrichment)
+\item[Locus Type:] Coding exons (selected by clade)
+\item[Typical Number of Loci:] 200--10,000+ exons depending on design
+\item[Optimal Phylogenetic Scale:] Flexible: designed for specific clade and scale
+\item[DNA Quality:] Moderate (degraded DNA tolerated)
+\item[DNA Quantity:] Low to moderate
+\item[Tissue:] Any tissue with extractable DNA
+\item[Museum/Herbarium Specimen Compatibility:] Good (similar to UCE/AHE for degraded DNA)
+\item[Relative Cost:] Moderate to high (probe design + synthesis adds upfront cost)
+\item[Bioinformatic Complexity:] Moderate to high (requires custom bioinformatic pipeline)
+\item[Orthology Assessment Difficulty:] Moderate (depends on gene selection criteria)
+\item[Matrix Completeness Tendency:] Moderate to high (depends on probe-target divergence)
+\item[Cross-study Combinability:] Low (different studies target different genes)
+\item[Broad Taxonomic Range:] Lineage-specific by definition; available for many vertebrate, insect, plant clades
+\item[Suitability for Non-model Organisms:] Good (can be designed for any clade with some genomic resources)
+\end{description}
+
+\subsection{Strengths and Limitations}
+
+Customization for clade of interest optimizes informativeness. Limitations include lack of standardization between studies (poor combinability), requirement for genomic/transcriptomic data for probe design, and upfront cost of probe synthesis.
+
+\textcite{bi2012, bragg2016, portik2016}
+
+\section{RADseq / ddRADseq / GBS}
+
+Restriction enzyme-based sequencing captures random genomic fragments, ideal for population-scale studies at shallow divergence.
+
+\subsection{General Characteristics}
+
+\begin{description}
+\item[Category:] Reduced representation (restriction enzyme-based)
+\item[Locus Type:] Anonymous genomic fragments (random with respect to function)
+\item[Typical Number of Loci:] Thousands--hundreds of thousands of loci containing SNPs
+\item[Optimal Phylogenetic Scale:] Shallow: population to genus level (<10--20 Mya)
+\item[DNA Quality:] Moderate to high (fresh DNA preferred for consistent digestion)
+\item[DNA Quantity:] Moderate (100--500 ng typical)
+\item[Tissue:] Fresh or well-preserved tissue preferred
+\item[Museum/Herbarium Specimen Compatibility:] Poor (requires high-quality DNA for consistent digestion)
+\item[Relative Cost:] Low (U\$10--30 per sample; no probe purchase necessary)
+\item[Bioinformatic Complexity:] Moderate (established pipelines: Stacks, ipyrad, dDocent)
+\item[Orthology Assessment Difficulty:] Low at shallow scales (anonymous loci treated as independent)
+\item[Matrix Completeness Tendency:] Low to moderate (locus dropout increases with divergence)
+\item[Cross-study Combinability:] Very low (restriction sites not conserved between divergent taxa)
+\item[Broad Taxonomic Range:] Universal in principle; widely used in population genomics of fish, birds, amphibians, insects, plants
+\item[Suitability for Non-model Organisms:] Excellent for population-level studies with fresh tissue; poor for deep phylogenetics
+\end{description}
+
+\subsection{Strengths and Limitations}
+
+Lower cost per sample, no probe design, massive SNP recovery, excellent for population genomics and phylogeography. Limitations include severe locus dropout with divergence, poor reproducibility between studies, and very poor with degraded/museum DNA.
+
+\textcite{baird2008, peterson2012, eaton2020, huang2016}
+
+\section{Genome Skimming (Low-coverage WGS)}
+
+Low-coverage sequencing captures high-copy genomes: organellar (plastomes, mitogenomes) and nuclear ribosomal DNA. Deep genome skimming (DGS) can recover hundreds of nuclear genes.
+
+\subsection{General Characteristics}
+
+\begin{description}
+\item[Category:] Complete genome (low coverage)
+\item[Locus Type:] High copy: organellar genomes (plastomes, mitogenomes) + nuclear ribosomal DNA
+\item[Typical Number of Loci:] Complete organellar genomes + nrDNA operon; deep DGS can recover hundreds of nuclear genes
+\item[Optimal Phylogenetic Scale:] Intermediate to deep for organellar genomes
+\item[DNA Quality:] Low to moderate (works with degraded DNA for organellar recovery)
+\item[DNA Quantity:] Low (even <1 ng can yield organellar data)
+\item[Tissue:] Any tissue; herbarium, museum, even subfossil material
+\item[Museum/Herbarium Specimen Compatibility:] Excellent (one of the best approaches for degraded specimens)
+\item[Relative Cost:] Very low (U\$5--20 per sample at 1--5$\times$ coverage)
+\item[Bioinformatic Complexity:] Low to moderate (assembly of high-copy elements relatively straightforward)
+\item[Orthology Assessment Difficulty:] Low for organellar genomes (uniparental inheritance, no paralogy)
+\item[Matrix Completeness Tendency:] Very high for organellar genomes; variable for nuclear genes
+\item[Cross-study Combinability:] High for organellar genomes; moderate for nuclear
+\item[Broad Taxonomic Range:] Universal: any eukaryote; plants especially well served (plastomes)
+\item[Suitability for Non-model Organisms:] Excellent: lower cost and tissue requirements; ideal for herbarium/museum specimens
+\end{description}
+
+\subsection{Strengths and Limitations}
+
+Lower cost, lower DNA requirements, excellent for degraded specimens, organellar genomes easily assembled, DGS approach can recover nuclear genes. Limitations include organellar genomes representing single non-recombinant locus (limited independent signal), and most of nuclear genome not recovered at low coverage.
+
+\textcite{straub2012, dodsworth2015, weitemier2014}
+
+\section{Organellar Genome Phylogenomics (Plastomics / Mitogenomics)}
+
+Analysis of complete organellar genomes from any sequencing strategy, including protein-coding genes, rRNA, tRNA, and intergenic spacers.
+
+\subsection{General Characteristics}
+
+\begin{description}
+\item[Category:] Organellar genome (from any sequencing strategy)
+\item[Locus Type:] Coding genes + rRNA + tRNA + intergenic spacers from organellar genomes
+\item[Typical Number of Loci:] \(\sim 80\) coding genes (plastome); \(\sim 13\) (animal mitogenome); \(\sim 40\)+ (plant mitogenome)
+\item[Optimal Phylogenetic Scale:] Deep to moderately shallow for plastomes; shallow for animal mitogenomes
+\item[DNA Quality:] Low (organellar DNA high copy; recoverable from degraded samples)
+\item[DNA Quantity:] Very low
+\item[Tissue:] Any tissue
+\item[Museum/Herbarium Specimen Compatibility:] Excellent
+\item[Relative Cost:] Very low (often byproduct of other sequencing)
+\item[Bioinformatic Complexity:] Low (assembly and annotation tools well established: GetOrganelle, NOVOPlasty, MITOS)
+\item[Orthology Assessment Difficulty:] Very low (no paralogy concern in typical cases)
+\item[Matrix Completeness Tendency:] Very high (complete organellar genomes standard)
+\item[Cross-study Combinability:] Very high (organellar genomes universally comparable)
+\item[Broad Taxonomic Range:] Universal across eukaryotes; thousands of plastomes and mitogenomes in GenBank
+\item[Suitability for Non-model Organisms:] Excellent: works for any eukaryote; minimal requirements
+\end{description}
+
+\subsection{Strengths and Limitations}
+
+Easier to assemble and annotate, massive existing datasets for comparison, excellent for barcoding and specimen identification. Limitations include single non-recombinant locus (single independent gene tree), maternal inheritance does not capture complete species history, cytoplasmic-nuclear discordance (hybridization, introgression).
+
+\textcite{jansen2007, smith2015, twyford2017, li2021}
+
+\section{BUSCO Gene-Based Phylogenomics}
+
+Post hoc extraction of single-copy orthologous genes from assembled genomes or transcriptomes.
+
+\subsection{General Characteristics}
+
+\begin{description}
+\item[Category:] Post hoc extraction (from genomes or transcriptomes)
+\item[Locus Type:] Coding genes (single-copy orthologs)
+\item[Typical Number of Loci:] 300--5,000+ depending on lineage-specific BUSCO set
+\item[Optimal Phylogenetic Scale:] Broad: effective from shallow to deep scales
+\item[DNA Quality:] N/A (depends on source data: genome or transcriptome quality)
+\item[DNA Quantity:] N/A (depends on source sequencing strategy)
+\item[Tissue:] N/A (depends on source data)
+\item[Museum/Herbarium Specimen Compatibility:] N/A (depends if genome/transcriptome can be generated)
+\item[Relative Cost:] No additional cost (extracted from existing assemblies)
+\item[Bioinformatic Complexity:] Low to moderate (automated BUSCO pipeline; downstream tree inference standard)
+\item[Orthology Assessment Difficulty:] Moderate (BUSCO genes not always strictly single-copy, especially post-WGD)
+\item[Matrix Completeness Tendency:] Moderate (depends on genome/transcriptome completeness)
+\item[Cross-study Combinability:] High (BUSCO sets standardized per lineage)
+\item[Broad Taxonomic Range:] Universal: BUSCO sets available for 193 lineages (eukaryotes, bacteria, archaea, viruses)
+\item[Suitability for Non-model Organisms:] Excellent if genome/transcriptome data exist
+\end{description}
+
+\subsection{Strengths and Limitations}
+
+No additional sequencing cost, standardized ortholog sets, automated pipeline, applicable to any existing genome/transcriptome. Limitations include dependence on input assembly quality, BUSCO genes not always single-copy, functional bias toward housekeeping genes.
+
+\textcite{simao2015, waterhouse2018, manni2021, sahbou2022}
+
+\section{Assembly-Free / k-mer Methods (AAF, CASTER, Read2Tree)}
+
+Approaches that avoid traditional assembly, using direct k-mer comparisons or mapping relative to reference sequences.
+
+\subsection{General Characteristics}
+
+\begin{description}
+\item[Category:] Alignment-free or read-based
+\item[Locus Type:] Complete genome (all sequence content used as k-mer spectra) or read mapping to reference
+\item[Typical Number of Loci:] N/A (distance-based or relative mapping; not locus-based in traditional sense)
+\item[Optimal Phylogenetic Scale:] Emerging: demonstrated at intermediate to deep scales
+\item[DNA Quality:] Variable (works with raw reads; tolerates moderate quality)
+\item[DNA Quantity:] Variable (benefits from moderate coverage; >5$\times$ useful)
+\item[Tissue:] Any tissue yielding sequenceable DNA
+\item[Museum/Herbarium Specimen Compatibility:] Potentially good (works from raw reads without assembly)
+\item[Relative Cost:] No additional cost if sequencing data already exist
+\item[Bioinformatic Complexity:] Low (avoids assembly, alignment, and orthology steps)
+\item[Orthology Assessment Difficulty:] N/A (orthology implicit in k-mer overlap or mapping)
+\item[Matrix Completeness Tendency:] N/A (not matrix-based in traditional sense; completeness = coverage)
+\item[Cross-study Combinability:] Moderate (requires consistent sequencing strategy)
+\item[Broad Taxonomic Range:] Universal in principle; CASTER tested across eukaryotes
+\item[Suitability for Non-model Organisms:] Excellent in principle: minimal computational expertise; no reference genome necessary
+\end{description}
+
+\subsection{Strengths and Limitations}
+
+Faster and simpler pipeline: raw reads $\rightarrow$ tree. Avoids assembly, alignment, and orthology inference. Limitations include limited model-based analysis (distances, not site patterns in most implementations), and some methods are recent and less well tested.
+
+\textcite{fan2015, dylus2024, balaban2025}
+
+\section{Comparative Considerations}
+
+The selection among these data types involves complex cost-benefit considerations. For population-scale phylogeographic studies, RADseq offers best value for cost. For deep phylogenomic studies in non-model organisms with large genomes, RNA-seq offers better balance of cost and informativeness. For studies requiring robust cross-study combination across multiple groups, UCEs or Angiosperms353 offer maximum standardization. For obtaining high-quality reference genomic assemblies, long-read sequencing with combined strategies is necessary.
+
+Each data type captures different phylogenomic signals and resolution at different nodes in species trees. An increasingly adopted approach involves multi-strategy data approach, in which different data types provide complementary context for robust phylogenetic reconstruction.
+
+\clearpage
+\begin{revise}
+\begin{enumerate}
+    \item Short-read WGS: complete genome, $\geq$500\,ng HMW DNA, U\$50--200+/sample; poor for museum; bioinformatics very high.
+    \item Long-read WGS (PacBio HiFi / ONT): chromosome-level assembly, ultra-HMW DNA $>$20\,kb, U\$200--1\,000+; fresh tissue mandatory.
+    \item RNA-seq: expressed exons (1\,000--20\,000 genes), RIN$\geq$7, U\$30--100; tissue-specific variation creates missing data; paralogy from WGD and splicing.
+    \item UCEs: non-coding conserved cores + variable flankers; 500--5\,000 loci; degraded DNA tolerated; PHYLUCE pipeline; very high combinability.
+    \item AHE (Anchored Hybrid Enrichment): exonic anchors + intronic flankers; 300--600+ loci; FSU center; loci longer than UCEs.
+    \item Angiosperms353: 353 universal genes for angiosperms; validated with herbarium >100 years; HybPiper pipeline; botanical standard.
+    \item RADseq/ddRADseq/GBS: restriction enzymes, thousands of SNPs; U\$10--30/sample; ideal <10--20\,Mya; severe dropout with divergence; very low combinability.
+    \item Genome skimming: low coverage (1--5$\times$), U\$5--20; recovers organellar + nrDNA; deep DGS $\to$ hundreds of nuclear genes; excellent for degraded.
+    \item Organellar phylogenomics: plastome ($\sim$80 genes), animal mitogenome ($\sim$13 genes); single non-recombinant locus; cytoplasmic-nuclear discordance.
+    \item BUSCO: post hoc extraction of single-copy orthologs; 300--5\,000+ genes; 193 sets per lineage; no additional sequencing cost.
+    \item k-mer methods (AAF, CASTER, Read2Tree): raw reads $\to$ tree without assembly/alignment; emerging but less well tested.
+\end{enumerate}
+\end{revise}
+
+\clearpage
+
+\printbibliography[heading=subbibliography,title={References}]
+

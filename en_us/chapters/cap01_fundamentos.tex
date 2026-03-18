@@ -1,0 +1,363 @@
+\chapter{Theoretical-Philosophical Foundations of Phylogenetics}
+
+\section{Introduction}
+
+Inferring the evolutionary history of organisms requires organized hereditary observations capable of discriminating between competing phylogenetic hypotheses. The transformation of raw biological observations into such evidence is not a trivial operation: it demands a principled understanding of what constitutes a character, how characters support the hypothesis of common ancestry, and how apparent conflicts between characters are interpreted and resolved \parencite{wheeleretal2006}.
+
+These problems have a long and contested history. \textcite{lankester1870} introduced the term \textit{homoplasy} to distinguish features that resemble superficially but do not share a common origin. \textcite{hennig1966} formalized the distinction between ancestral and derived character states that are shared, providing the logical foundation of cladistic methodology. \textcite{depinna1991} and \textcite{patterson1982} subsequently addressed the epistemological status of homology as a hypothesis. \textcite{wheeleretal2006} and \textcite{wheeler2012} synthesized these contributions into an integrated computational framework, capable of dealing with the scale and complexity of modern genomic data.
+
+Characters are, in this framework, theory-laden objects in the sense of \textcite{popper1959}: the prior understanding that the investigator has of the biology of organisms informs the decision to recognize a feature as a character. Phylogenetic systematics is, therefore, an idiographic science --- not nomothetic --- that seeks to discover the series of historical transformation events that explain hereditary variation among lineages \parencite{grant2004ts}.
+
+The advent of high-throughput sequencing (HTS) has fundamentally altered the scale at which phylogenetic data are collected: hundreds or thousands of loci can now be sequenced for dozens to hundreds of taxa in a single experiment. This abundance of data does not simplify the conceptual problems of character delimitation, homology assessment, and homoplasy management; rather, it amplifies them. The practical urgency of these questions is illustrated by large-scale analyses such as that of \textcite{jacobmachado2021a}, which analyzed 2,006 complete genomes of the subfamily \textit{Orthocoronavirinae} using total evidence parsimony, producing the most comprehensive phylogenetic hypothesis for this group at the time and elucidating the origin and host history of SARS-CoV-2. \textcite{jacobmachado2021b} reviewed the trajectory of genomic epidemiology from its origins in molecular epidemiology through the COVID-19 pandemic, demonstrating how the dramatic reduction in sequencing costs enabled phylogenomic surveillance at a global scale.
+
+Recent developments in software have further extended the scope of phylogenetic inference. PhyG \parencite{wheeleretal2024}, successor to POY5, extends phylogenetic search to general graphs, including softwired and hardwired networks, and offers substantial improvements in optimization quality and execution speed. \textcite{wheelervaron2025} proposed phylogenetic minimum description length (PMDL) as a unified optimality criterion grounded in algorithmic information theory. The present chapter examines these conceptual foundations and their practical implementation in contemporary phylogenetic analysis workflows.
+
+\section{The Structure of Phylogenetic Trees}
+
+\subsection{Trees, Cladograms, and Topologies}
+
+In phylogenetic systematics, the terms \textbf{phylogenetic tree}, \textbf{cladogram}, and \textbf{topology} are frequently used interchangeably \parencite{wheeler2012}. The phylogenetic tree is the primary tool for describing evolutionary relationships among organisms. Formally, trees are connected acyclic graphs that represent nested hierarchical relationships among groups. In YBYRÁ and in other phylogenetic analysis programs, trees are typically represented in parenthetic notation, following the \textsc{Newick} format or the \textsc{Hennig86} format (also called \textsc{TREAD}) \parencite{machado2015}.
+
+\subsection{Elementary Components: Nodes, Branches, Terminals, and Root}
+
+The structural elements of a phylogenetic tree are the following:
+
+\begin{description}
+    \item[Terminals] The terminals --- also called \textit{operational taxonomic units} (OTUs) or leaves --- are the objects that occur at the extremities of the tree. Terminals frequently represent taxa, but can represent any comparable entity (e.g., sequences, populations, fossil species).
+
+    \item[Nodes] Nodes are the intersection points in a tree, identifying each component. Internal nodes represent hypothetical ancestors and are called \textit{hypothetical taxonomic units} (HTUs); terminal nodes correspond to OTUs. In a rooted tree, the root is the only node with degree two.
+
+    \item[Branches] Branches are the edges that connect two adjacent nodes. Each branch can be associated with a length representing the number of transformations or the evolutionary duration of the interval.
+
+    \item[Root] The root determines the polarity of character transformations in the cladogram \parencite{schuh2009}. Rooting converts an unrooted tree into a rooted tree, establishing the direction of evolutionary transformations.
+\end{description}
+
+\subsection{Sister Groups, Splits, and Strict Consensus}
+
+In a binary tree, \textbf{sister groups} are two groups that share a single exclusive common ancestor \parencite{schuh2009}. A \textbf{split} is the bipartition of a set of terminals induced by the removal of an edge from the tree. For example, the tree \texttt{(A,(C,(D,(E,F))))} can be split into the subtrees \texttt{(E,F)} and \texttt{(A,(C,D))} by removing the branch connecting them. A \textbf{strict consensus tree} contains exclusively the nodes present in \emph{all} trees from a set of equally optimal results; any inconsistency results in the collapse of the corresponding node \parencite{schuh2009}.
+
+\subsection{File Formats for Phylogenetic Trees}
+
+Two file formats are widely used to represent trees in parenthetic notation:
+
+\begin{description}
+    \item[Newick] Adopted by programs such as GARLI, MrBayes, PAUP*, PHYLIP, PROTML, and TREE-PUZZLE. Terminals are separated by commas and sister group relationships by nested parentheses. Supports branch lengths and internal node labels: \texttt{((A:5,B:7)Ancestral:10,C:3);}
+
+    \item[TREAD (Hennig86)] Represents trees preceded by the header \texttt{tread}. Multiple trees are separated by asterisks, and the last ends with a semicolon. It is common to include \texttt{proc-;} at the end of the file for use in TNT \parencite{goloboff2008}.
+\end{description}
+
+\section{Taxa, Clades, and Phylogenetic Classification}
+
+\subsection{Monophyletic, Paraphyletic, and Polyphyletic Groups}
+
+A \textbf{taxon} is any group of organisms recognized at any level of the systematic hierarchy \parencite{schuh2009}. Phylogenetic systematics distinguishes three types of grouping \parencite{hennig1966,schuh2009}:
+
+\begin{description}
+    \item[Monophyletic group (clade)] Composed of a single common ancestor and \emph{all} of its descendants. Only monophyletic groups are recognized as natural and valid units of cladistic classification \parencite{hennig1966}.
+
+    \item[Paraphyletic group] One that is missing exactly one monophyletic group to become monophyletic (e.g., ``Reptilia'' in the classical sense, which excludes Aves).
+
+    \item[Polyphyletic group] One that is missing two or more monophyletic groups to become monophyletic; typically reflects evolutionary convergence \parencite{schuh2009}.
+\end{description}
+
+The monophyly of any grouping is a proposition to be evaluated by the congruence of characters, not a methodological assumption \parencite{nixon1993}.
+
+\section{The Concept of Character}
+\label{sec:caracteres}
+
+\subsection{The Historical Nature of Character}
+
+A character, in the phylogenetic sense, is ``a historically independent transformation series'' \parencite[p.~333]{wheeleretal2006}. Characters are not simple observations, but theoretically organized statements about hereditary variation among taxa, carrying notions of relevance, comparability, and correspondence \parencite{wheeler2012}. They are theory-laden objects in the sense of \textcite{popper1959}: the prior understanding of the investigator informs the decision to recognize a feature as a character.
+
+\textcite{grant2004ts} argue that this is the only character concept consistent with the epistemological requirements of phylogenetic systematics. As transformation series, characters are historical individuals, analogous in ontological status to species and clades. The independence relevant to phylogenetic inference is \textbf{historical or transformational independence}, not functional or developmental correlation \parencite{grant2004ts}.
+
+\textbf{Character states} are the alternative forms that a transformation series can assume. For binary characters, states typically designate presence or absence of a structure; for sequence data, states are the nucleotide or amino acid residues at a given position.
+
+\subsection{Types of Character}
+
+\textcite{wheeleretal2006} recognize five fundamental types of character:
+
+\begin{description}
+    \item[Additive] Assume linear ordering of states; the cost of transformation is the additive distance between states \parencite{farris1970}.
+
+    \item[Non-additive] Assign equal costs to all transformations, without nested homology among states \parencite{fitch1971}.
+
+    \item[Matrix (Sankoff)] Allow arbitrary transformation costs specified by a cost matrix \parencite{sankoff1975,sankoffrousseau1975}.
+
+    \item[Sequence] Treat contiguous chains of nucleotides or amino acids as the unit of comparison, with transformations involving substitution, insertion, or deletion.
+
+    \item[Chromosomal] Optimize simultaneously the variation at the nucleotide level and at the locus level; applicable to mitochondrial, bacterial, and viral genomes \parencite{wheeleretal2006}.
+\end{description}
+
+PhyG \parencite{wheeleretal2024} extends this representation further to effectively unlimited alphabets, allowing the analysis of linguistic data, developmental data, and other types of non-standard comparative data.
+
+\subsection{Phenotypic and Genotypic Characters}
+
+Phenotypic characters are structural or functional characteristics that express the genotype in conjunction with environmental influences, including morphological, behavioral, and amino acid sequence data. Genotypic characters derive directly from DNA or RNA sequences, eliminating concerns about heritability; their main challenge is that nucleotide homology cannot be tested in isolation, but requires a congruence test with other characters \parencite{wheeleretal2006}. The principle of \textbf{total evidence} \parencite{kluge1989} maintains that all available evidence --- phenotypic and genotypic --- has equal initial value for discriminating among phylogenetic hypotheses and should be analyzed simultaneously.
+
+\section{Homology: Definition, Epistemology, and Debate}
+\label{sec:homologia}
+
+\subsection{The Operational Definition and Homology as Null Hypothesis}
+
+In the formulation of \textcite[p.~10]{wheeleretal2006}, ``features are homologous when their origins can be traced to a single transformation in a branch of the cladogram leading to the most recent common ancestor.'' Three consequences follow from this definition: (1) homology is \textbf{cladogram-dependent} --- there is no notion of homology without reference to a cladogram, nor choice among cladograms without statements of homology; (2) homology is the \textbf{null hypothesis} in the construction of monophyletic groups during tree search; (3) every statement of homology is simultaneously a phylogenetic hypothesis, subject to falsification by character incongruence.
+
+\textcite{grant2004ts} argue, independently, that homology refers to a \textbf{historical relation of identity} --- the identity of being derived from the same single transformation event --- and as such is conceptually prior to and distinct from the cladistic test of character congruence.
+
+\subsection{The Homology--Synapomorphy Debate}
+
+\textcite{nixon2012} argue that the equation of homology with synapomorphy, proposed by \textcite{patterson1982}, is historically and conceptually incorrect. \textcite{hennig1966} clearly intended that homology encompass both plesiomorphy and synapomorphy, since both represent features shared by taxa as a result of common ancestry. A symplesiomorphy is homologous at the most inclusive level at which it constitutes a synapomorphy; at the level of the ingroup, it is homologous but phylogenetically non-informative \parencite{nixon2012}.
+
+\subsection{The Primary--Secondary Homology Debate}
+
+\textcite{depinna1991} proposed a two-stage model: \textbf{primary homology} refers to initial propositions based on similarity, generated before analysis; \textbf{secondary homology} refers to propositions that survive the test of character congruence. \textcite{wheeleretal2006} reject this separation as ``neither a methodological necessity nor an epistemological one'' \parencite[p.~10]{wheeleretal2006}. \textcite{grant2004ts} argue that the distinction confuses the \textit{concept} of homology with the \textit{discovery operations} used to detect instances of that concept; since both are distinct, no intermediate epistemological category is necessary. The congruence test can be applied directly to the unrestricted set of homology hypotheses --- which is the core of the \textbf{dynamic homology} framework's claim \parencite{wheeler2001a,wheeler2001b}.
+
+\subsection{Static and Dynamic Homology}
+
+\textbf{Static homology} encodes homology hypotheses in a fixed matrix before phylogenetic analysis. In molecular systematics, multiple sequence alignment is the canonical method: each column is treated as a character and each residue within the column as a homologous state (positional homology). The critical limitation is that the optimal alignment is topology-dependent; an alignment produced under a guide tree may differ from the optimal alignment for the optimal cladogram \parencite{wheeleretal2006}.
+
+\textbf{Dynamic homology} treats homology as an optimization problem solved simultaneously with tree search, employing the same optimality criterion for both steps; the globally optimal solution is the combination of minimum cladogram cost plus homology scheme \parencite{wheeleretal2006}.
+
+An important practical development is \textbf{implied alignments}, introduced by \textcite{wheeler2003a} as visual representations of synapomorphies in a given cladogram. Each implied alignment is unique to a topology and a set of specific transformation parameters; using it as the basis for a subsequent independent analysis would reintroduce the problems of static homology \parencite{wheeleretal2006}.
+
+\subsection{Types of Transformations}
+
+Character states are classified according to polarity and distribution in the tree \parencite{hennig1966,schuh2009}:
+
+\begin{description}
+    \item[Apomorphy] Derived character state, originating from an ancestral state in a transformation event.
+    \item[Plesiomorphy] Ancestral character state. Plesiomorphies are legitimate homologies, but are not informative for discriminating relationship hypotheses \parencite{nixon2012}.
+    \item[Synapomorphy] Shared occurrence of an apomorphic state in a monophyletic group \parencite{grant2004a}; fundamental evidence of monophyly.
+    \item[Symplesiomorphy] Ancestral state shared by a non-monophyletic group of terminals; does not support natural groupings.
+    \item[Autapomorphy] Apomorphy exclusive to a single terminal or taxon; diagnostic for individual terminals, but not informative for relationships among them.
+\end{description}
+
+\section{Homoplasy: Definition, Measurement, and Interpretation}
+\label{sec:homoplasia}
+
+\subsection{Definition and Epistemological Status}
+
+Homoplasy occurs ``when a character state is shared by two or more taxa without being the result of common ancestry, but rather of parallelism or convergence'' \parencite[p.~336]{wheeleretal2006}. The term was introduced by \textcite{lankester1870}. In operational terms, homoplasy is any non-minimal transformation of a character in a cladogram --- a definition explicitly tree-specific: a homoplastic feature in one cladogram may be optimized without extra steps in another \parencite{wheeler2012}.
+
+\textcite{farris1983} and \textcite{kluge2009} argue that homoplasy functions as a \textbf{falsifier} of the tree hypothesis in which it occurs. The preferred cladogram is the one least falsified by homoplasy, i.e., the one that minimizes \textit{ad hoc} hypotheses of convergence and parallelism. This is the criterion of parsimony stated in epistemological terms. An \textbf{\textit{ad hoc} hypothesis} is an assumption invoked to eliminate inconvenient observations; in cladistics, the \textit{a priori} resort to homoplasy --- explaining similarity as non-homologous without topological justification --- is the paradigmatic example \parencite{grant2004a}.
+
+\subsection{Measurement of Homoplasy}
+
+The \textbf{consistency index} (CI) for a character is the ratio of the minimum possible number of steps to the number observed in a given tree \parencite{klugeanfarris1969}. A CI of 1.0 indicates absence of homoplasy. The \textbf{retention index} (RI; \cite{farris1989}) measures the fraction of apparent synapomorphy effectively retained as synapomorphy in the tree; it is less sensitive to the number of taxa than the CI.
+
+\textcite{goloboff1991} introduced the distinction between homoplasy and \textbf{decisiveness} --- the information content of a matrix with respect to choice of trees, proportional to the variance in tree length over all possible cladograms. Lower values of CI or RI do not necessarily imply lower decisiveness: a dataset can have high homoplasy in the most parsimonious cladogram and still be highly decisive if alternative trees are substantially less parsimonious. This result warns against confusing the level of homoplasy with the strength of evidence for a cladogram \parencite{goloboff1991}.
+
+\subsection{InDels and Homoplasy}
+
+Insertions and deletions (InDels) exhibit patterns of homoplasy distinct from nucleotide substitutions. \textcite{redelings2024} observe that InDel rates vary substantially among taxonomic groups and genomic regions, and that a deletion bias is observed in most studied lineages. Because InDels are relatively rare events compared to point mutations, and because the probability of an identical InDel occurring independently in two unrelated lineages at the same position is very low, shared InDels constitute particularly strong synapomorphic evidence \parencite{redelings2024}.
+
+\section{Outgroup Comparison, Polarity, and Rooting}
+\label{sec:outgroup}
+
+\subsection{Outgroup, Ingroup, and the Identity of Three Problems}
+
+The \textbf{ingroup} is the putative monophyletic group whose internal relationships constitute the primary focus of the study; ingroup monophyly is a hypothesis to be tested, not an assumption to be imposed \parencite{nixon1993}. The \textbf{outgroup} is any taxon external to the ingroup included to root the resulting network and establish character polarity \parencite{nixon1993,grant2019}.
+
+\textcite{nixon1993} clarified that outgroup comparison, determination of character polarity, and rooting all reduce to a single operation: polarity need not --- and should not --- be decided before phylogenetic analysis; it is a consequence of rooting, not a prerequisite. The ``outgroup algorithm'' of Maddison et al. (1984, discussed in \cite{nixon1993}), which applies parsimony independently to ingroup and outgroup, constitutes a theoretically indefensible relaxation of parsimony \parencite{nixon1993}. The solution is unrestricted simultaneous analysis of all terminals in a single unrooted network, which is then rooted between the ingroup and outgroup.
+
+\subsection{Lundberg Rooting}
+
+Lundberg rooting consists of constructing a hypothetical ancestor to root the network. \textcite{nixon1993} concluded that this procedure is consistent with cladistic parsimony only when the hypothetical ancestor is derived from independent ontogenetic or paleontological evidence, not from outgroup comparison; using it otherwise is circular.
+
+\subsection{Successive Outgroup Expansion}
+
+\textcite{grant2019} proposed the procedure of \textbf{successive outgroup expansion}: the outgroup sample is expanded iteratively, with priority for terminals more closely related to the ingroup and for terminals in regions of the external topology weakly supported, until the topology and homology hypotheses of the ingroup remain stable over at least two consecutive rounds of expansion. This procedure provides a defensible stopping rule without implying that results are beyond refutation \parencite{grant2019}.
+
+\subsection{Simultaneous Analysis and Total Evidence}
+
+\textbf{Simultaneous analysis} refers to the joint analysis of multiple datasets in opposition to separate analysis followed by consensus \parencite{nixon1996}. The term \textbf{total evidence} is often synonymous \parencite{kluge1989}, although some authors reserve ``total evidence'' for analyses that incorporate \emph{all} available data \parencite{kluge1989,nixon1996}. Both approaches oppose partitioned analysis followed by consensus, which can obscure informative conflict between partitions \parencite{grantkluge2003}.
+
+\section{Dynamic Homology, InDels, and High-Throughput Sequencing}
+\label{sec:dinamica}
+
+\subsection{The Problem of InDels in Static Alignment}
+
+Insertions and deletions (InDels) constitute the second most important source of genomic variation, after point mutations \parencite{redelings2024}. Most alignment algorithms are not phylogeny-aware and tend to infer alignments in which characters are independently deleted many times when considered in a tree, resulting in overestimation of convergent loss events and loss of the genuine phylogenetic signal carried by shared InDels \parencite{redelings2024}.
+
+The empirical consequences of coding gaps as missing data in maximum likelihood (ML) analysis were studied systematically by \textcite{jacobmachado2021c}. This study demonstrated that ML scores correlate negatively with gap-opening costs, and that variations in the number and distribution of gaps produce substantial and largely unpredictable effects on tree topology. Using Monte Carlo simulations that replaced nucleotides with gaps while holding nucleotide homology fixed, \textcite{jacobmachado2021c} confirmed that, under the standard convention of gaps as unknown nucleotides, the ML criterion rewards the alignment with more gaps, converging on the \textbf{trivial identity alignment} (TIA) as optimal when the alignment space is fully explored. This is a fundamental inconsistency: aligning sequences with MAFFT and then evaluating alignment quality with the ML score applies distinct optimality criteria at different stages of the same analysis.
+
+To quantify the number and distribution of gaps in any alignment, \textcite{jacobmachado2021c} introduced four indices: the \textbf{Gap Contiguity Index} (GCI), the \textbf{Nucleotide Contiguity Index} (NCI), the \textbf{Shared Gap Index} (SGI), and the \textbf{Topological Gap Index} (TGI), which provide a quantitative basis for characterizing alignment decisions independently of any particular tree.
+
+\subsection{Sequence Optimization Algorithms under Dynamic Homology}
+
+Dynamic homology, as implemented in direct analysis \parencite{wheeler1996}, treats homology as an optimization problem solved simultaneously with tree search, employing the same optimality criterion for both steps. \textcite{wheeleretal2006} describe four heuristic procedures for solving the problem of HTU sequence determination:
+
+\begin{description}
+    \item[Direct Optimization] \parencite{wheeler1996} Evaluates simultaneously the homologies of nucleic acid sequences and cladogram cost without requiring pre-analysis alignment. InDels are treated as informative events via an edit cost matrix.
+
+    \item[Iterative Pass Optimization] \parencite{wheeler2003b} Combines direct optimization of three sequences with iterative improvement. HTU sequences are optimized based on descendant and ancestral sequences simultaneously, until total cost stabilizes.
+
+    \item[Fixed-States Optimization] \parencite{wheeler1999a} Treats each sequence as a single multistate character whose state is one of the observed terminal sequences. HTU sequences are drawn from this predetermined pool via dynamic programming.
+
+    \item[Search-Based Optimization] \parencite{wheeler2003c} Extends fixed-states optimization by allowing the user to provide a larger set of candidate solutions for ancestral states.
+\end{description}
+
+PhyG \parencite{wheeleretal2024} enhances all these procedures through character-specific graph traversals \parencite{varonwheeler2012}, typically generating shorter trees than POY5, with score improvements reaching 7\% on empirical datasets.
+
+\subsection{Likelihood under Dynamic Homology}
+
+ML analysis can be performed under the dynamic homology framework without requiring pre-analysis alignment \parencite{wheeleretal2006}. In this implementation, a five-state general time reversible (GTR) model is used, with states A, C, G, T, and gap --- treating gap as a fifth character state in the Markov process, unlike standard implementations.
+
+PhyG \parencite{wheeleretal2024} additionally implements No-Common-Mechanism (NCM) likelihood \parencite{tuffleysteel1997}, which does not assume a shared model among sites and is equivalent to parsimony for treeless networks.
+
+\subsection{Parallel Computation}
+
+The scale of HTS data demands distributed computational resources. The problem of cladogram search is amenable to parallelization because many independent heuristic replicates can be executed concurrently on separate processors \parencite{wheeleretal2006}. PhyG \parencite{wheeleretal2024} adopts a different model: it uses lightweight operating system threads instead of MPI, eliminating the need for external libraries and enabling deployment on common hardware and high-performance clusters without additional configuration.
+
+\section{Phylogenetic Networks}
+\label{sec:redes}
+
+Traditional phylogenetic analysis is restricted to trees --- directed acyclic graphs in which each non-root node has exactly one parent. This structure represents only vertical inheritance and strictly bifurcating relationships. Processes such as horizontal gene transfer, hybridization, and introgression produce reticulate evolutionary histories that trees cannot represent without invoking \textit{ad hoc} hypotheses of homoplasy \parencite{wheeleretal2024}.
+
+PhyG \parencite{wheeleretal2024} extends phylogenetic search to softwired and hardwired networks:
+
+\begin{description}
+    \item[Softwired network] Each character or data block follows a single display tree; different blocks may follow distinct paths through the network, capturing heterogeneous histories produced by horizontal transfer.
+
+    \item[Hardwired network] Each reticulation vertex inherits from two parents simultaneously, and the cost is determined by transformation costs in both parental branches. Hardwired network costs are always at least as high as those of any display tree derivable from the graph \parencite{wheeleretal2024}.
+\end{description}
+
+Individual data blocks can be assigned to separate reticulate paths via the \texttt{reblock} command, allowing the user to specify which loci share a common history \parencite{wheeleretal2024}.
+
+\section{Optimality Criteria}
+\label{sec:criterios}
+
+\subsection{Overview and Incommensurability}
+
+Phylogenetic systematics requires an optimality criterion: a metric by which we compare candidate trees and select the one or ones that best explain the data. The three dominant criteria --- parsimony, maximum likelihood, and Bayesian posterior probability --- are \textbf{incommensurable}: a parsimony score, a log-likelihood, and a posterior probability cannot be directly compared among methods \parencite{wheelervaron2025}. This prevents principled model selection or comparison of alternative graph types under existing frameworks.
+
+\subsection{Parsimony}
+
+\textbf{Parsimony} selects the cladogram that minimizes total cost --- the total number of transformation events postulated \parencite{farris1983,wheeleretal2006}. Minimizing homoplasy is not merely computational convenience, but an epistemological principle grounded in Occam's razor: each instance of homoplasy represents an independent evolutionary event that must be explained without reference to shared ancestry.
+
+\subsection{Maximum Likelihood}
+
+\textbf{Maximum likelihood} selects the tree that maximizes $\Pr(D \mid T, \theta)$, the probability of the data $D$ given the tree $T$ and a set of model parameters $\theta$. It requires explicit specification of a substitution model.
+
+\subsection{Bayesian Inference}
+
+\textbf{Bayesian inference} calculates the posterior probability distribution $P(T \mid D)$ over the space of topologies, under a specified \textit{a priori} distribution, combining information from the data with prior beliefs formally expressed.
+
+\subsection{Phylogenetic Minimum Description Length (PMDL)}
+
+\textcite{wheelervaron2025} proposed PMDL as a unified optimality criterion grounded in algorithmic information theory \parencite{kolmogorov1968,livitanyi1997}. PMDL defines the complexity of a phylogenetic hypothesis $H$ as:
+
+\begin{equation}
+    K(H) = K(M) + K(D \mid M)
+\end{equation}
+
+where $K(M)$ is the algorithmic complexity of the model $M$ (encompassing both the structure of the graph and the character transformation model) and $K(D \mid M)$ is the complexity of the data $D$ given the model --- equivalent to the likelihood of the data under the model \parencite{wheelervaron2025}. The preferred hypothesis is the one that minimizes $K(H)$.
+
+This formulation has several desirable properties. First, PMDL generates natural character weighting schemes without external specification: each data type contributes its own complexities via the same framework. Second, it includes graph complexity, allowing competition among trees, networks, and forests on a common numerical scale. Third, it converges on parsimony for low-complexity models, on likelihood for large datasets, and on Bayesian posterior probability when priors are specified, unifying the three dominant frameworks \parencite{wheelervaron2025}. PMDL is implemented in PhyG \parencite{wheeleretal2024}.
+
+\section{Character Weighting}
+\label{sec:pesos}
+
+\subsection{Implied Weighting}
+
+\textcite{goloboff1993b} proposed implied weighting as a method for simultaneously estimating character weights and searching for the optimal cladogram. The fitness of a character is defined as $F = K / (K + S)$, where $K$ is a concavity constant set by the user and $S$ is the number of extra steps (homoplasy) for that character in a given tree \parencite{wheeleretal2006}. The analysis maximizes total fitness during tree search. The constant $K$ controls the rate at which the function decreases as homoplasy increases: low values heavily penalize highly homoplastic characters. The sensitivity to this choice should be examined as part of any analysis employing implied weighting \parencite{goloboff1993b,goloboff2013}.
+
+PMDL \parencite{wheelervaron2025} provides an alternative: by generating weights intrinsically from the algorithmic complexity of the model and data, it does not require the user to specify a concavity constant.
+
+\subsection{Successive Approximation Weighting}
+
+\textcite{farris1969} proposed successive approximation weighting as an iterative procedure: characters are first analyzed with equal weights; the resulting tree is used to calculate character fit statistics (e.g., CI); characters are reweighted and the analysis is repeated until stabilization. This method differs from implied weighting in that it performs weighting between analytical cycles, not continuously during search.
+
+\section{Clade Support}
+\label{sec:suporte}
+
+Identifying the optimal cladogram is only one component of a phylogenetic analysis. Assessing confidence in the recovered groups is equally important. \textcite{grantkluge2008} argue that support values should reflect the strength of evidence for a group, not merely the frequency with which it is recovered under data perturbation.
+
+\subsection{Bremer Support}
+
+The \textbf{Bremer support index} \parencite{bremer1988} measures the difference in cost between the optimal cladogram containing a given clade and the optimal cladogram that does not contain it. A higher value indicates that more evidence supports the clade. Under likelihood, it is expressed as difference in log-likelihood scores.
+
+\subsection{Jackknife}
+
+The \textbf{jackknife} \parencite{farrisetal1996} is a resampling method without replacement: a subset of characters is randomly deleted in each replicate, and the frequency with which each clade appears is reported. The jackknife is considered more theoretically defensible than the bootstrap under parsimony because it does not resample characters with replacement, which distorts character independence \parencite{farrisetal1996}.
+
+\subsection{Bootstrap}
+
+The \textbf{bootstrap} \parencite{felsenstein1985} resamples characters with replacement; each replicate is a new matrix of the same size in which some characters are absent and others duplicated. Bootstrap frequencies are widely reported but criticized on theoretical grounds \parencite{farrisetal1996}. \textcite{jacobmachado2021d} investigated the empirical relationship between bootstrap support values and likelihood ratio tests, finding a consistent positive relationship, although the precise correspondence depends on model assumptions and data properties.
+
+\section{Sensitivity Analysis and Topological Comparison Metrics}
+\label{sec:metricas}
+
+\subsection{Sensitivity Analysis}
+
+In phylogenetic systematics, \textbf{sensitivity analysis} assesses the extent to which obtained hypotheses are affected by analytical variables such as search strategies, optimality criteria, alignment methods, and transformation cost schemes \parencite{machado2015,wheeler1995}. \textcite{morrisonellis1997} demonstrated that phylogenetic results can be more sensitive to these parameter values than to the choice of analytical method.
+
+The results of a sensitivity analysis can be summarized in several ways \parencite{wheeleretal2006}: (1) percentage of parameter sets under which each node is recovered \parencite{giribetetal2001}; (2) ``Navajo rug'' plots, in which the parameter space is a two-dimensional grid with monophyly of each clade indicated by color coding; (3) consensus of the clades recovered under all parameter sets. Optimal parameter sets can be identified by minimizing partition incongruence between data subsets \parencite{wheeleretal2006}. The \textbf{Meta-Retention Index} (MRI), calculated as the RI over all characters, was proposed as a partition-free metric for this purpose \parencite{wheeleretal2006}.
+
+\subsection{Robinson-Foulds Distance}
+
+Originally proposed by \textcite{robinson1981}, the \textbf{Robinson-Foulds} (RF) distance is calculated by the number of elementary operations necessary to transform one tree into another, equivalent to the number of splits exclusive to each tree. A known limitation is that shifting a single OTU can alter multiple nodes, causing the metric to overestimate the differences between two topologies.
+
+\subsection{Match Split Distance}
+
+The \textbf{match split} (MS) distance for binary unrooted phylogenetic trees is defined by \textcite{bogdanowicz2012} as the cost of the best global assignment between the internal edges of the two compared trees. The MS distance is more sensitive than RF and, at the same time, more resistant to the displacement of a small number of terminals \parencite{bogdanowicz2012}, making it especially suitable for identifying rogue taxa.
+
+\section{Open Perspectives and Debates}
+\label{sec:debates}
+
+\subsection{Static versus Dynamic Homology}
+
+The most fundamental debate in molecular phylogenetics concerns the role of multiple sequence alignment. Proponents of static homology argue that alignment is a necessary step in which positional homology hypotheses are explicitly stated and evaluated independently of the tree. Proponents of dynamic homology argue that fixing alignments before search introduces topology-dependent bias and prevents identification of the globally optimal cladogram-plus-homology-scheme \parencite{wheeleretal2006}. \textcite{redelings2024} provide additional evidence from the InDel perspective: most alignment algorithms are not phylogeny-aware, introduce guide-tree bias, and lead to overestimation of independent loss events.
+
+\subsection{Treatment of InDels}
+
+\textcite{redelings2024} identify three dominant approaches for InDel treatment: (1) exclusion of columns containing gaps; (2) treatment of gaps as missing data; and (3) InDel coding --- which codes each InDel event as a binary presence/absence character \parencite{simmons2007}. Probabilistic models of InDels, such as those based on the TKF framework \parencite{thornekishinofelsenstein1991}, offer a more principled treatment, but have been implemented in relatively limited contexts \parencite{redelings2024}. The absence of a widely accepted gold standard for InDel treatment remains a significant limitation of contemporary phylogenetic practice.
+
+\subsection{Incommensurability between Optimality Criteria}
+
+A parsimony score, a log-likelihood, and a Bayesian posterior probability cannot be directly compared among methods \parencite{wheelervaron2025}. PMDL addresses this limitation by expressing all components of the phylogenetic hypothesis in a common unit of bits. Whether PMDL will achieve wide empirical adoption depends on continued improvements in the upper-bound approximations used to estimate Kolmogorov complexity and the availability of user-friendly implementations \parencite{wheelervaron2025}.
+
+\subsection{Gene Trees, Species Tree, and Horizontal Transfer}
+
+Phylogenomic analyses frequently recover incongruences among gene trees, which can arise from deep coalescence, hybridization, incomplete lineage sorting, or horizontal gene transfer (HGT). \textcite{wheeler2012} warns against the tendency to attribute all incongruence to HGT without independent evidence, arguing that this is \textit{ad hoc}. The explicit modeling of reticulate events in PhyG \parencite{wheeleretal2024} offers a rigorous alternative: if a network with specified reticulation nodes provides a significantly lower PMDL score than the best tree, the network hypothesis is supported by the data, not merely assumed.
+
+\subsection{Point-and-Click Systematics}
+
+The democratization of bioinformatic software has made phylogenetic analysis accessible to investigators with limited training in the theoretical foundations of the discipline. \textcite{grant2003} documented the risks of this development, showing how uncritical application of default parameters, inadequate treatment of InDels, and use of theoretically unjustified analytical choices produce results that superficially resemble rigorous phylogenetic analysis while lacking its logical foundation. The epistemological coherence demanded by the cladistic framework requires that analytical procedures be transparent, repeatable, and theoretically justified \parencite{wheeleretal2006}.
+
+\section{Conclusion}
+
+The concepts of character, homology, and homoplasy form an interconnected theoretical triad that underlies all phylogenetic systematics. Characters are transformation series laden with theory. Homology is a tree-dependent hypothesis of shared ancestry that serves as the null hypothesis in cladogram construction. Homoplasy is a tree-specific non-minimal transformation that acts as a falsifier of the cladogram in which it is observed.
+
+Outgroup comparison, character polarity, and rooting are the same problem, solved by unrestricted simultaneous analysis of all terminals \parencite{nixon1993}. Ingroup monophyly is a hypothesis subject to empirical test, not a prior assumption, and the successive outgroup expansion procedure \parencite{grant2019} provides an objective and repeatable criterion for limiting the outgroup sample.
+
+High-throughput sequencing did not alter the conceptual foundations of phylogenetics; it amplified the consequences of how these foundations are implemented. Treating InDels as missing data is an empirically demonstrated source of unpredictable topological error and score inflation \parencite{jacobmachado2021c}. The dynamic homology framework, by integrating sequence alignment and tree search into a single optimization problem, provides the most theoretically coherent approach. PMDL \parencite{wheelervaron2025} provides a unified criterion that can dissolve the tripartition parsimony-likelihood-Bayesian by expressing all forms of phylogenetic inference in a common language of information theory.
+
+\clearpage
+\begin{revise}
+\begin{enumerate}
+    \item Characters are \textbf{historical individuals} laden with theory (transformation series; Hennig 1966); phylogenetics = \textbf{idiographic} science, not nomothetic \parencite{grant2004ts,popper1959}.
+    \item Five types of character: additive \parencite{farris1970}, non-additive \parencite{fitch1971}, Sankoff \parencite{sankoff1975}, sequence and chromosomal \parencite{wheeleretal2006}; phenotypic \textit{vs.} genotypic; total evidence \parencite{kluge1989}.
+    \item Homology $\neq$ synapomorphy \parencite{nixon2012}; homology = null hypothesis in group construction; historical relation of identity \parencite{grant2004ts}.
+    \item Primary/secondary debate (de Pinna 1991): rejected \parencite{wheeleretal2006,grant2004ts}; no intermediate category necessary under dynamic homology \parencite{wheeler2001a,wheeler2001b}.
+    \item Static homology (fixed alignment) vs. dynamic (simultaneous optimization); implied alignments: topology and parameter specific \parencite{wheeler2003a}.
+    \item InDels: 2nd largest source of genomic variation; gaps as missing data → TIA and unpredictable topologies \parencite{jacobmachado2021c}; indices GCI, NCI, SGI, TGI \parencite{jacobmachado2021c}.
+    \item Homoplasy as \textbf{falsifier} of tree \parencite{farris1983,kluge2009}; CI \parencite{klugeanfarris1969}, RI \parencite{farris1989}, decisiveness $\neq$ homoplasy \parencite{goloboff1991}.
+    \item Polarity + outgroup + rooting = \textbf{same problem}; unrestricted simultaneous analysis \parencite{nixon1993}. Lundberg rooting valid only with independent evidence \parencite{nixon1993}.
+    \item Successive outgroup expansion \parencite{grant2019}; ingroup monophyly = hypothesis to test.
+    \item Simultaneous analysis / total evidence \parencite{kluge1989,nixon1996} vs. partitioned \parencite{grantkluge2003}.
+    \item 4 optimization algorithms: DO \parencite{wheeler1996}, iterative passes \parencite{wheeler2003b}, fixed states \parencite{wheeler1999a}, search-based \parencite{wheeler2003c}; PhyG exceeds POY5 \parencite{wheeleretal2024,varonwheeler2012}.
+    \item Likelihood under DH: GTR + gap as 5th state; NCM $\equiv$ parsimony for trees \parencite{tuffleysteel1997}.
+    \item Implied weighting: $F = K/(K+S)$ \parencite{goloboff1993b,goloboff2013}; successive approximations \parencite{farris1969}.
+    \item Support: Bremer \parencite{bremer1988}, jackknife \parencite{farrisetal1996}, bootstrap \parencite{felsenstein1985}; bootstrap/LRT relationship \parencite{jacobmachado2021d}.
+    \item 4 criteria: parsimony \parencite{farris1983}; ML; BI; PMDL: $K(H) = K(M) + K(D\mid M)$ \parencite{wheelervaron2025}. First three are \textbf{incommensurable}.
+    \item Softwired and hardwired networks in PhyG \parencite{wheeleretal2024}; hardwired cost $\geq$ best display tree.
+    \item Sensitivity: Navajo rugs, MRI, partition incongruence \parencite{wheeleretal2006,wheeler1995,morrisonellis1997}.
+    \item Point-and-click systematics: risks of uncritical defaults \parencite{grant2003}. HGT $\neq$ default explanation for incongruence \parencite{wheeler2012}.
+    \item Empirical applications: Orthocoronavirinae \parencite{jacobmachado2021a}; genomic epidemiology \parencite{jacobmachado2021b}.
+\end{enumerate}
+\end{revise}
+
+\clearpage
+
+\printbibliography[heading=subbibliography,title={References}]

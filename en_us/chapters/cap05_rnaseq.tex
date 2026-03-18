@@ -1,0 +1,204 @@
+\chapter{RNA-seq in Phylogenomic Studies}
+
+\section{Introduction and Motivations}
+
+RNA sequencing (RNA-seq) has emerged as a powerful and widely accessible approach for collecting phylogenomic data in diverse organisms, particularly those lacking reference genomes or established genomic resources. The application of RNA-seq in phylogenomic studies offers multiple important advantages: efficient access to hundreds or thousands of single-copy nuclear coding loci, simultaneous generation of gene expression and gene duplication data, and the ability to leverage large repositories of publicly available transcriptomes generated for other purposes. These properties make RNA-seq especially valuable for non-model organisms and for groups with large genomes that would be impractical to sequence in their entirety.
+
+However, RNA-seq presents a distinct set of technical and analytical challenges that researchers must navigate. This chapter reviews the motivations for using RNA-seq in phylogenomics, characterizes the major technical and analytical challenges, and describes strategies that researchers have developed to overcome them.
+
+\section{Motivations for RNA-seq in Phylogenomics}
+
+\subsection{Access to Multiple Coding Loci}
+
+RNA-seq provides comprehensive access to expressed genes, potentially capturing thousands of single-copy coding loci in a single reaction. For non-model organisms, this represents a considerable advantage over methods requiring prior probe design or knowledge of reference genomes. The amount of phylogenomic information available in a single transcriptome library can rival or exceed that obtained through targeted capture methods following investment in custom probe design.
+
+\subsection{Cost Economics in Non-Model Organisms}
+
+For taxa lacking well-annotated reference genomes, the cost of developing custom probe sets for targeted capture approaches can be prohibitive. In contrast, RNA-seq offers a lower cost entry point. A single transcriptome library with moderate coverage (for example, 50 million reads) can cost \$30--100 for preparation and sequencing, comparable to the cost of a targeted capture sample without requiring the initial investment in probe design.
+
+\subsection{Integrated Expression Data}
+
+A distinctive feature of RNA-seq is that transcript abundance measurements (mapped read counts) are inherently captured during sequencing. This enables researchers to simultaneously extract (1) sequence data for phylogenetic inference and (2) gene expression data that characterize expression patterns across different tissues or developmental stages. This duality of data makes collection more efficient compared to sequencing methods yielding only sequence.
+
+\subsection{Access to Public Repositories}
+
+The NCBI Sequence Read Archive (SRA) and similar repositories host tens of millions of publicly available transcriptome libraries, frequently submitted for non-phylogenomic purposes (for example, gene expression studies, draft genome characterization). For phylogenomic researchers, this offers an opportunity to reuse existing data---enabling retrospective phylogenomic studies combining transcriptome data from multiple laboratories and projects. This data reuse accelerates construction of taxonomic phylogenies and reduces overall project costs.
+
+\section{Technical Challenges: Tissue Preservation and RNA Quality}
+
+\subsection{Rapid RNA Degradation}
+
+RNA is chemically unstable compared to DNA, subject to degradation through multiple mechanisms. Ubiquitous RNases (RNA-cleaving enzymes) are especially prevalent in natural environments, contaminating tools, water, and air. Once tissue is collected, RNA degradation begins immediately through spontaneous hydrolysis and endogenous nuclease activity, unless immediate preservation measures are initiated.
+
+RNA quality is commonly measured through the RNA Integrity Number (RIN), which ranges from 10 (completely intact RNA) to 1 (degraded RNA). For phylogenomic applications, RIN values $\geq 7$ are generally considered acceptable, although higher RIN (8--10) is preferred. Significant RNA degradation results in loss of complete full-length transcripts and introduction of alignment artifacts that complicate subsequent orthology.
+
+\subsection{Tissue Preservation Methods}
+
+Several preservation strategies have been developed to maintain RNA integrity:
+
+\begin{itemize}
+\item \textbf{Silica-gel}: Fresh tissue is immediately placed in blue silica-gel desiccant, which absorbs moisture and dehydrates tissue rapidly. This approach is low-cost, portable, and effective for field use. RNA extracted from samples preserved in silica-gel often exhibits reasonable RIN (7--9), although some tissues are more prone to degradation.
+
+\item \textbf{RNAlater}: A chemical preservation solution that stabilizes RNA through a proprietary mixture of components that inhibit nucleases. Tissue is immersed in RNAlater, which penetrates tissue within 24 hours and protects RNA for extended periods (months to years) at room temperature. RNAlater typically preserves higher quality RNA than silica-gel, but is more expensive and less portable in field settings.
+
+\item \textbf{Liquid Nitrogen}: Flash-freezing fresh tissue in liquid nitrogen offers superior preservation if storage at -80$\textdegree{}$C is maintained. This approach is best for research environments with freezing infrastructure, but less practical for field collection.
+
+\item \textbf{Desiccated Drying}: Drying under low humidity in buffer solution preserves RNA reasonably well and can be implemented in field settings with minimal equipment.
+\end{itemize}
+
+\subsection{Tissue-Specific Variation}
+
+Transcriptomic composition varies dramatically between tissues. A muscle transcriptome is dominated by transcripts related to muscle contraction, while a brain transcriptome is enriched in genes related to neuroactivity. For phylogenomics, this creates a potential source of missing data: a gene may be absent from a transcriptome of a specific tissue simply because it is not being highly expressed in that context.
+
+Researchers frequently mitigate this variation through combining multiple tissues (for example, combining data from muscle, brain, and digestive glands) to improve gene coverage and matrix completeness. Alternatively, standardizing on a single tissue (for example, always using muscle tissue) sacrifices completeness in favor of comparability across studies.
+
+\section{Analytical Challenges: Orthology Determination and Paralog Contamination}
+
+\subsection{Increased Orthology Complexity}
+
+Orthology determination---the identification of sequences truly homologous derived by speciation and not by gene duplication---is complicated in RNA-seq data for multiple reasons:
+
+\begin{itemize}
+\item \textbf{Whole-Genome Duplications (WGD)}: Many organisms have undergone whole-genome duplications in their evolutionary histories. For example, vertebrate lineages experienced two rounds of WGD near the base of vertebrate radiation. These duplications amplify every gene in the genome, potentially creating hundreds of pairs of paralogous genes. Distinguishing true orthologs from paralogs resulting from WGD requires careful filtering and synteny analysis.
+
+\item \textbf{Intraspecific Structural Variation}: Some genes may be present in single copy in some individuals of a population but duplicated in others, due to polymorphic structural variations. This introduces heterogeneity in orthology determination.
+
+\item \textbf{Alternative Splicing}: Many genes produce multiple isoforms through alternative splicing. Different isoforms can have very different exonic structure, complicating alignment and orthology. It is often unclear which isoform represents the most evolutionarily informative.
+\end{itemize}
+
+\subsection{Orthology Pipelines}
+
+To overcome these challenges, researchers have developed sophisticated automated pipelines:
+
+\textbf{OrthoMCL} groups homologous sequences through reciprocal BLAST search, best-reciprocal-hit filtering, and Markov clustering. For RNA-seq data, OrthoMCL can be combined with additional filters removing truncated sequences, low-expression isoforms, or apparent copies based on sequence similarity within predefined thresholds.
+
+\textbf{InParanoid} identifies ortholog pairs between two genomes while placing secondary paralogs in context. InParanoid is particularly useful for multi-species RNA-seq data where multiple copies of a gene may be present in one or more species.
+
+\textbf{HybPiper} was originally developed for hybridized targeted capture data but adapts well to RNA-seq data, assembling novel transcripts from reads, identifying exons and introns, and performing alignment to known reference sequences. This pipeline reduces isoform artifacts through careful selection of reference sequences and similarity thresholds.
+
+\subsection{Paralog Contamination and Contamination Capture}
+
+A particular challenge is "paralog contamination capture"---the situation in which an orthology pipeline inadvertently includes a paralogous gene in a phylogenomic data matrix. This can occur when:
+
+\begin{itemize}
+\item A species has a duplicated copy and the duplicated copy is accidentally selected as "ortholog" for use in matrix
+\item A contaminant sequence from another species is accidentally assigned as ortholog
+\item Alternative isoforms of the same gene are treated as separate genes
+\end{itemize}
+
+Captured paralogs can introduce misleading systematic signal in phylogenomic matrices, resulting in incorrect tree topologies. Rigorous verification through reverse BLAST, individual gene tree analysis, and orthology tests can mitigate this risk.
+
+\section{Analytical Challenges: Gene Tree Discordance and Alignment}
+
+\subsection{Incomplete Lineage Sorting (ILS)}
+
+ILS---the retention of ancestral polymorphism---occurs when multiple alleles of a gene segregate in an ancestral population for a period sufficient that they can become fixed in different descendants. This results in gene histories that differ from species history. In RNA-seq data with multiple genes, most genes will likely exhibit some degree of discordance due to ILS, especially in rapid radiations and lineages with large effective population size.
+
+\subsection{Introgression}
+
+Historical hybridization followed by backcrossing introduces DNA segments from one species into the genome of a related species. If a gene was introgressed, its gene tree will reflect the introgression history rather than the speciation history. This can result in highly discordant gene topology.
+
+\subsection{Gene Duplication and Loss}
+
+Some genes undergo duplication in one lineage followed by loss in the sister lineage. If only one of the co-orthologs is analyzed, the resulting gene tree may reflect the duplication-loss history rather than the speciation history.
+
+\subsection{Alignment Quality and Masking}
+
+Sequence alignments are the foundation of all phylogenetic inference. Low-quality alignments introduce systematic noise that can confound phylogenomic signals. For RNA-seq data specifically, several sources of low-quality alignment are common:
+
+\begin{itemize}
+\item \textbf{Low-Complexity Regions}: Low-complexity sequences (for example, homopolymers, dinucleotide repeats) often align ambiguously and should be masked before phylogenetic analysis.
+
+\item \textbf{Rapidly Evolving Sequences}: Rapidly evolving sequences (for example, immunological protein surface regions) can have alignment positions with low confidence, particularly at deep phylogenomic distances.
+
+\item \textbf{Alternative Splicing Artifacts}: Different isoforms can introduce gaps and misalignments if alternative splice sites are not adequately resolved.
+\end{itemize}
+
+Masking strategies can remove problematic sites while retaining informative sites. Methods include ALISCORE (identifies ambiguously aligned sites), ZORRO (assigns confidence weights to alignments), and manual filtering based on sequence complexity.
+
+\section{Strategies for Overcoming Challenges}
+
+\subsection{Automated Processing Pipelines}
+
+Several automated processing pipelines have been developed to streamline the trajectory from raw RNA-seq data to phylogenomic matrices:
+
+\textbf{TranscriptomeTools}: A suite of scripts that coordinates de novo transcript assembly, reference alignment, ortholog extraction, and multiple alignment.
+
+\textbf{PHYLONOME}: A web pipeline that accepts raw FASTQ data, performs de novo assembly and orthology, returning multiple alignment of orthologs.
+
+\textbf{SequenceMatrix}: A program with graphical interface for sequence data management, enabling rapid combination of multiple gene regions with automatic partitioning strategies for model testing and phylogenetic reconstruction.
+
+\subsection{Multi-Method Analysis of Discordance}
+
+Given the multiple sources of gene tree discordance, an increasingly adopted approach involves multi-method analysis that treats discordance explicitly:
+
+\begin{itemize}
+\item \textbf{Concatenated Analysis}: Methods that concatenate multiple genes into a supermatrix and perform direct phylogenetic reconstruction (for example, maximum likelihood, Bayesian inference) on the concatenated matrix. These approaches often employ phylogenomic models that allow rate heterogeneity among gene partitions.
+
+\item \textbf{Individual Gene Tree Analysis}: Methods that reconstruct individual gene tree for each gene then synthesize gene trees into a final species tree. Examples include ASTRAL (from "Accurate Species TRee ALgorithm"), which resolves discordance through tree search that maximizes the number of consistent trios across gene trees.
+
+\item \textbf{Explicit Models}: Evolutionary models that explicitly model processes such as ILS, introgression, and duplication-loss can be fit to gene tree data to estimate demographic and historical parameters.
+\end{itemize}
+
+\subsection{Enrichment of Targeted Capture Derived from RNA-seq}
+
+A complementary strategy involves using initial RNA-seq data to inform design of custom probes for subsequent targeted capture. For example, researchers could:
+
+\begin{enumerate}
+\item Sequence transcriptomes of representatives of the taxa in question
+\item Identify conserved genes found consistently across taxa that would be good capture targets
+\item Design probes based on these transcriptome sequences
+\item Use probes to enrich DNA libraries (including degraded DNA from museum specimens) of additional taxa
+\end{enumerate}
+
+This approach combines advantages of RNA-seq (low initial cost, access to multiple genes without reference genome knowledge) with advantages of targeted capture (compatibility with degraded DNA, low per-sample cost after probe design).
+
+\section{Empirical Applications and Case Studies}
+
+\subsection{Invertebrates}
+
+RNA-seq was particularly impactful in invertebrate phylogenomics, where reference genomes were historically scarce. \textcite{misof2014} utilized transcriptome data from >100 insect species to produce the first robustly resolved insect phylogenome, establishing relationships among all major groups of modern insects.
+
+\subsection{Plants}
+
+For plants, the One Thousand Plant Transcriptomes (1KP) initiative generated transcriptomes from ~1000 plant species comprising the full diversity of major plant groups. \textcite{onetp2019} demonstrated that 1KP data could be combined for X-ray analysis of plant evolution across deep timescales.
+
+\subsection{Quality Considerations in Retrospective Data}
+
+Analysis of datasets of public transcriptomes revealed substantial variation in quality across studies. Researchers reusing transcriptome data should carefully evaluate RIN quality, sequencing depth, and processing methods from previous studies before inclusion in phylogenomic analyses.
+
+\section{Future Directions and Perspectives}
+
+\subsection{Long-Read RNA Sequencing}
+
+Long-read RNA sequencing (PacBio Iso-Seq, Oxford Nanopore direct RNA sequencing) offers the capability to sequence full-length transcripts without need for de novo assembly. This can resolve some alternative splicing ambiguities and improve orthology confidence in the future.
+
+\subsection{Single-Cell Transcriptomics}
+
+Single-cell RNA sequencing (scRNA-seq) opens entirely new avenues for phylogenomics, potentially allowing phylogenomic characters to be assigned to specific cell types and biological functions. However, substantial analytical challenges related to gene dropout and capture variability must be overcome.
+
+\subsection{Integration with Other Data Types}
+
+An increasing trend is integration of multiple data types (sequence, expression, phenotype) into unified phylogenetic modeling. RNA-seq provides a natural entry point for such integration due to the availability of integrated expression data.
+
+\clearpage
+\begin{revise}
+\begin{enumerate}
+    \item RNA-seq accesses hundreds--thousands of nuclear coding loci without probes; cost \$30--100/sample; integrated expression data; reusable public repositories (SRA).
+    \item RNA quality: RIN$\geq$7 required; degradation by RNases is rapid. Preservation: silica-gel (field, cheap), RNAlater (penetrates in 24h, months at room temp.), liquid nitrogen (-80$\textdegree{}$C, superior), desiccated drying.
+    \item Tissue-specific variation: transcriptomes differ drastically between tissues; combining multiple tissues improves coverage but complicates comparability.
+    \item Orthology complicated by: whole-genome duplications (WGD), intraspecific structural variation, alternative splicing (multiple isoforms).
+    \item Orthology pipelines: OrthoMCL (reciprocal BLAST + Markov clustering), InParanoid (ortholog pairs between genomes), HybPiper (de novo assembly + reference alignment).
+    \item Paralog contamination: inadvertent inclusion of paralog in matrix $\to$ misleading signal; mitigate with reverse BLAST, individual gene trees, orthology tests.
+    \item Gene tree discordance: ILS (ancestral polymorphism retention), introgression (historical hybridization), duplication--loss.
+    \item Alignment quality: mask low-complexity regions, rapidly evolving sequences and alternative splicing artifacts; tools: ALISCORE, ZORRO.
+    \item Multi-method approach: concatenation (supermatrix) vs. coalescent species tree (ASTRAL) vs. explicit models (ILS, introgression).
+    \item RNA-seq $\to$ custom probe design: transcriptomes inform subsequent targeted capture for degraded museum DNA.
+    \item Future directions: Iso-Seq / direct RNA (full-length transcripts), scRNA-seq (single cell), multi-data integration.
+\end{enumerate}
+\end{revise}
+
+\clearpage
+
+\printbibliography[heading=subbibliography,title={References}]
+

@@ -1,0 +1,364 @@
+
+\chapter{Fundamentos Teórico-Filosóficos da Filogenética}
+
+\section{Introdução}
+
+Inferir a história evolutiva dos organismos exige observações organizadas e hereditárias capazes de discriminar entre hipóteses filogenéticas concorrentes. A transformação de observações biológicas brutas em tal evidência não é uma operação trivial: ela demanda uma compreensão principiada do que constitui um caráter, de como os caracteres sustentam a hipótese de ancestralidade comum, e de como conflitos aparentes entre caracteres são interpretados e resolvidos \parencite{wheeleretal2006}.
+
+Esses problemas têm uma longa e contestada história. \textcite{lankester1870} introduziu o termo \textit{homoplasia} para distinguir feições que se assemelham superficialmente mas não compartilham uma origem comum. \textcite{hennig1966} formalizou a distinção entre estados de caráter ancestrais e derivados compartilhados, fornecendo o fundamento lógico da metodologia cladística. \textcite{depinna1991} e \textcite{patterson1982} abordaram subsequentemente o estatuto epistemológico da homologia como hipótese. \textcite{wheeleretal2006} e \textcite{wheeler2012} sintetizaram essas contribuições em um arcabouço computacional integrado, capaz de lidar com a escala e a complexidade dos dados genômicos modernos.
+
+Os caracteres são, nesse arcabouço, objetos carregados de teoria (\textit{theory-laden objects}) no sentido de \textcite{popper1959}: a compreensão prévia que o investigador tem da biologia dos organismos informa a decisão de reconhecer uma feição como um caráter. A sistemática filogenética é, portanto, uma ciência ideográfica --- não nomotética --- que busca descobrir as séries de eventos históricos de transformação que explicam a variação hereditária entre linhagens \parencite{grant2004ts}.
+
+O advento do sequenciamento de alto rendimento (HTS, do inglês \textit{high-throughput sequencing}) alterou fundamentalmente a escala em que dados filogenéticos são coletados: centenas ou milhares de loci podem agora ser sequenciados para dezenas a centenas de táxons em um único experimento. Essa abundância de dados não simplifica os problemas conceituais de delimitação de caracteres, avaliação de homologia e gestão de homoplasia; pelo contrário, os amplifica. A urgência prática dessas questões é ilustrada por análises de larga escala como a de \textcite{jacobmachado2021a}, que analisou 2.006 genomas completos da subfamília \textit{Orthocoronavirinae} usando parcimônia de evidência total, produzindo a hipótese filogenética mais abrangente para esse grupo à época e elucidando a origem e a história de hospedeiros do SARS-CoV-2. \textcite{jacobmachado2021b} revisaram a trajetória da epidemiologia genômica desde suas origens na epidemiologia molecular até a pandemia de COVID-19, demonstrando como a redução dramática nos custos de sequenciamento possibilitou a vigilância filogenômica em escala global.
+
+Desenvolvimentos recentes no software estenderam ainda mais o escopo da inferência filogenética. PhyG \parencite{wheeleretal2024}, sucessor do POY5, estende a busca filogenética a grafos gerais, incluindo redes \textit{softwired} e \textit{hardwired}, e oferece melhorias substanciais em qualidade de otimização e velocidade de execução. \textcite{wheelervaron2025} propuseram o comprimento mínimo de descrição filogenética (PMDL, do inglês \textit{phylogenetic minimum description length}) como um critério de otimalidade unificado fundamentado na teoria algorítmica da informação. O presente capítulo examina esses fundamentos conceituais e sua implementação prática em fluxos de trabalho contemporâneos de análise filogenética.
+
+\section{A Estrutura das Árvores Filogenéticas}
+
+\subsection{Árvores, Cladogramas e Topologias}
+
+Na sistemática filogenética, os termos \textbf{árvore filogenética}, \textbf{cladograma} e \textbf{topologia} são frequentemente utilizados de forma intercambiável \parencite{wheeler2012}. A árvore filogenética é a ferramenta primária para descrever relações evolutivas entre organismos. Formalmente, árvores são grafos conexos e acíclicos que representam relações hierárquicas aninhadas entre grupos. Em YBYRÁ e em outros programas de análise filogenética, árvores são tipicamente representadas em notação parentética, seguindo o formato \textsc{Newick} ou o formato \textsc{Hennig86} (também denominado \textsc{TREAD}) \parencite{machado2015}.
+
+\subsection{Componentes Elementares: Nós, Ramos, Terminais e Raiz}
+
+Os elementos estruturais de uma árvore filogenética são os seguintes:
+
+\begin{description}
+    \item[Terminais] Os terminais --- também denominados \textit{unidades taxonômicas operacionais} (OTUs, do inglês \textit{operational taxonomic units}) ou folhas (\textit{leaves}) --- são os objetos que ocorrem nas extremidades da árvore. Terminais frequentemente representam táxons, mas podem representar qualquer entidade comparável (e.g., sequências, populações, espécies fósseis).
+
+    \item[Nós] Os nós são os pontos de interseção em uma árvore, identificando cada componente. Nós internos representam ancestrais hipotéticos e são denominados \textit{unidades taxonômicas hipotéticas} (HTUs, do inglês \textit{hypothetical taxonomic units}); nós terminais correspondem às OTUs. Em uma árvore enraizada, a raiz é o único nó com grau dois.
+
+    \item[Ramos] Os ramos são as arestas que conectam dois nós adjacentes. Cada ramo pode ser associado a um comprimento representando o número de transformações ou a duração evolutiva do intervalo.
+
+    \item[Raiz] A raiz determina a polaridade das transformações de caráter no cladograma \parencite{schuh2009}. O enraizamento converte uma árvore não enraizada em uma árvore enraizada, estabelecendo a direção das transformações evolutivas.
+\end{description}
+
+\subsection{Grupos-Irmãos, Splits e Consenso Estrito}
+
+Em uma árvore binária, \textbf{grupos-irmãos} (\textit{sister-groups}) são dois grupos que compartilham um único ancestral comum exclusivo \parencite{schuh2009}. Um \textbf{split} é a bipartição de um conjunto de terminais induzida pela remoção de uma aresta da árvore. Por exemplo, a árvore \texttt{(A,(C,(D,(E,F))))} pode ser dividida nas subárvores \texttt{(E,F)} e \texttt{(A,(C,D))} pela remoção do ramo que as une. Uma \textbf{árvore de consenso estrito} contém exclusivamente os nós presentes em \emph{todas} as árvores de um conjunto de resultados igualmente ótimos; qualquer inconsistência resulta no colapso do nó correspondente \parencite{schuh2009}.
+
+\subsection{Formatos de Arquivo para Árvores Filogenéticas}
+
+Dois formatos de arquivo são amplamente utilizados para representar árvores em notação parentética:
+
+\begin{description}
+    \item[Newick] Adotado por programas como GARLI, MrBayes, PAUP*, PHYLIP, PROTML e TREE-PUZZLE. Terminais são separados por vírgulas e as relações de grupo-irmão por parênteses aninhados. Suporta comprimentos de ramo e rótulos de nós internos: \texttt{((A:5,B:7)Ancestral:10,C:3);}
+
+    \item[TREAD (Hennig86)] Representa árvores precedidas pelo cabeçalho \texttt{tread}. Múltiplas árvores são separadas por asteriscos, e a última termina com ponto e vírgula. É comum incluir \texttt{proc-;} ao final do arquivo para uso em TNT \parencite{goloboff2008}.
+\end{description}
+
+\section{Táxons, Clados e Classificação Filogenética}
+
+\subsection{Grupos Monofiléticos, Parafiléticos e Poliféticos}
+
+Um \textbf{táxon} é qualquer grupo de organismos reconhecido em qualquer nível da hierarquia sistemática \parencite{schuh2009}. A sistemática filogenética distingue três tipos de agrupamento \parencite{hennig1966,schuh2009}:
+
+\begin{description}
+    \item[Grupo monofilético (clado)] Composto por um ancestral comum único e \emph{todos} os seus descendentes. Somente grupos monofiléticos são reconhecidos como unidades naturais e válidas de classificação cladística \parencite{hennig1966}.
+
+    \item[Grupo parafilético] Ao qual falta exatamente um grupo monofilético para se tornar monofilético (e.g., ``Reptilia'' no sentido clássico, que exclui Aves).
+
+    \item[Grupo polifilético] Ao qual faltam dois ou mais grupos monofiléticos para se tornar monofilético; tipicamente reflete convergência evolutiva \parencite{schuh2009}.
+\end{description}
+
+A monofilia de qualquer agrupamento é uma proposição a ser avaliada pela congruência de caracteres, não uma assunção metodológica \parencite{nixon1993}.
+
+\section{O Conceito de Caráter}
+\label{sec:caracteres}
+
+\subsection{A Natureza Histórica do Caráter}
+
+Um caráter, no sentido filogenético, é ``uma série de transformação historicamente independente'' \parencite[p.~333]{wheeleretal2006}. Caracteres não são simples observações, mas declarações teoricamente organizadas sobre variação hereditária entre táxons, carregando noções de relevância, comparabilidade e correspondência \parencite{wheeler2012}. São objetos carregados de teoria no sentido de \textcite{popper1959}: a compreensão prévia do investigador informa a decisão de reconhecer uma feição como caráter.
+
+\textcite{grant2004ts} argumentam que esse é o único conceito de caráter consistente com as exigências epistemológicas da sistemática filogenética. Como séries de transformação, caracteres são indivíduos históricos, análogos em estatuto ontológico às espécies e clados. A independência relevante para a inferência filogenética é \textbf{independência histórica ou transformacional}, não correlação funcional ou desenvolvimental \parencite{grant2004ts}.
+
+Os \textbf{estados de caráter} são as formas alternativas que uma série de transformação pode assumir. Para caracteres binários, estados designam tipicamente presença ou ausência de uma estrutura; para dados de sequência, os estados são os resíduos nucleotídicos ou aminoacídicos em uma dada posição.
+
+\subsection{Tipos de Caráter}
+
+\textcite{wheeleretal2006} reconhecem cinco tipos fundamentais de caráter:
+
+\begin{description}
+    \item[Aditivos] Assumem ordenação linear dos estados; o custo de transformação é a distância aditiva entre os estados \parencite{farris1970}.
+
+    \item[Não-aditivos] Atribuem custos iguais a todas as transformações, sem homologia aninhada entre estados \parencite{fitch1971}.
+
+    \item[Matriz (Sankoff)] Permitem custos de transformação arbitrários especificados por uma matriz de custos \parencite{sankoff1975,sankoffrousseau1975}.
+
+    \item[Sequência] Tratam cadeias contíguas de nucleotídeos ou aminoácidos como unidade de comparação, com transformações envolvendo substituição, inserção ou deleção.
+
+    \item[Cromossômicos] Otimizam simultaneamente a variação em nível nucleotídico e em nível de loco; aplicáveis a genomas mitocondriais, bacterianos e virais \parencite{wheeleretal2006}.
+\end{description}
+
+PhyG \parencite{wheeleretal2024} estende ainda mais essa representação para alfabetos efetivamente ilimitados, permitindo a análise de dados linguísticos, desenvolvimental e outros tipos de dados comparativos não-padrão.
+
+\subsection{Caracteres Fenotípicos e Genotípicos}
+
+Caracteres fenotípicos são características estruturais ou funcionais que expressam o genótipo em conjunto com influências ambientais, incluindo dados morfológicos, comportamentais e de sequências de aminoácidos. Caracteres genotípicos derivam diretamente de sequências de DNA ou RNA, eliminando preocupações com heritabilidade; seu desafio principal é que a homologia de nucleotídeos não pode ser testada isoladamente, mas requer um teste de congruência com outros caracteres \parencite{wheeleretal2006}. O princípio da \textbf{evidência total} \parencite{kluge1989} sustenta que toda a evidência disponível --- fenotípica e genotípica --- possui igual valor inicial para discriminar entre hipóteses filogenéticas e deve ser analisada simultaneamente.
+
+\section{Homologia: Definição, Epistemologia e Debate}
+\label{sec:homologia}
+
+\subsection{A Definição Operacional e a Homologia como Hipótese Nula}
+
+Na formulação de \textcite[p.~10]{wheeleretal2006}, ``feições são homólogas quando suas origens podem ser rastreadas a uma única transformação em um ramo do cladograma que leva ao ancestral comum mais recente.'' Três consequências decorrem dessa definição: (1) a homologia é \textbf{dependente do cladograma} --- não há noção de homologia sem referência a um cladograma, nem escolha entre cladogramas sem declarações de homologia; (2) a homologia é a \textbf{hipótese nula} na construção de grupos monofiléticos durante a busca em árvores; (3) toda afirmação de homologia é simultaneamente uma hipótese filogenética, sujeita à falsificação pela incongruência de caracteres.
+
+\textcite{grant2004ts} argumentam, de forma independente, que a homologia refere-se a uma \textbf{relação histórica de identidade} --- a identidade de ser derivado do mesmo evento único de transformação --- e como tal é conceitualmente anterior e distinta do teste cladístico de congruência de caracteres.
+
+\subsection{O Debate Homologia--Sinapomorfia}
+
+\textcite{nixon2012} argumentam que a equação de homologia com sinapomorfia, proposta por \textcite{patterson1982}, é histórica e conceitualmente incorreta. \textcite{hennig1966} claramente pretendia que a homologia abrangesse tanto a plesiomorfia quanto a sinapomorfia, uma vez que ambas representam feições compartilhadas por táxons em decorrência de ancestralidade comum. Uma simplesiomorfia é homóloga no nível mais inclusivo em que constitui uma sinapomorfia; no nível do grupo interno, ela é homóloga mas filogeneticamente não-informativa \parencite{nixon2012}.
+
+\subsection{O Debate Homologia Primária--Secundária}
+
+\textcite{depinna1991} propôs um modelo de dois estágios: a \textbf{homologia primária} refere-se a proposições iniciais baseadas em similaridade, geradas antes da análise; a \textbf{homologia secundária} refere-se às proposições que sobrevivem ao teste de congruência de caracteres. \textcite{wheeleretal2006} rejeitam essa separação como ``nem uma necessidade metodológica nem epistemológica'' \parencite[p.~10]{wheeleretal2006}. \textcite{grant2004ts} argumentam que a distinção confunde o \textit{conceito} de homologia com as \textit{operações de descoberta} usadas para detectar instâncias desse conceito; como ambos são distintos, nenhuma categoria epistemológica intermediária é necessária. O teste de congruência pode ser aplicado diretamente ao conjunto irrestrito de hipóteses de homologia --- que é o núcleo da reivindicação do arcabouço de \textbf{homologia dinâmica} \parencite{wheeler2001a,wheeler2001b}.
+
+\subsection{Homologia Estática e Dinâmica}
+
+A \textbf{homologia estática} codifica hipóteses de homologia em uma matriz fixa antes da análise filogenética. Em sistemática molecular, o alinhamento múltiplo de sequências é o método canônico: cada coluna é tratada como um caráter e cada resíduo dentro da coluna como um estado homólogo (homologia posicional). A limitação crítica é que o alinhamento ótimo é dependente da topologia; um alinhamento produzido sob uma árvore-guia pode diferir do alinhamento ótimo para o cladograma ótimo \parencite{wheeleretal2006}.
+
+A \textbf{homologia dinâmica} trata a homologia como um problema de otimização resolvido simultaneamente com a busca em árvores, empregando o mesmo critério de otimalidade para ambas as etapas; a solução globalmente ótima é a combinação de custo mínimo de cladograma mais esquema de homologia \parencite{wheeleretal2006}.
+
+Um desenvolvimento prático importante são os \textbf{alinhamentos implícitos} (\textit{implied alignments}), introduzidos por \textcite{wheeler2003a} como representações visuais das sinapomorfias em um determinado cladograma. Cada alinhamento implícito é único para uma topologia e um conjunto de parâmetros de transformação específicos; usá-lo como base para uma análise independente subsequente reintroduziria os problemas da homologia estática \parencite{wheeleretal2006}.
+
+\subsection{Tipos de Transformações}
+
+Os estados de caráter classificam-se de acordo com polaridade e distribuição na árvore \parencite{hennig1966,schuh2009}:
+
+\begin{description}
+    \item[Apomorfia] Estado de caráter derivado, originado a partir de um estado ancestral em um evento de transformação.
+    \item[Plesiomorfia] Estado de caráter ancestral. Plesiomorfias são homologias legítimas, mas não são informativas para discriminar hipóteses de relacionamento \parencite{nixon2012}.
+    \item[Sinapomorfia] Ocorrência compartilhada de um estado apomórfico em um grupo monofilético \parencite{grant2004a}; evidência fundamental de monofiletismo.
+    \item[Simplesiomorfia] Estado ancestral compartilhado por um grupo não-monofilético de terminais; não sustenta agrupamentos naturais.
+    \item[Autapomorfia] Apomorfia exclusiva de um único terminal ou táxon; diagnóstica para terminais individuais, mas não informativa para relacionamentos entre eles.
+\end{description}
+
+\section{Homoplasia: Definição, Medição e Interpretação}
+\label{sec:homoplasia}
+
+\subsection{Definição e Estatuto Epistemológico}
+
+Homoplasia ocorre ``quando um estado de caráter é compartilhado por dois ou mais táxons sem ser resultado de ancestralidade comum, mas sim de paralelismo ou convergência'' \parencite[p.~336]{wheeleretal2006}. O termo foi introduzido por \textcite{lankester1870}. Em termos operacionais, a homoplasia é qualquer transformação não-mínima de um caráter em um cladograma --- definição explicitamente específica da árvore: uma feição homoplástica em um cladograma pode ser otimizada sem passos extras em outro \parencite{wheeler2012}.
+
+\textcite{farris1983} e \textcite{kluge2009} argumentam que a homoplasia funciona como um \textbf{falsificador} da hipótese de árvore na qual ocorre. O cladograma preferido é aquele menos falsificado pela homoplasia, i.e., aquele que minimiza hipóteses \textit{ad hoc} de convergência e paralelismo. Este é o critério de parcimônia enunciado em termos epistemológicos. Uma \textbf{hipótese \textit{ad hoc}} é uma suposição invocada para eliminar observações inconvenientes; em cladística, o recurso \textit{a priori} à homoplasia --- explicar similaridade como não-homóloga sem justificativa topológica --- é o exemplo paradigmático \parencite{grant2004a}.
+
+\subsection{Medição da Homoplasia}
+
+O \textbf{índice de consistência} (CI) para um caráter é a razão entre o número mínimo possível de passos e o número observado em uma dada árvore \parencite{klugeanfarris1969}. Um CI de 1,0 indica ausência de homoplasia. O \textbf{índice de retenção} (RI; \cite{farris1989}) mede a fração da aparente sinapomorfia efetivamente retida como sinapomorfia na árvore; é menos sensível ao número de táxons do que o CI.
+
+\textcite{goloboff1991} introduziu a distinção entre homoplasia e \textbf{decisividade} (\textit{decisiveness}) --- o conteúdo informativo de uma matriz em relação à escolha de árvores, proporcional à variância no comprimento das árvores sobre todos os cladogramas possíveis. Valores menores de CI ou RI não implicam necessariamente menor decisividade: um conjunto de dados pode ter alta homoplasia no cladograma mais parcimonioso e ainda ser altamente decisivo se as árvores alternativas forem substancialmente menos parcimoniosas. Esse resultado adverte contra confundir o nível de homoplasia com a força da evidência para um cladograma \parencite{goloboff1991}.
+
+\subsection{InDels e Homoplasia}
+
+Inserções e deleções (InDels) exibem padrões de homoplasia distintos das substituições nucleotídicas. \textcite{redelings2024} observam que as taxas de InDels variam substancialmente entre grupos taxonômicos e regiões genômicas, e que um viés de deleção é observado na maioria das linhagens estudadas. Como InDels são eventos relativamente raros comparados às mutações pontuais, e como a probabilidade de um InDel idêntico ocorrer independentemente em duas linhagens não aparentadas na mesma posição é muito baixa, InDels compartilhados constituem evidência sinapomórfica particularmente forte \parencite{redelings2024}.
+
+\section{Comparação com Grupo Externo, Polaridade e Enraizamento}
+\label{sec:outgroup}
+
+\subsection{Grupo Externo, Grupo Interno e a Identidade dos Três Problemas}
+
+O \textbf{grupo interno} (\textit{ingroup}) é o grupo monofilético putativo cujas relações internas constituem o foco primário do estudo; a monofilia do grupo interno é uma hipótese a ser testada, não uma suposição a ser imposta \parencite{nixon1993}. O \textbf{grupo externo} (\textit{outgroup}) é qualquer táxon externo ao grupo interno incluído para enraizar a rede resultante e estabelecer a polaridade dos caracteres \parencite{nixon1993,grant2019}.
+
+\textcite{nixon1993} esclareceram que a comparação com grupo externo, a determinação da polaridade de caráter e o enraizamento reduzem-se todos a uma única operação: a polaridade não precisa --- e não deve --- ser decidida antes da análise filogenética; ela é uma consequência do enraizamento, não um pré-requisito. O ``algoritmo de grupo externo'' de Maddison et al. (1984, discutido em \cite{nixon1993}), que aplica parcimônia independentemente ao grupo interno e ao externo, constitui uma forma relaxada de parcimônia teoricamente indefensável \parencite{nixon1993}. A solução é a análise simultânea irrestrita de todos os terminais em um único network não-enraizado, que é então enraizado entre o grupo interno e o externo.
+
+\subsection{Enraizamento de Lundberg}
+
+O enraizamento de Lundberg consiste na construção de um ancestral hipotético para enraizar a rede. \textcite{nixon1993} concluíram que esse procedimento é consistente com a parcimônia cladística apenas quando o ancestral hipotético é derivado de evidências ontogenéticas ou paleontológicas independentes, não da comparação com o grupo externo; usá-lo de outra forma é circular.
+
+\subsection{Expansão Sucessiva do Grupo Externo}
+
+\textcite{grant2019} propôs o procedimento de \textbf{expansão sucessiva do grupo externo}: a amostra do grupo externo é expandida iterativamente, com prioridade para terminais mais estreitamente relacionados ao grupo interno e para terminais de regiões da topologia externa fracamente suportadas, até que a topologia e as hipóteses de homologia do grupo interno permaneçam estáveis ao longo de pelo menos duas rodadas consecutivas de expansão. Esse procedimento fornece uma regra de parada defensável sem implicar que os resultados estão além da refutação \parencite{grant2019}.
+
+\subsection{Análise Simultânea e Evidência Total}
+
+A \textbf{análise simultânea} refere-se à análise conjunta de múltiplos conjuntos de dados em oposição à análise separada seguida de consenso \parencite{nixon1996}. O termo \textbf{evidência total} é frequentemente sinônimo \parencite{kluge1989}, embora alguns autores reservem ``evidência total'' para análises que incorporam \emph{todos} os dados disponíveis \parencite{kluge1989,nixon1996}. Ambas as abordagens se opõem à análise particionada seguida de consenso, que pode ocultar conflito informativo entre as partições \parencite{grantkluge2003}.
+
+\section{Homologia Dinâmica, InDels e Sequenciamento de Alto Rendimento}
+\label{sec:dinamica}
+
+\subsection{O Problema dos InDels em Alinhamento Estático}
+
+Inserções e deleções (InDels) constituem a segunda fonte mais importante de variação genômica, após as mutações pontuais \parencite{redelings2024}. A maioria dos algoritmos de alinhamento não é ciente da filogenia (\textit{phylogeny-aware}) e tende a inferir alinhamentos nos quais caracteres são independentemente deletados muitas vezes quando considerados em uma árvore, resultando em superestimativa de eventos de perda convergente e perda do sinal filogenético genuíno carregado por InDels compartilhados \parencite{redelings2024}.
+
+As consequências empíricas de codificar gaps como dados ausentes em análise de máxima verossimilhança (ML) foram estudadas sistematicamente por \textcite{jacobmachado2021c}. Esse estudo demonstrou que os escores de ML correlacionam negativamente com os custos de abertura de gap, e que variações no número e na distribuição de gaps produzem efeitos substanciais e amplamente imprevisíveis na topologia das árvores. Usando simulações de Monte Carlo que substituíram nucleotídeos por gaps mantendo fixa a homologia nucleotídica, \textcite{jacobmachado2021c} confirmaram que, sob a convenção padrão de gaps como nucleotídeos desconhecidos, o critério de ML recompensa o alinhamento com mais gaps, convergindo para o \textbf{alinhamento de identidade trivial} (TIA, do inglês \textit{trivial identity alignment}) como ótimo quando o espaço de alinhamento é completamente explorado. Esta é uma inconsistência fundamental: alinhar sequências com MAFFT e então avaliar a qualidade do alinhamento com o escore de ML aplica critérios de otimalidade distintos em diferentes estágios da mesma análise.
+
+Para quantificar o número e a distribuição de gaps em qualquer alinhamento, \textcite{jacobmachado2021c} introduziram quatro índices: o \textbf{Índice de Contiguidade de Gaps} (GCI), o \textbf{Índice de Contiguidade de Nucleotídeos} (NCI), o \textbf{Índice de Gaps Compartilhados} (SGI) e o \textbf{Índice Topológico de Gaps} (TGI), que fornecem uma base quantitativa para caracterizar decisões de alinhamento independentemente de qualquer árvore particular.
+
+\subsection{Algoritmos de Otimização de Sequências sob Homologia Dinâmica}
+
+A homologia dinâmica, tal como implementada em análise direta \parencite{wheeler1996}, trata a homologia como um problema de otimização resolvido simultaneamente com a busca em árvores, empregando o mesmo critério de otimalidade para ambas as etapas. \textcite{wheeleretal2006} descrevem quatro procedimentos heurísticos para resolver o problema de determinação de sequências de HTU:
+
+\begin{description}
+    \item[Otimização Direta (\textit{Direct Optimization})] \parencite{wheeler1996} Avalia simultaneamente as homologias de sequências nucleicas e o custo do cladograma sem exigir alinhamento pré-análise. InDels são tratados como eventos informativos via uma matriz de custo de edição.
+
+    \item[Otimização por Passagens Iterativas (\textit{Iterative Pass Optimization})] \parencite{wheeler2003b} Combina a otimização direta de três sequências com melhoria iterativa. As sequências de HTU são otimizadas com base em sequências descendentes e ancestrais simultaneamente, até a estabilização do custo total.
+
+    \item[Otimização de Estados Fixos (\textit{Fixed-States Optimization})] \parencite{wheeler1999a} Trata cada sequência como um único caráter multiestado cujo estado é uma das sequências terminais observadas. As sequências de HTU são retiradas desse pool predeterminado via programação dinâmica.
+
+    \item[Otimização Baseada em Busca (\textit{Search-Based Optimization})] \parencite{wheeler2003c} Estende a otimização de estados fixos permitindo que o usuário forneça um conjunto maior de soluções candidatas para os estados ancestrais.
+\end{description}
+
+PhyG \parencite{wheeleretal2024} aprimora todos esses procedimentos por meio de percursos de grafo específicos para cada caráter \parencite{varonwheeler2012}, gerando tipicamente árvores mais curtas do que o POY5, com melhorias de escore atingindo 7\% em conjuntos de dados empíricos.
+
+\subsection{Verossimilhança sob Homologia Dinâmica}
+
+A análise de ML pode ser realizada sob o arcabouço de homologia dinâmica sem exigir alinhamento pré-análise \parencite{wheeleretal2006}. Nessa implementação, um modelo GTR (\textit{general time reversible}) de cinco estados é utilizado, com os estados A, C, G, T e gap --- tratando o gap como um quinto estado de caráter no processo de Markov, diferentemente das implementações padrão.
+
+PhyG \parencite{wheeleretal2024} implementa adicionalmente a verossimilhança Sem Mecanismo Comum (NCM, do inglês \textit{No-Common-Mechanism}; \cite{tuffleysteel1997}), que não assume um modelo compartilhado entre os sítios e é equivalente à parcimônia para árvores sem penalidades de rede.
+
+\subsection{Computação Paralela}
+
+A escala dos dados de HTS demanda recursos computacionais distribuídos. O problema de busca em cladogramas é amenável à paralelização porque muitas réplicas heurísticas independentes podem ser executadas concorrentemente em processadores separados \parencite{wheeleretal2006}. PhyG \parencite{wheeleretal2024} adota um modelo diferente: usa \textit{threads} leves do sistema operacional em vez de MPI, eliminando a necessidade de bibliotecas externas e permitindo implantação em hardware comum e em clusters de alto desempenho sem configuração adicional.
+
+\section{Redes Filogenéticas}
+\label{sec:redes}
+
+A análise filogenética tradicional está restrita a árvores --- grafos acíclicos dirigidos em que cada nó não-raiz tem exatamente um pai. Essa estrutura representa apenas herança vertical e estritamente bifurcante. Processos como transferência horizontal de genes, hibridização e introgressão produzem histórias evolutivas reticuladas que árvores não podem representar sem invocar hipóteses \textit{ad hoc} de homoplasia \parencite{wheeleretal2024}.
+
+PhyG \parencite{wheeleretal2024} estende a busca filogenética a redes \textit{softwired} e \textit{hardwired}:
+
+\begin{description}
+    \item[Rede \textit{softwired}] Cada caráter ou bloco de dados segue uma única árvore de display; blocos diferentes podem seguir caminhos distintos pela rede, capturando histórias heterogêneas produzidas por transferência horizontal.
+
+    \item[Rede \textit{hardwired}] Cada vértice de reticulação herda de dois pais simultaneamente, e o custo é determinado pelos custos de transformação em ambos os ramos parentais. Os custos de redes \textit{hardwired} são sempre pelo menos tão altos quanto os de qualquer árvore de display derivável do grafo \parencite{wheeleretal2024}.
+\end{description}
+
+Blocos de dados individuais podem ser atribuídos a caminhos reticulados separados via o comando \texttt{reblock}, permitindo ao usuário especificar quais loci compartilham uma história comum \parencite{wheeleretal2024}.
+
+\section{Critérios de Otimalidade}
+\label{sec:criterios}
+
+\subsection{Visão Geral e Incomensurabilidade}
+
+A sistemática filogenética requer um critério de otimalidade: uma métrica pela qual comparamos árvores candidatas e selecionamos aquela ou aquelas que melhor explicam os dados. Os três critérios dominantes --- parcimônia, máxima verossimilhança e probabilidade posterior Bayesiana --- são \textbf{incomensuráveis}: uma pontuação de parcimônia, um log-verossimilhança e uma probabilidade posterior não podem ser diretamente comparados entre métodos \parencite{wheelervaron2025}. Isso impede a seleção principiada de modelos ou a comparação de tipos alternativos de grafos sob os arcabouços existentes.
+
+\subsection{Parcimônia}
+
+A \textbf{parcimônia} seleciona o cladograma que minimiza o custo total --- o número total de eventos de transformação postulados \parencite{farris1983,wheeleretal2006}. Minimizar a homoplasia não é meramente conveniência computacional, mas um princípio epistemológico fundamentado na navalha de Ockham: cada instância de homoplasia representa um evento evolutivo independente que deve ser explicado sem referência à ancestralidade compartilhada.
+
+\subsection{Máxima Verossimilhança}
+
+A \textbf{máxima verossimilhança} seleciona a árvore que maximiza $\Pr(D \mid T, \theta)$, a probabilidade dos dados $D$ dada a árvore $T$ e um conjunto de parâmetros do modelo $\theta$. Requer a especificação explícita de um modelo de substituição.
+
+\subsection{Inferência Bayesiana}
+
+A \textbf{inferência Bayesiana} calcula a distribuição de probabilidade posterior $P(T \mid D)$ sobre o espaço de topologias, sob uma distribuição \textit{a priori} especificada, combinando informação dos dados com crenças prévias expressas formalmente.
+
+\subsection{Comprimento Mínimo de Descrição Filogenética (PMDL)}
+
+\textcite{wheelervaron2025} propuseram o PMDL como um critério de otimalidade unificado fundamentado na teoria da informação algorítmica \parencite{kolmogorov1968,livitanyi1997}. O PMDL define a complexidade de uma hipótese filogenética $H$ como:
+
+\begin{equation}
+    K(H) = K(M) + K(D \mid M)
+\end{equation}
+
+onde $K(M)$ é a complexidade algorítmica do modelo $M$ (abrangendo tanto a estrutura do grafo quanto o modelo de transformação de caracteres) e $K(D \mid M)$ é a complexidade dos dados $D$ dado o modelo --- equivalente à verossimilhança dos dados sob o modelo \parencite{wheelervaron2025}. A hipótese preferida é aquela que minimiza $K(H)$.
+
+Essa formulação tem várias propriedades desejáveis. Primeiro, o PMDL gera esquemas naturais de ponderação de caracteres sem especificação externa: cada tipo de dado contribui com suas próprias complexidades via o mesmo arcabouço. Segundo, inclui a complexidade do grafo, permitindo a competição entre árvores, redes e florestas em uma escala numérica comum. Terceiro, converge sobre a parcimônia para modelos de baixa complexidade, sobre a verossimilhança para conjuntos de dados grandes, e sobre a probabilidade posterior Bayesiana quando prioris são especificadas, unificando os três arcabouços dominantes \parencite{wheelervaron2025}. O PMDL está implementado no PhyG \parencite{wheeleretal2024}.
+
+\section{Ponderação de Caracteres}
+\label{sec:pesos}
+
+\subsection{Ponderação Implicada}
+
+\textcite{goloboff1993b} propôs a ponderação implicada (\textit{implied weighting}) como método de estimar simultaneamente os pesos dos caracteres e buscar o cladograma ótimo. A adequação de um caráter é definida como $F = K / (K + S)$, onde $K$ é uma constante de concavidade definida pelo usuário e $S$ é o número de passos extras (homoplasia) para aquele caráter em uma dada árvore \parencite{wheeleretal2006}. A análise maximiza a adequação total durante a busca em árvores. A constante $K$ controla a taxa com que a função diminui à medida que a homoplasia aumenta: valores baixos penalizam pesadamente caracteres altamente homoplásticos. A sensibilidade a essa escolha deve ser examinada como parte de qualquer análise que empregue ponderação implicada \parencite{goloboff1993b,goloboff2013}.
+
+O PMDL \parencite{wheelervaron2025} fornece uma alternativa: por gerar pesos intrinsecamente a partir da complexidade algorítmica do modelo e dos dados, não requer que o usuário especifique uma constante de concavidade.
+
+\subsection{Ponderação por Aproximações Sucessivas}
+
+\textcite{farris1969} propôs a ponderação por aproximações sucessivas (\textit{successive approximation weighting}) como um procedimento iterativo: os caracteres são primeiro analisados com pesos iguais; a árvore resultante é usada para calcular estatísticas de ajuste dos caracteres (e.g., CI); os caracteres são reponderados e a análise é repetida até a estabilização. Esse método difere da ponderação implicada em que realiza a ponderação entre ciclos analíticos, não continuamente durante a busca.
+
+\section{Suporte de Clados}
+\label{sec:suporte}
+
+Identificar o cladograma ótimo é apenas um componente de uma análise filogenética. Avaliar a confiança nos grupos recuperados é igualmente importante. \textcite{grantkluge2008} argumentam que os valores de suporte devem refletir a força da evidência para um grupo, não meramente a frequência com que ele é recuperado sob perturbação dos dados.
+
+\subsection{Suporte de Bremer}
+
+O \textbf{índice de suporte de Bremer} \parencite{bremer1988} mede a diferença em custo entre o cladograma ótimo que contém um dado clado e o cladograma ótimo que não o contém. Um valor mais alto indica que mais evidência suporta o clado. Sob verossimilhança, é expresso como diferença nos escores de log-verossimilhança.
+
+\subsection{Jackknife}
+
+O \textbf{jackknife} \parencite{farrisetal1996} é um método de reamostragem sem reposição: um subconjunto de caracteres é deletado aleatoriamente em cada réplica, e a frequência com que cada clado aparece é reportada. O jackknife é considerado mais defensável teoricamente do que o bootstrap sob parcimônia porque não reamostra caracteres com reposição, o que distorce a independência dos caracteres \parencite{farrisetal1996}.
+
+\subsection{Bootstrap}
+
+O \textbf{bootstrap} \parencite{felsenstein1985} reamostra caracteres com reposição; cada réplica é uma nova matriz do mesmo tamanho em que alguns caracteres estão ausentes e outros duplicados. As frequências de bootstrap são amplamente reportadas mas criticadas em bases teóricas \parencite{farrisetal1996}. \textcite{jacobmachado2021d} investigaram a relação empírica entre valores de suporte de bootstrap e testes de razão de verossimilhança, encontrando uma relação positiva consistente, embora a correspondência precisa dependa das premissas do modelo e das propriedades dos dados.
+
+\section{Análise de Sensibilidade e Métricas de Comparação Topológica}
+\label{sec:metricas}
+
+\subsection{Análise de Sensibilidade}
+
+Em sistemática filogenética, a \textbf{análise de sensibilidade} avalia em que medida as hipóteses obtidas são afetadas por variáveis analíticas como estratégias de busca, critérios de otimalidade, métodos de alinhamento e esquemas de custos de transformação \parencite{machado2015,wheeler1995}. \textcite{morrisonellis1997} demonstraram que os resultados filogenéticos podem ser mais sensíveis a esses valores de parâmetros do que à escolha do método analítico.
+
+Os resultados de uma análise de sensibilidade podem ser sumarizados de várias formas \parencite{wheeleretal2006}: (1) percentagem de conjuntos de parâmetros sob os quais cada nó é recuperado \parencite{giribetetal2001}; (2) gráficos ``tapetes Navajo'' (\textit{Navajo rugs}), em que o espaço de parâmetros é uma grade bidimensional com monofilia de cada clado indicada por codificação de cores; (3) consenso dos clados recuperados sob todos os conjuntos de parâmetros. Conjuntos de parâmetros ótimos podem ser identificados minimizando a incongruência de partição entre subconjuntos de dados \parencite{wheeleretal2006}. O \textbf{Meta-Índice de Retenção} (MRI), calculado como o RI sobre todos os caracteres, foi proposto como métrica livre de partição para essa finalidade \parencite{wheeleretal2006}.
+
+\subsection{Distância de Robinson-Foulds}
+
+Originalmente proposta por \textcite{robinson1981}, a \textbf{distância de Robinson-Foulds} (RF) é calculada pelo número de operações elementares necessárias para transformar uma árvore na outra, equivalente ao número de splits exclusivos a cada árvore. Uma limitação conhecida é que o deslocamento de um único OTU pode alterar múltiplos nós, fazendo com que a métrica superestime as diferenças entre duas topologias.
+
+\subsection{Distância de \textit{Match Split}}
+
+A \textbf{distância de \textit{match split}} (MS) para árvores filogenéticas binárias não-enraizadas é definida por \textcite{bogdanowicz2012} como o custo da melhor atribuição global entre as arestas internas das duas árvores comparadas. A distância MS é mais sensível do que a RF e, ao mesmo tempo, mais resistente ao deslocamento de um número pequeno de terminais \parencite{bogdanowicz2012}, tornando-a especialmente adequada para a identificação de táxons rogue.
+
+\section{Perspectivas e Debates em Aberto}
+\label{sec:debates}
+
+\subsection{Homologia Estática versus Dinâmica}
+
+O debate mais fundamental em filogenética molecular concerne ao papel do alinhamento múltiplo de sequências. Proponentes de homologia estática argumentam que o alinhamento é uma etapa necessária em que hipóteses de homologia posicional são explicitamente declaradas e avaliadas independentemente da árvore. Proponentes da homologia dinâmica argumentam que fixar alinhamentos antes da busca introduz viés dependente da topologia e impede a identificação do cladograma-mais-esquema-de-homologia globalmente ótimo \parencite{wheeleretal2006}. \textcite{redelings2024} fornecem evidência adicional sob a perspectiva dos InDels: a maioria dos algoritmos de alinhamento não é ciente da filogenia, introduz viés da árvore-guia e leva a uma superestimativa de eventos de perda independentes.
+
+\subsection{Tratamento de InDels}
+
+\textcite{redelings2024} identificam três abordagens dominantes para o tratamento de InDels: (1) exclusão de colunas contendo gaps; (2) tratamento de gaps como dados ausentes; e (3) codificação de InDels --- que codifica cada evento de InDel como um caráter binário de presença/ausência \parencite{simmons2007}. Modelos probabilísticos de InDels, como os baseados no arcabouço TKF \parencite{thornekishinofelsenstein1991}, oferecem um tratamento mais principiado, mas têm sido implementados em contextos relativamente limitados \parencite{redelings2024}. A ausência de um padrão ouro amplamente aceito para o tratamento de InDels permanece uma limitação significativa da prática filogenética contemporânea.
+
+\subsection{Incomensurabilidade entre Critérios de Otimalidade}
+
+Uma pontuação de parcimônia, um log-verossimilhança e uma probabilidade posterior Bayesiana não podem ser diretamente comparados entre métodos \parencite{wheelervaron2025}. O PMDL aborda essa limitação expressando todos os componentes da hipótese filogenética em uma unidade comum de bits. Se o PMDL alcançará adoção empírica ampla dependerá de melhorias contínuas nas aproximações de limite superior usadas para estimar a complexidade de Kolmogorov e da disponibilidade de implementações amigáveis ao usuário \parencite{wheelervaron2025}.
+
+\subsection{Árvores de Genes, Árvore de Espécies e Transferência Horizontal}
+
+Análises filogenômicas frequentemente recuperam incongruências entre árvores de genes, que podem surgir de coalescência profunda, hibridização, separação de linhagens incompleta ou transferência horizontal de genes (HGT). \textcite{wheeler2012} adverte contra a tendência de atribuir toda a incongruência a HGT sem evidência independente, argumentando que isso é \textit{ad hoc}. A modelagem explícita de eventos reticulados no PhyG \parencite{wheeleretal2024} oferece uma alternativa rigorosa: se uma rede com nós de reticulação especificados fornece um escore PMDL significativamente menor do que a melhor árvore, a hipótese de rede é suportada pelos dados, não meramente assumida.
+
+\subsection{Sistemática Ponto-e-Clique}
+
+A democratização do software bioinformático tornou a análise filogenética acessível a investigadores com treinamento limitado nos fundamentos teóricos da disciplina. \textcite{grant2003} documentaram os riscos desse desenvolvimento, mostrando como a aplicação acrítica de parâmetros padrão, o tratamento inadequado de InDels e o uso de escolhas analíticas teoricamente injustificadas produzem resultados que superficialmente se assemelham à análise filogenética rigorosa enquanto carecem de seu fundamento lógico. A coerência epistemológica exigida pelo arcabouço cladístico demanda que os procedimentos analíticos sejam transparentes, repetíveis e teoricamente justificados \parencite{wheeleretal2006}.
+
+\section{Conclusão}
+
+Os conceitos de caráter, homologia e homoplasia formam uma tríade teórica interconectada que fundamenta toda a sistemática filogenética. Caracteres são séries de transformação carregadas de teoria. Homologia é uma hipótese dependente da árvore de ancestralidade compartilhada, que serve como hipótese nula na construção do cladograma. Homoplasia é uma transformação não-mínima específica da árvore que atua como falsificador do cladograma no qual é observada.
+
+A comparação com grupo externo, a polaridade de caráter e o enraizamento são o mesmo problema, resolvido pela análise simultânea irrestrita de todos os terminais \parencite{nixon1993}. A monofilia do grupo interno é uma hipótese sujeita a teste empírico, não uma suposição prévia, e o procedimento de expansão sucessiva do grupo externo \parencite{grant2019} fornece um critério objetivo e repetível para limitar a amostra do grupo externo.
+
+O sequenciamento de alto rendimento não alterou os fundamentos conceituais da filogenética; amplificou as consequências de como esses fundamentos são implementados. O tratamento de InDels como dados ausentes é uma fonte empiricamente demonstrada de erro topológico imprevisível e inflação de escore \parencite{jacobmachado2021c}. O arcabouço de homologia dinâmica, ao integrar o alinhamento de sequências e a busca em árvores em um único problema de otimização, fornece a abordagem mais coerente teoricamente. O PMDL \parencite{wheelervaron2025} fornece um critério unificado que pode dissolver a tripartição parcimônia-verossimilhança-Bayesiana expressando todas as formas de inferência filogenética em uma linguagem comum da teoria da informação.
+
+\clearpage
+\begin{revise}
+\begin{enumerate}
+    \item Caracteres são \textbf{indivíduos históricos} carregados de teoria (séries de transformação; Hennig 1966); filogenética = ciência \textbf{ideográfica}, não nomotética \parencite{grant2004ts,popper1959}.
+    \item Cinco tipos de caráter: aditivo \parencite{farris1970}, não-aditivo \parencite{fitch1971}, Sankoff \parencite{sankoff1975}, sequência e cromossômico \parencite{wheeleretal2006}; fenotípicos \textit{vs.} genotípicos; evidência total \parencite{kluge1989}.
+    \item Homologia $\neq$ sinapomorfia \parencite{nixon2012}; homologia = hipótese nula na construção de grupos; relação histórica de identidade \parencite{grant2004ts}.
+    \item Debate primária/secundária (de Pinna 1991): rejeitado \parencite{wheeleretal2006,grant2004ts}; nenhuma categoria intermediária necessária sob homologia dinâmica \parencite{wheeler2001a,wheeler2001b}.
+    \item Homologia estática (alinhamento fixo) vs. dinâmica (otimização simultânea); alinhamentos implícitos: específicos de topologia e parâmetro \parencite{wheeler2003a}.
+    \item InDels: 2ª maior fonte de variação genômica; gaps como missing data → TIA e topologias imprevisíveis \parencite{jacobmachado2021c}; índices GCI, NCI, SGI, TGI \parencite{jacobmachado2021c}.
+    \item Homoplasia como \textbf{falsificador} da árvore \parencite{farris1983,kluge2009}; CI \parencite{klugeanfarris1969}, RI \parencite{farris1989}, decisividade $\neq$ homoplasia \parencite{goloboff1991}.
+    \item Polaridade + grupo externo + enraizamento = \textbf{mesmo problema}; análise simultânea irrestrita \parencite{nixon1993}. Lundberg rooting válido apenas com evidência independente \parencite{nixon1993}.
+    \item Expansão sucessiva do grupo externo \parencite{grant2019}; ingroup monophyly = hipótese a testar.
+    \item Análise simultânea / evidência total \parencite{kluge1989,nixon1996} vs. particionada \parencite{grantkluge2003}.
+    \item 4 algoritmos de otimização: DO \parencite{wheeler1996}, passagens iterativas \parencite{wheeler2003b}, estados fixos \parencite{wheeler1999a}, baseado em busca \parencite{wheeler2003c}; PhyG supera POY5 \parencite{wheeleretal2024,varonwheeler2012}.
+    \item Verossimilhança sob DH: GTR + gap como 5º estado; NCM $\equiv$ parcimônia para árvores \parencite{tuffleysteel1997}.
+    \item Ponderação implicada: $F = K/(K+S)$ \parencite{goloboff1993b,goloboff2013}; aproximações sucessivas \parencite{farris1969}.
+    \item Suporte: Bremer \parencite{bremer1988}, jackknife \parencite{farrisetal1996}, bootstrap \parencite{felsenstein1985}; relação bootstrap/LRT \parencite{jacobmachado2021d}.
+    \item 4 critérios: parcimônia \parencite{farris1983}; ML; IB; PMDL: $K(H) = K(M) + K(D\mid M)$ \parencite{wheelervaron2025}. Os três primeiros são \textbf{incomensuráveis}.
+    \item Redes \textit{softwired} e \textit{hardwired} no PhyG \parencite{wheeleretal2024}; custo \textit{hardwired} $\geq$ melhor árvore de display.
+    \item Sensibilidade: Navajo rugs, MRI, incongruência de partição \parencite{wheeleretal2006,wheeler1995,morrisonellis1997}.
+    \item Sistemática ponto-e-clique: riscos de defaults acríticos \parencite{grant2003}. HGT $\neq$ explicação padrão para incongruência \parencite{wheeler2012}.
+    \item Aplicações empíricas: Orthocoronavirinae \parencite{jacobmachado2021a}; epidemiologia genômica \parencite{jacobmachado2021b}.
+\end{enumerate}
+\end{revise}
+
+\clearpage
+
+\printbibliography[heading=subbibliography,title={Referências}]

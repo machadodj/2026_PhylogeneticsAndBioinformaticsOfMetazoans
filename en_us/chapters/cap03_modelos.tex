@@ -1,0 +1,308 @@
+\chapter{Substitution Models in Phylogenetic Reconstruction}
+
+\section{Introduction}
+
+Phylogenetic reconstruction from molecular sequence data requires an explicit probabilistic framework for modeling how characters change along a tree. This framework is incorporated in substitution models, which specify the instantaneous rates of change between character states and the stationary frequencies of those states. Substitution models underpin two main optimality criteria in modern systematics: maximum likelihood (ML) and Bayesian posterior probability. Both criteria share a common probabilistic core but differ in how they treat unknown parameters and how they summarize inference.
+
+This chapter synthesizes the theoretical principles, implementation strategies, interpretive limits, and recent developments associated with substitution models in phylogenetic analysis. The primary sources are chapters 11 and 12 of Wheeler (2012), which address likelihood and Bayesian optimality criteria respectively.
+
+\section{Theoretical Principles}
+
+\subsection{The Likelihood Function in Systematics}
+
+Note that this section was already explained in the previous chapter, where additional details are provided to help understand the equations. Here, some information is repeated to aid study of the material at the expense of page count.
+
+The foundation of model-based phylogenetics is the likelihood function. For a tree $T$ and data $D$, the likelihood is proportional to the probability of the data given the tree and a set of parameters \parencite{edwards1972}:
+
+$$l(T|D) \propto \Pr(D|T)$$
+
+A systematic ML method selects the tree $T$ that maximizes $\Pr(D|T)$. This maximization requires specifying a set of \textit{nuisance parameters} $\theta$, defined as all quantities necessary to compute $\Pr(D|T)$ beyond the data and tree topology \parencite{wheeler2012}. The three most consequential nuisance parameters are: (1) the model of character transformation; (2) branch parameters (branch lengths); and (3) the distribution of rates of change among characters.
+
+\subsection{The General Reversible Markov Model}
+
+Note that this section was already explained in the previous chapter, where additional details are provided to help understand the equations. Here, some information is repeated to aid study of the material at the expense of page count.
+
+The most general reversible description of character change for $n$ states is specified by an instantaneous rate matrix $R$ and a stationary frequency vector $\symbf{\pi}$ \parencite{yang1994,tavare1986}. The symmetry conditions imposed on $R$ are:
+
+$$\forall i,\; R_{ii} = 0; \quad \forall i,j,\; R_{ij} = R_{ji}; \quad \sum_{i=1}^{n}\sum_{j=1}^{n} \pi_i \cdot \pi_j \cdot R_{ij} = 1$$
+
+These matrices are combined in Tavaré's (1986) rate matrix $Q$:
+
+$$Q_{ij} = \begin{cases} R_{i,j} \cdot \pi_j & \text{if } i \neq j \\ -\sum_{m=1}^{n} R_{i,m} \cdot \pi_m & \text{if } i = j \end{cases}$$
+
+The probability of change between states $i$ and $j$ over time $t$ is then:
+
+$$P_{i,j}(t) = \sum_{m=1}^{n} e^{\lambda_m t} \cdot U_{m,i} \cdot U^{-1}_{j,m}$$
+
+where $\lambda_m$ are the eigenvalues of $Q$, $U$ is the matrix of eigenvectors, and $U^{-1}$ its inverse \parencite{strang2006}. The time-reversibility constraint allows efficient computation of tree likelihoods \parencite{wheeler2012}.
+
+This formulation accommodates at most $n-1$ independent frequency parameters and $\binom{n}{2} - 1$ independent rate parameters.
+
+\subsection{Named Models as Special Cases}
+
+All substitution models in current use are restrictions of the general reversible process through additional symmetry requirements \parencite{wheeler2012}. The hierarchy from least to most parameterized for nucleotide data is documented in Swofford et al. (1996) and includes, among others:
+
+\begin{itemize}
+    \item \textbf{JC69} (Jukes and Cantor, 1969): a single type of substitution with equal base frequencies. This is the most restricted model and the only one with zero free parameters (beyond branch lengths).
+    \item \textbf{K2P} (Kimura, 1980): distinguishes transitions from transversions with equal base frequencies.
+    \item \textbf{HKY85} (Hasegawa et al., 1985): transitions versus transversions with unequal base frequencies.
+    \item \textbf{GTR} (Lanave et al., 1984; Tavaré, 1986): the most general time-reversible model with six rate categories and four unequal base frequencies.
+\end{itemize}
+
+Models other than GTR have analytical solutions for $P_{i,j}(t)$, while GTR requires numerical eigenvalue decomposition \parencite{wheeler2012}.
+
+\section{Rate Variation Among Sites}
+
+\subsection{Invariable Sites}
+
+Molecular sequence data commonly show pronounced heterogeneity in substitution rates among positions. Two distributional models are regularly applied to accommodate this variation.
+
+The parameter \textit{proportion of invariable sites} $I$ represents the frequently observed class of positions that never change \parencite{hasegawa1985}. A separate parameter is added to represent the fraction of sites available for substitution.
+
+\subsection{Rate Heterogeneity and the Discrete Gamma Distribution}
+
+To account for the fact that different positions in a sequence evolve at distinct rates, the \textit{discrete Gamma distribution} is employed \parencite{yang1994}. This model adds rate classes governed by a single shape parameter, $\alpha$, which defines the degree of variation among sites.
+
+The probability density function (PDF) of the Gamma distribution is defined as:
+
+\begin{equation}
+g(x; \alpha, \beta) = \frac{\beta^{\alpha} x^{\alpha-1} e^{-\beta x}}{\Gamma(\alpha)}
+\end{equation}
+
+Where:
+\begin{itemize}
+    \item $x$: represents the substitution rate.
+    \item $\alpha$ (alpha): the shape parameter. The smaller the value of $\alpha$, the greater the heterogeneity (many slow sites and few fast "hotspots").
+    \item $\beta$ (beta): the scale parameter. In phylogenetic practice, one sets $\beta = \alpha$ to ensure that the mean of the distribution is 1 ($\alpha/\beta = 1$), maintaining the interpretation of branch length units as the expected number of substitutions per site.
+    \item $\Gamma(\alpha)$ (Gamma of alpha): the Gamma function, which acts as a normalization constant so that the area under the curve equals 1.
+\end{itemize}
+
+\textbf{Implementation via discretization:}
+
+Since integrating over a continuous distribution is computationally prohibitive, the curve is divided into $k$ classes (usually 4 to 8) of equal areas. The mean rate of each partition is used as a multiplier for the tree's branch lengths.
+
+It is fundamental to note that this is a \textbf{rate mixture model}: we do not know \textit{a priori} which rate class belongs to which site. Therefore, the likelihood of site $i$ is calculated as the weighted average of likelihoods across all $k$ rate classes:
+
+\begin{equation}
+L_i = \sum_{j=1}^{k} \frac{1}{k} L_i(r_j)
+\end{equation}
+
+Where $r_j$ is the representative rate of the $j$-th class. This method allows capturing the phylogenetic signal of both conserved and variable sites simultaneously without drastically increasing the number of model parameters.
+
+%%%%%%%%%%%%%%
+
+
+\section{Expansion to Five States: Models with Indels}
+
+\subsection{Five-State Jukes-Cantor Model}
+
+For dynamic homology analyses, the four-state nucleotide model can be expanded to include a fifth state representing insertion-deletion (indel) events \parencite{wheeler2006,mcguire2001}. Under the five-state Jukes-Cantor model (JC69+Gaps), the transition probability is:
+
+$$P_{ij}(t) = \begin{cases} \frac{1}{5} + \frac{4}{5} e^{-\mu t} & \text{if } i = j \\ \frac{1}{5} - \frac{1}{5} e^{-\mu t} & \text{if } i \neq j \end{cases}$$
+
+This approach treats indels as atomic events and emphasizes computational tractability over mechanistic realism.
+
+\subsection{Birth-Death Models}
+
+A more mechanistically grounded alternative is the birth-death model of Thorne et al. (1991) (TKF91, TKF92), which couples a Poisson birth-death process with standard four-nucleotide substitution models to compute the probability of transforming one sequence into another. TKF91 and TKF92 represent the most mechanistically explicit treatment of indels, where the probability of $n$ insertions over time $t$ is:
+
+$$p_n(t) = e^{-\mu t}\left[1 - \lambda\beta(t)\right] \left[\lambda\beta(t)\right]^{n-1}$$
+
+where $\beta(t) = (1 - e^{(\lambda-\mu)t})/(\mu - \lambda e^{(\lambda-\mu)t})$, with $\lambda$ being the insertion rate and $\mu$ the deletion rate.
+
+\section{Forms of Likelihood and Their Relationships}
+
+Wheeler (2012) and Barry and Hartigan (1987) distinguish several forms of likelihood relevant to phylogenetic inference:
+
+\begin{enumerate}
+    \item \textbf{Average Maximum Likelihood (AML)}: sums over all possible assignments of vertex states weighted by their probabilities. This is the standard ``ML'' method used in empirical analyses.
+
+    \item \textbf{Most Parsimonious Maximum Likelihood (MPML)}: assigns specific vertex states to maximize overall likelihood. Branch probabilities are constant across characters, so MPML generally does not select the same tree as parsimony \parencite{wheeler2012}.
+
+    \item \textbf{Evolutionary Path Likelihood (EPL)}: proposed by Farris (1973), this form specifies the entire sequence of intermediate states between vertices. The tree maximizing EPL is precisely the most parsimonious tree \parencite{wheeler2012}, a result also derived by Goldman (1990) and Tuffley and Steel (1997).
+
+    \item \textbf{Integrated Maximum Likelihood (IML)}: integrates over nuisance parameters $\theta$ given their distribution $\Phi(\theta|T)$. This corresponds to Bayesian MAP estimation when tree priors are flat \parencite{wheeler2012,steel2000}.
+\end{enumerate}
+
+The relationship among these forms is summarized in Wheeler (2012). The apparent paradox between Felsenstein's claim of ML consistency and Farris's result of MP-as-ML dissolves once we recognize that the two authors discussed different forms of likelihood.
+
+\section{Protein Modeling and Structural Constraints}
+
+\subsection{Amino Acid Substitution Matrices}
+
+Protein evolution is more complex than nucleotide evolution. Empirical amino acid substitution matrices, such as PAM and WAG, were estimated from large databases of aligned protein sequences. These matrices capture average evolutionary trends but assume stationarity and homogeneity of the substitution process, which are biologically unrealistic.
+
+More realistic are structurally constrained substitution (SCS) models, which account for the physical constraints imposed by protein folding on the rates of amino acid substitutions. SCS models frequently incorporate site-dependent evolution, meaning that the rate matrix at one site depends on the states of neighboring sites or structural contacts. This feature dramatically increases biological realism but renders the standard likelihood function intractable because ML-based phylogenetic methods compute likelihoods under the assumption of site independence.
+
+\section{Model Selection}
+
+\subsection{Classical Model Selection Criteria}
+
+Model selection has been recognized as a prerequisite for accurate phylogenetic inference. Incorrectly specified models produce biased estimates of tree topology and branch lengths \parencite{buckley2002,sanderson2002,abadi2019}. Standard criteria for model selection include:
+
+\begin{itemize}
+    \item \textbf{Likelihood Ratio Test (LRT).} When two models are nested, twice the difference in log-likelihood is approximately distributed as $\chi^2$:
+    $$2(l_{T,T'}) = 2\log(l_T / l_{T'}) = 2(\log l_T - \log l_{T'})$$
+    The confidence threshold for one degree of freedom is 1.9207 log-likelihood units, corresponding to a likelihood ratio of 6.826.
+
+    \item \textbf{Akaike Information Criterion (AIC).} The AIC \parencite{akaike1974} penalizes parameters with a fixed cost:
+    $$\mathrm{AIC} = -2\log l_T + 2p$$
+    An additional parameter is favored only if it improves the likelihood by at least one log unit.
+
+    \item \textbf{Bayesian Information Criterion (BIC).} The BIC \parencite{schwarz1978} penalizes extra parameters more strongly, with the penalty depending on data size $n$:
+    $$\mathrm{BIC} = -2\log l_T + p\log n$$
+\end{itemize}
+
+These criteria are implemented in software such as ModelTest and are reviewed comprehensively in Posada and Buckley (2004).
+
+\subsection{Impact of Model Selection}
+
+Abadi et al. (2019) showed that model selection affects branch length estimates more strongly than topology inference. Furthermore, no standard criterion was designed to select the model best suited specifically for accurate branch length inference.
+
+\section{Computational Implementation}
+
+\subsection{Computing Tree Likelihood: Felsenstein's Pruning Algorithm}
+
+For a single character $x$, the likelihood of an internal vertex $i$ with descendant vertices $j$ and $k$ is \parencite{wheeler2012}:
+
+$$L_i(x) = \left(\sum_{x_j} p_{x_i, x_j}(t_j) L_j(x_j)\right) \times \left(\sum_{x_k} p_{x_i, x_k}(t_k) L_k(x_k)\right)$$
+
+Character likelihoods are multiplied across the entire dataset to obtain tree likelihood. Branch weights are estimated numerically by optimizing the marginal likelihood for each branch while keeping all other parameters constant, commonly using Brent's method (1973) or Newton-Raphson \parencite{ypma1995}. Because character data are assumed to be independent and identically distributed (i.i.d.), the joint likelihood of multiple characters is the product of their individual values.
+
+\subsection{Markov Chain Monte Carlo for Bayesian Inference}
+
+Direct numerical integration of the posterior is computationally prohibitive for non-trivial datasets. A 100-taxon GTR analysis involves at least 205 parameters. Markov Chain Monte Carlo (MCMC) methods based on the Metropolis-Hastings algorithm \parencite{metropolis1953,hastings1970} provide a tractable alternative by sampling trees proportionally to their posterior probabilities.
+
+The acceptance ratio between a current tree $T$ and a proposed tree $T^*$ is:
+
+$$\alpha = \min\left(1, \frac{\pi(T^{*})}{\pi(T)}\right)$$
+
+where $\pi(T) = p(\theta) p(T|\theta) p(t_T|\theta, T) p(D|\theta, T, t_T)$ is the numerator of the posterior. The ratio cancels the marginal probability of data (the denominator of the full posterior), which is difficult to compute directly.
+
+\subsubsection{Coupled Metropolis-MCMC (MC$^3$)}
+
+The most commonly used strategy is coupled Metropolis-MCMC (MC$^3$) \parencite{geyer1991}. Multiple chains run in parallel, each heated to a different temperature. The cold chain (chain 0) converges to the posterior; hotter chains explore parameter space more broadly. Chains exchange states periodically according to a second acceptance ratio:
+
+$$\alpha = \min\left(1, \frac{\pi_i(T_j) \pi_j(T_i)}{\pi_i(T_i) \pi_j(T_j)} \right)$$
+
+The heating schedule is:
+
+$$\pi_j(T) \propto \pi_0(T)^{\frac{1}{1+\lambda(j-2)}}, \quad \lambda > 0$$
+
+\section{Limits of Interpretation of Results}
+
+\subsection{Statistical Inconsistency of Parsimony: The Felsenstein Zone}
+
+The original motivation for ML in systematics was the statistical inconsistency of parsimony under certain combinations of parameters \parencite{felsenstein1978}. In a four-taxon tree where branches leading to taxa $A$ and $B$ are long (probability of change $p$) while the internal branch and branches to $C$ and $D$ are short (probability of change $q$), parsimony favors the incorrect topology ($AC|BD$) when:
+
+$$p^2 \geq q(1-q)$$
+
+The region of parameter space satisfying this inequality is the ``Felsenstein zone'' of inconsistency \parencite{wheeler2012}.
+
+\subsection{Clade Prior Bias and Clade Posterior Probabilities}
+
+A critical interpretive limitation of Bayesian phylogenetics is that a uniform prior over tree topologies does not induce a uniform distribution over clades of different sizes. The prior probability of a clade of size $m$ in a tree with $n$ leaves is \parencite{wheeler2012}:
+
+$$\Pr(c_m) = \frac{\left(\prod_{i=2}^{m} (2i-3)\right) \cdot \left(\prod_{i=m+1}^{n} (2i-2m-1)\right)}{\prod_{i=2}^{n} (2i-3)}$$
+
+Pickett and Randle (2005) first demonstrated this empirically. Steel and Pickett (2006) subsequently proved that it is impossible to construct a prior over topologies that induces a uniform prior over clades. The influence of this bias can be extreme: for 50-taxon trees, the prior probability ratio between clades of sizes 2 and 25 can reach a factor of $10^{13}$ \parencite{wheeler2012}.
+
+Goloboff and Pol (2005) illustrated a particularly pathological consequence: a taxon with completely missing data can be placed specifically in a tree (with 55\% posterior clade probability) solely because of this clade prior bias, even though all its placements have identical posterior probability under the data. Yang (2006) extended this example to show that clade support values approaching 1 can be generated for groups absent from the true tree.
+
+These results have a direct practical implication: posterior clade probabilities from Bayesian analysis cannot be directly interpreted as measures of phylogenetic support.
+
+\section{Recent Advances}
+
+\subsection{Hidden Markov Models for Sequence Analysis}
+
+A significant advance over simple Markov substitution models is the Hidden Markov Model (HMM), which adds a layer of unobserved latent states \parencite{wheeler2012}. In an HMM, a sequence of observations is generated by a sequence of hidden states, each of which emits observations according to an emission probability and transitions to other states according to a transition probability. The probability of a sequence $x$ given a state path $\pi$, transition probabilities $t$, and emission probabilities $e$ is:
+
+$$p(x, \pi|t, e) = p(\pi_0) e_{\pi_0, x_0} \cdot \prod_{i=1}^{n-1} t_{\pi_{i-1}, \pi_i} e_{\pi_i, x_i}$$
+
+Three canonical algorithms address the three fundamental questions of HMM analysis \parencite{wheeler2012}:
+
+\begin{enumerate}
+    \item \textbf{Viterbi Algorithm} (Viterbi, 1967): identifies the most likely hidden state path $\pi^* = \arg\max_\pi p(x, \pi|t, e)$ using dynamic programming in time $O(k^2 n)$ for $k$ states and $n$ observations.
+
+    \item \textbf{Forward-Backward Algorithm}: computes the posterior probability of each state at each position using the product of forward and backward probabilities conditioned on the total sequence probability.
+
+    \item \textbf{Baum-Welch Algorithm} (Baum et al., 1970): estimates transition and emission parameters by iterating the Forward-Backward algorithm on training sequences until improvement in sequence probability falls below a threshold.
+\end{enumerate}
+
+HMMs have been applied to pairwise and multiple sequence alignment through profile HMMs \parencite{krogh1994}, which model aligned sequence families with position-specific emission and transition probabilities. Profile HMMs are widely used for gene family identification and functional motif detection.
+
+\subsection{Likelihood-Based Sequence Alignment}
+
+The recognition that sequence alignment and phylogenetic inference should be performed jointly under a probabilistic model represents a major conceptual advance. The pairwise alignment recursion under the JC69+Gaps model uses the modified Needleman-Wunsch framework to sum probabilities instead of minimizing costs \parencite{wheeler2012}:
+
+$$\mathrm{cost}[i][j] = \log\left( e^{-(\mathrm{cost}[i-1][j-1] + \sigma_{i,j})} + e^{-(\mathrm{cost}[i-1][j] + \sigma_{\mathrm{indel}})} + e^{-(\mathrm{cost}[i][j-1] + \sigma_{\mathrm{indel}})} \right)$$
+
+Wheeler (2012) emphasizes the distinction between \textit{dominant likelihood} (the single best alignment, analogous to MPML) and \textit{total likelihood} (the sum over all alignments, analogous to AML). The dominant alignment may represent as little as one-third of the total likelihood, underscoring the importance of this distinction for downstream inference.
+
+Wheeler's Direct Optimization (DO) approach (1996, 2006) extends this pairwise framework to the Tree Alignment Problem (TAP), where median sequences and tree topologies are co-optimized under ML.
+
+\subsection{Birth-Death Indel Models}
+
+The TKF91 and TKF92 models of Thorne et al. (1991, 1992) represent the most mechanistically explicit treatment of indels. These models couple a birth (insertion rate $\lambda$) and death (deletion rate $\mu$) process with standard four-nucleotide substitution models. Bayesian TAP implementations using TKF91/92 include BEAST (Lunter et al., 2005) and BaliPhy (Redelings and Suchard, 2005). The computational cost is prohibitive: Wheeler (2012) notes that BaliPhy requires hundreds of hours on a personal computer to analyze 12 protein sequences of length 400.
+
+\section{Machine Learning in Substitution Model Selection}
+
+\subsection{Motivation for ML Approaches}
+
+The computational cost of likelihood-based model selection is substantial. Machine learning (ML) methods can ``learn complex relationships from input data without computing likelihoods,'' and this ``facilitates the application of machine learning to complex models, especially scenarios in which standard statistical and Bayesian inference may be intractable'' \parencite{mo2024}.
+
+\subsection{Random Forests and Deep Neural Networks}
+
+ModelTeller (Abadi et al., 2020) uses a random forest (RF) regressor trained on over 50 summary statistics. These statistics are broadly categorized into four groups: properties of the alignment itself, properties of a distance-based tree approximation, parameters estimated under a parameter-rich substitution model, and similarity metrics of sequences within taxon subsets. The RF regressor classifies 24 candidate nucleotide substitution models according to their predicted accuracy for branch length estimation.
+
+ModelRevelator (Burgstaller-Muehlbacher et al., 2023) takes a different approach. It uses two independent deep neural networks to perform model selection without computing likelihoods or reconstructing trees. The first network, NNmodelfind, is a residual neural network that takes as input a set of summary statistics computed from pairwise alignments. It selects among six nucleotide substitution models varying in complexity from JC to GTR. The second network, NNalphafind, is a bidirectional LSTM that takes base composition profiles as input and predicts whether rate heterogeneity should be incorporated and, if so, estimates the $\alpha$ parameter of the Gamma distribution.
+
+\subsection{Direct Alignment Encoding}
+
+An alternative to summary statistics is to encode alignments directly as numerical matrices and feed them into neural networks with appropriate inductive biases. For four-taxon trees, convolutional neural networks (CNNs) have been applied to alignments encoded as integers or one-hot-encoded. Burgstaller-Muehlbacher et al. (2023) showed that CNNs analyzing images of nucleotide alignments can achieve performance comparable to ML-based model prediction.
+
+Mo et al. (2024) note that Phyloformer (Nesterenko et al., 2022), which uses self-attention mechanisms, accommodates variable input sizes through careful network design. This approach offers a path for networks that can accept alignments of arbitrary length and taxon number while preserving the representational richness of direct alignment encoding.
+
+\section{Protein Neural Networks and Language Models}
+
+\subsection{Protein Language Models}
+
+Large language models (LLMs) trained on protein sequences represent a fundamentally different approach to encoding evolutionary information. Protein language models (PLMs) such as ESM-2 and ProtTrans treat amino acid sequences as sentences in a molecular language. They learn statistical dependencies among amino acid positions from millions of sequences, implicitly capturing coevolutionary constraints, structural contacts, and evolutionary conservation \parencite{valentini2023}.
+
+Unlike traditional substitution models, PLMs do not impose an explicit Markovian structure on the substitution process. Instead, they learn a high-dimensional representation of sequence space that reflects the actual distribution of natural protein sequences.
+
+Lupo et al. (2022) showed that protein language models trained on multiple sequence alignments (MSAs) learn phylogenetic relationships. This finding implies that the attention mechanisms in these models encode information about evolutionary relationships. Mo et al. (2024) cite this result in the context of alternative strategies for representing alignments, noting that language models can produce ``networks that can accept variable input sizes, and are capable of incorporating relationships among sites and lineages simultaneously.''
+
+\subsection{Phyloformer and Attention Architectures}
+
+Phyloformer (Nesterenko et al., 2022) uses self-attention to infer pairwise evolutionary distances from aligned amino acid sequences. The model encodes sequence pairs through an attention mechanism that alternates between site-level attention (sharing information across sites within each pair) and pair-level attention (sharing information across sequence pairs within each site).
+
+\section{Conclusion}
+
+Substitution models occupy a central role in phylogenetic reconstruction from molecular data. Their theoretical foundation lies in the time-reversible general Markov process, of which all named models are derived as special cases. Implementation requires both efficient computation of tree likelihoods via pruning algorithms and robust model selection criteria that penalize overparameterization. Bayesian inference adds prior distributions over all model parameters, requiring careful justification of those priors and critical evaluation of the resulting posterior summaries.
+
+The interpretive limitations are substantial. Posterior clade probabilities are subject to non-uniform clade prior bias that can produce strongly supported but erroneous topological conclusions. The Felsenstein zone of parsimony inconsistency motivates ML analysis, but ML itself is not immune to misspecification. The treatment of indels and the choice of substitution model both carry significant downstream consequences for inference.
+
+Recent advances focus on more realistic and comprehensive probabilistic models: HMMs for sequence alignment, birth-death indel models, extensions to genomic rearrangement and phylogenetic networks, and applications of machine learning and language models for model selection and distance estimation. These developments expand the scope of model-based inference while simultaneously increasing computational demands. The fundamental tension between biological realism and computational tractability remains the defining challenge of the field.
+
+\clearpage
+\begin{revise}
+\begin{enumerate}
+    \item Tavaré rate matrix (1986) $Q$: $Q_{ij}=R_{ij}\pi_j$ ($i\neq j$); $P_{ij}(t)$ via eigenvalue decomposition of $Q$ \parencite{tavare1986,yang1994}.
+    \item Model hierarchy: JC69 (0 free parameters) $\to$ K2P (transition/transversion) $\to$ HKY85 (unequal $\pi$) $\to$ GTR (6 rates, 4 freq.) \parencite{swofford1996}.
+    \item Rate variation: invariable sites ($I$) + discrete Gamma ($\alpha$, mean $=1$); GTR$+I+\Gamma$ is standard empirical model.
+    \item JC69+Gaps (5 states): $P_{ij}(t)=\frac{1}{5}-\frac{1}{5}e^{-\mu t}$ ($i\neq j$); indels as atomic events \parencite{wheeler2006}.
+    \item Birth-death models TKF91/92 (Thorne et al., 1991): couple insertion ($\lambda$) / deletion ($\mu$) with substitution; mechanistically explicit but computationally expensive.
+    \item Felsenstein's pruning algorithm: $L_i(x)=\left(\sum_{x_j}p_{x_i,x_j}(t_j)L_j(x_j)\right)\!\times\!\left(\sum_{x_k}p_{x_i,x_k}(t_k)L_k(x_k)\right)$; assumes i.i.d.\ characters.
+    \item MCMC / MC$^3$ (Metropolis-coupled): cold chain converges to posterior; hot chains explore; exchange by $\alpha=\min(1,\pi_i(T_j)\pi_j(T_i)/\pi_i(T_i)\pi_j(T_j))$.
+    \item Model selection: LRT ($\chi^2$), AIC ($-2\log l+2p$), BIC ($-2\log l+p\log n$); Abadi et al.\ (2019): selection affects branch lengths more than topology.
+    \item Felsenstein zone: parsimony inconsistent when $p^2\geq q(1-q)$ (long-branch attraction).
+    \item Clade prior bias: uniform prior over topologies $\neq$ uniform prior over clades; prior probability ratio between clades of sizes 2 and 25 can reach $10^{13}$ (Steel \& Pickett, 2006).
+    \item Recent advances: HMMs (Viterbi, Forward-Backward, Baum-Welch), likelihood-based alignment (dominant vs.\ total), protein language models (ESM-2, Phyloformer).
+\end{enumerate}
+\end{revise}
+
+\clearpage
+
+\printbibliography[heading=subbibliography,title={References}]
+
