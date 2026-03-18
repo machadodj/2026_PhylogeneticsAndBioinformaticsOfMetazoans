@@ -3,9 +3,9 @@
 
 \section{Introdução}
 
-A reconstrução filogenética a partir de dados de sequências moleculares requer um marco probabilístico explícito para modelar como caracteres mudam ao longo de uma árvore. Este marco é incorporado em modelos de substituição, que especificam as taxas instantâneas de mudança entre estados de caracteres e as frequências estacionárias desses estados. Modelos de substituição fundamentam dois critérios de otimalidade principais na sistemática moderna: máxima verossimilhança (MV) e probabilidade posterior bayesiana. Ambos os critérios compartilham um núcleo probabilístico comum mas diferem em como tratam parâmetros desconhecidos e como resumem inferência.
+A reconstrução filogenética a partir de dados de sequências moleculares requer um marco probabilístico explícito para modelar como caracteres mudam ao longo de uma árvore. Este marco é incorporado em modelos de substituição, que especificam as taxas instantâneas de mudança entre estados de caracteres e as frequências estacionárias desses estados. Modelos de substituição fundamentam dois critérios de otimalidade principais na sistemática moderna: máxima verossimilhança (MV) e probabilidade posterior Bayesiana. Ambos os critérios compartilham um núcleo probabilístico comum mas diferem em como tratam parâmetros desconhecidos e como resumem inferência.
 
-Este capítulo sintetiza os princípios teóricos, estratégias de implementação, limites interpretativos e desenvolvimentos recentes associados com modelos de substituição em análise filogenética. As fontes primárias são capítulos 11 e 12 de Wheeler (2012), que tratam critérios de otimalidade de verossimilhança e bayesiana respectivamente.
+Este capítulo sintetiza os princípios teóricos, estratégias de implementação, limites interpretativos e desenvolvimentos recentes associados com modelos de substituição em análise filogenética. As fontes primárias são capítulos 11 e 12 de Wheeler (2012), que tratam critérios de otimalidade de verossimilhança e Bayesiana respectivamente.
 
 \section{Princípios Teóricos}
 
@@ -95,7 +95,7 @@ Wheeler (2012) e Barry e Hartigan (1987) distinguem várias formas de verossimil
 
     \item \textbf{Verossimilhança de Caminho Evolutivo (VCE)}: proposta por Farris (1973), esta forma especifica a sequência inteira de estados intermediários entre vértices. A árvore maximizando VCE é precisamente a árvore mais parcimoniosa \parencite{wheeler2012}, um resultado também derivado por Goldman (1990) e Tuffley e Steel (1997).
 
-    \item \textbf{Máxima Verossimilhança Integrada (MVI)}: integra sobre parâmetros de incômodo $\theta$ dada sua distribuição $\Phi(\theta|T)$. Isto corresponde à estimativa MAP bayesiana quando prioris de árvore são planas \parencite{wheeler2012,steel2000}.
+    \item \textbf{Máxima Verossimilhança Integrada (MVI)}: integra sobre parâmetros de incômodo $\theta$ dada sua distribuição $\Phi(\theta|T)$. Isto corresponde à estimativa MAP Bayesiana quando prioris de árvore são planas \parencite{wheeler2012,steel2000}.
 \end{enumerate}
 
 A relação entre estas formas é resumida em Wheeler (2012). O aparente paradoxo entre a reivindicação de consistência de MV de Felsenstein e o resultado de MP-como-MV de Farris dissolve-se uma vez que reconhecemos que os dois autores discutiam diferentes formas de verossimilhança.
@@ -175,7 +175,7 @@ A região do espaço de parâmetros satisfazendo esta desigualdade é a ``Zona d
 
 \subsection{Viés Anterior de Clado e Probabilidades Posteriores de Clado}
 
-Uma limitação interpretativa crítica da filogenética bayesiana é que uma priori uniforme sobre topologias de árvore não induz uma distribuição uniforme sobre clados de diferentes tamanhos. A probabilidade priori de um clado de tamanho $m$ em uma árvore com $n$ folhas é \parencite{wheeler2012}:
+Uma limitação interpretativa crítica da filogenética Bayesiana é que uma priori uniforme sobre topologias de árvore não induz uma distribuição uniforme sobre clados de diferentes tamanhos. A probabilidade priori de um clado de tamanho $m$ em uma árvore com $n$ folhas é \parencite{wheeler2012}:
 
 $$\Pr(c_m) = \frac{\left(\prod_{i=2}^{m} (2i-3)\right) \cdot \left(\prod_{i=m+1}^{n} (2i-2m-1)\right)}{\prod_{i=2}^{n} (2i-3)}$$
 
@@ -183,7 +183,7 @@ Pickett e Randle (2005) primeiro demonstraram isto empiricamente. Steel e Picket
 
 Goloboff e Pol (2005) ilustraram uma consequência particularmente patológica: um táxon com dados completamente faltantes pode ser colocado especificamente em uma árvore (com 55\% de probabilidade de clado posterior) unicamente por causa deste viés anterior, mesmo embora todos seus posicionamentos tenham probabilidade posterior idêntica sob os dados. Yang (2006) estendeu este exemplo para mostrar que valores de suporte de clado aproximando-se a 1 podem ser gerados para grupos ausentes da árvore verdadeira.
 
-Estes resultados têm uma implicação prática direta: probabilidades posteriores de clado de análise bayesiana não podem ser interpretadas diretamente como medidas de suporte filogenético.
+Estes resultados têm uma implicação prática direta: probabilidades posteriores de clado de análise Bayesiana não podem ser interpretadas diretamente como medidas de suporte filogenético.
 
 \section{Avanços Recentes}
 
@@ -217,13 +217,13 @@ A abordagem de Otimização Direta (DO) de Wheeler (1996, 2006) estende este mar
 
 \subsection{Modelos de Indel de Nascimento-Morte}
 
-Os modelos TKF91 e TKF92 de Thorne et al. (1991, 1992) representam o tratamento mais mecanisticamente explícito de indels. Estes modelos acoplam um processo de nascimento (taxa de inserção $\lambda$) e morte (taxa de deleção $\mu$) com modelos de substituição de quatro nucleotídeos. Implementações de PAA bayesiana usando TKF91/92 incluem BEAST (Lunter et al., 2005) e BaliPhy (Redelings e Suchard, 2005). O custo computacional é proibitivo: Wheeler (2012) nota que BaliPhy requer centenas de horas em um computador pessoal para analisar 12 sequências proteicas de comprimento 400.
+Os modelos TKF91 e TKF92 de Thorne et al. (1991, 1992) representam o tratamento mais mecanisticamente explícito de indels. Estes modelos acoplam um processo de nascimento (taxa de inserção $\lambda$) e morte (taxa de deleção $\mu$) com modelos de substituição de quatro nucleotídeos. Implementações de PAA Bayesiana usando TKF91/92 incluem BEAST (Lunter et al., 2005) e BaliPhy (Redelings e Suchard, 2005). O custo computacional é proibitivo: Wheeler (2012) nota que BaliPhy requer centenas de horas em um computador pessoal para analisar 12 sequências proteicas de comprimento 400.
 
 \section{Aprendizado de Máquina em Seleção de Modelo de Substituição}
 
 \subsection{Motivação para Abordagens de AM}
 
-O custo computacional de seleção de modelo baseada em verossimilhança é substancial. Métodos de aprendizado de máquina (AM) podem ``aprender relações complexas de dados de entrada sem calcular verossimilhanças,'' e isto ``facilita a aplicação de aprendizado de máquina a modelos complexos, especialmente cenários nos quais inferência estatística e bayesiana padrão pode ser intratável'' \parencite{mo2024}.
+O custo computacional de seleção de modelo baseada em verossimilhança é substancial. Métodos de aprendizado de máquina (AM) podem ``aprender relações complexas de dados de entrada sem calcular verossimilhanças,'' e isto ``facilita a aplicação de aprendizado de máquina a modelos complexos, especialmente cenários nos quais inferência estatística e Bayesiana padrão pode ser intratável'' \parencite{mo2024}.
 
 \subsection{Florestas Aleatórias e Redes Neurais Profundas}
 
@@ -253,15 +253,14 @@ Phyloformer (Nesterenko et al., 2022) usa atenção própria para inferir distâ
 
 \section{Conclusão}
 
-Modelos de substituição ocupam um papel central em reconstrução filogenética a partir de dados moleculares. Sua fundação teórica situa-se no processo Markov reversível no tempo geral, do qual todos os modelos nomeados são derivados como casos especiais. Implementação requer ambos a computação eficiente de verossimilhanças de árvore via algoritmos de poda e critérios robustos de seleção de modelo que penalizem sobreparametrização. Inferência bayesiana adiciona distribuições prioris sobre todos os parâmetros do modelo, exigindo justificação cuidadosa daquelas prioris e avaliação crítica dos resumos posteriores resultantes.
+Modelos de substituição ocupam um papel central em reconstrução filogenética a partir de dados moleculares. Sua fundação teórica situa-se no processo Markov reversível no tempo geral, do qual todos os modelos nomeados são derivados como casos especiais. Implementação requer ambos a computação eficiente de verossimilhanças de árvore via algoritmos de poda e critérios robustos de seleção de modelo que penalizem sobreparametrização. Inferência Bayesiana adiciona distribuições prioris sobre todos os parâmetros do modelo, exigindo justificação cuidadosa daquelas prioris e avaliação crítica dos resumos posteriores resultantes.
 
 As limitações interpretativos são substanciais. Probabilidades posteriores de clado estão sujeitas a viés anterior não-uniforme que pode produzir conclusões topológicas fortemente apoiadas mas errôneas. A Zona de Felsenstein de inconsistência de parcimônia motiva análise de MV, mas MV em si não é imune a especificação incorreta de modelo. O tratamento de indels e a escolha de modelo de substituição ambos carregam consequências significativas downstream para inferência.
 
 Avanços recentes centram em modelos probabilísticos mais realistas e abrangentes: MOMs para alinhamento de sequência, modelos de indel de nascimento-morte, extensões a rearranjo genômico e redes filogenéticas, e aplicações de aprendizado de máquina e modelos de linguagem para seleção de modelo e distância estimada. Estes desenvolvimentos expandem o escopo de inferência baseada em modelo enquanto simultaneamente aumentam demandas computacionais. A tensão fundamental entre realismo biológico e tratabilidade computacional permanece o desafio definidor do campo.
 
 \clearpage
-\begin{destaque}
-\textbf{Roteiro de Revisão --- Capítulo 3}
+\begin{revise}
 \begin{enumerate}
     \item Matriz $Q$ de Tavaré (1986): $Q_{ij}=R_{ij}\pi_j$ ($i\neq j$); $P_{ij}(t)$ via decomposição de autovalores de $Q$ \parencite{tavare1986,yang1994}.
     \item Hierarquia de modelos: JC69 (0 parâmetros livres) $\to$ K2P (transição/transversão) $\to$ HKY85 ($\pi$ desiguais) $\to$ GTR (6 taxas, 4 freq.) \parencite{swofford1996}.
@@ -275,7 +274,7 @@ Avanços recentes centram em modelos probabilísticos mais realistas e abrangent
     \item Viés anterior de clado: priori uniforme sobre topologias $\neq$ priori uniforme sobre clados; razão priori entre clados de tamanhos 2 e 25 pode atingir $10^{13}$ (Steel \& Pickett, 2006).
     \item Avanços recentes: MOMs (Viterbi, Forward-Backward, Baum-Welch), alinhamento baseado em verossimilhança (dominante vs.\ total), modelos de linguagem de proteína (ESM-2, Phyloformer).
 \end{enumerate}
-\end{destaque}
+\end{revise}
 
 \clearpage
 

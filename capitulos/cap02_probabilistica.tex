@@ -3,9 +3,9 @@
 
 \section{Introdução}
 
-A reconstrução de relações filogenéticas a partir de dados genômicos situa-se na intersecção da biologia evolutiva, estatística e ciência computacional. Nos últimos três decênios, o paradigma analítico dominante em filogenética deslocou-se de métodos baseados em parcimônia para abordagens probabilísticas --- máxima verossimilhança (MV) e inferência bayesiana (IB). Este deslocamento foi impulsionado pela explosão de dados de sequências moleculares, pelo desenvolvimento de modelos cada vez mais sofisticados de evolução de sequências e pela disponibilidade de poder computacional que teria parecido fantástico aos sistematas dos anos 1990.
+A reconstrução de relações filogenéticas a partir de dados genômicos situa-se na intersecção da biologia evolutiva, estatística e ciência computacional. Nos últimos três decênios, o paradigma analítico dominante em filogenética deslocou-se de métodos baseados em parcimônia para abordagens probabilísticas --- máxima verossimilhança (MV) e inferência Bayesiana (IB). Este deslocamento foi impulsionado pela explosão de dados de sequências moleculares, pelo desenvolvimento de modelos cada vez mais sofisticados de evolução de sequências e pela disponibilidade de poder computacional que teria parecido fantástico aos sistematas dos anos 1990.
 
-Como Wheeler (2012) nos lembra, ``não existe uma única resposta para 'qual é o melhor método?' da mesma forma que não existe uma única resposta para 'qual é a melhor árvore?' Um critério deve ser especificado em ambos os casos'' \parencite{wheeler2012}. A escolha de um marco probabilístico é ela própria uma hipótese sobre como a inferência deve proceder --- e é uma que tem sido vigorosamente contestada em fundamentos teóricos, filosóficos e práticos.
+Como Wheeler (2012) nos lembra, ``não existe uma única resposta para `qual é o melhor método?' da mesma forma que não existe uma única resposta para `qual é a melhor árvore?' Um critério deve ser especificado em ambos os casos'' \parencite{wheeler2012}. A escolha de um marco probabilístico é ela própria uma hipótese sobre como a inferência deve proceder --- e é uma que tem sido vigorosamente contestada em fundamentos teóricos, filosóficos e práticos.
 
 \section{Fundamentos Teóricos da Probabilidade em Filogenética}
 
@@ -15,13 +15,38 @@ A verossimilhança de uma árvore $T$ dado dados $D$ é proporcional à probabil
 
 $$l(T|D) \propto \Pr(D|T)$$
 
-Um método sistemático de MV seleciona a árvore $T$ que maximiza $\Pr(D|T)$. Esta maximização requer especificar um conjunto de \textit{parâmetros de incômodo} (nuisance parameters) $\theta$, definidos como todas as quantidades necessárias para calcular $\Pr(D|T)$ além dos dados e da topologia da árvore \parencite{wheeler2012}. Os três parâmetros de incômodo mais consequentes são: (1) o modelo de transformação de caracteres; (2) parâmetros de ramo (comprimentos de ramo); e (3) a distribuição de taxas de mudança entre caracteres.
+Um método sistemático de MV seleciona a árvore $T$ que maximiza $\Pr(D|T)$. Esta maximização requer especificar um conjunto de \textit{parâmetros de incômodo} (\textit{nuisance parameters}) $\theta$, definidos como todas as quantidades necessárias para calcular $\Pr(D|T)$ além dos dados e da topologia da árvore \parencite{wheeler2012}. Os três parâmetros de incômodo mais consequentes são: (1) o modelo de transformação de caracteres; (2) parâmetros de ramo (comprimentos de ramo); e (3) a distribuição de taxas de mudança entre caracteres.
 
 \subsection{O Modelo Markov Geral}
 
 A descrição reversível mais geral de mudança de caráter para $n$ estados é especificada por uma matriz de taxa instantânea $R$ e um vetor de frequência estacionária $\symbf{\pi}$. As condições de simetria impostas em $R$ são:
 
 $$\forall i,\; R_{ii} = 0; \quad \forall i,j,\; R_{ij} = R_{ji}; \quad \sum_{i=1}^{n}\sum_{j=1}^{n} \pi_i \cdot \pi_j \cdot R_{ij} = 1$$
+
+\textbf{É assim que leríamos essa equação, passo-a-passo:}
+
+\begin{itemize}
+    \item \textbf{Parte 1:} ``Para todo $i$, erre-sub-ii é igual a zero;''
+    \item \textbf{Parte 2:} ``Para todo $i$ e $j$, erre-sub-ij é igual a erre-sub-ji;''
+    \item \textbf{Parte 3:} ``O somatório duplo, com $i$ e $j$ de 1 até $n$, de pi-sub-i vezes pi-sub-j vezes erre-sub-ij é igual a 1.''
+\end{itemize}
+
+\textbf{Veja algumas observações de pronúncia e contexto:}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabular}{lp{10cm}}
+\toprule
+\textbf{Símbolo} & \textbf{Descrição e Pronúncia} \\
+\midrule
+$\forall$ & Lido como ``Para todo'' ou ``Qualquer que seja''. \\
+$R_{ii}, R_{ij}$ & Pronuncia-se a letra e os índices (``erre-ii'' ou ``erre-ij''). \\
+$\pi_i$ & O som de $\pi$ em português é sempre ``pí'', nunca ``pái''. \\
+$\sum \sum$ & Chamado de ``Somatório duplo''. \\
+$n$ & Lido simplesmente como a letra ``ene''. \\
+\bottomrule
+\end{tabular}
+\end{center}
 
 Estas matrizes são combinadas na matriz de taxa $Q$:
 
@@ -31,7 +56,7 @@ A probabilidade de mudança entre estados $i$ e $j$ em tempo $t$ é:
 
 $$P_{i,j}(t) = \sum_{m=1}^{n} e^{\lambda_m t} \cdot U_{m,i} \cdot U^{-1}_{j,m}$$
 
-onde $\lambda_m$ são os autovalores de $Q$, $U$ é a matriz de autovetores e $U^{-1}$ sua inversa.
+onde $\lambda_m$ (lâmbda-sub-$m$) são os autovalores de $Q$, $U$ é a matriz de autovetores e $U^{-1}$ sua inversa.
 
 \section{Classificação de Métodos de Verossimilhança Máxima}
 
@@ -45,11 +70,36 @@ Se conhecêssemos a distribuição de parâmetros de incômodo, $\Phi(\theta|T)$
 
 $$p(D|T) = \int p(D|T, \theta) d\Phi(\theta|T)$$
 
+\textbf{Assim leríamos esta equação, passo-a-passo:}
+
+\begin{itemize}
+    \item \textbf{Lado Esquerdo:} ``A probabilidade pê ($p$) de dê ($D$) dado tê ($T$) é igual a...''
+    \item \textbf{Lado Direito:} ``A integral da probabilidade pê ($p$) de dê ($D$) dado tê ($T$) e teta ($\theta$), em relação à medida fi ($\Phi$) de teta ($\theta$) dado tê ($T$).''
+    \item \textbf{Leitura Fluida:} ``A probabilidade de D dado T é a integral da verossimilhança de D dado T e teta ($\theta$), integrada sobre a distribuição \textit{a priori} (ou medida) de teta ($\theta$) dado T.''
+\end{itemize}
+
+\vspace{0.5cm}
+
+\textbf{Algumas observações de pronúncia e contexto:}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabular}{lp{10cm}}
+\hline
+\textbf{Símbolo} & \textbf{Descrição e Pronúncia} \\ \hline
+$p(A|B)$ & O traço vertical ``$|$'' é sempre lido como \textbf{``dado''}. \\
+$\int$ & Lido como \textbf{``Integral''}. \\
+$\theta$ & Letra grega \textbf{``teta''}. \\
+$\Phi$ & Letra grega \textbf{``fi''} (maiúsculo). \\
+$d\Phi$ & O ``$d$'' indica o diferencial, lido como \textbf{``em relação a''} ou \textbf{``na medida de''}. \\ \hline
+\end{tabular}
+\end{center}
+
 A árvore que maximiza esta probabilidade integrada é a árvore de \textbf{Máxima Verossimilhança Integrada} (MVI). Esta é a abordagem teoricamente mais satisfatória porque conta para nossa incerteza nos parâmetros de incômodo ao invés de escolher um único conjunto ``melhor''.
 
 \subsection{Máxima A Posteriori (MAP)}
 
-Se também temos uma \textbf{distribuição priori sobre árvores}, $p(T)$, podemos perguntar: qual árvore tem a maior probabilidade posterior? Székelyi e Steel (1999) mostraram que o método com a maior expectativa de retornar a árvore verdadeira seleciona a árvore maximizando $p(T) \times \Pr(D|T)$. Esta é a árvore de \textbf{Máxima A Posteriori} (MAP) --- a estimativa bayesiana.
+Se também temos uma \textbf{distribuição priori sobre árvores}, $p(T)$, podemos perguntar: qual árvore tem a maior probabilidade posterior? Székelyi e Steel (1999) mostraram que o método com a maior expectativa de retornar a árvore verdadeira seleciona a árvore maximizando $p(T) \times \Pr(D|T)$. Esta é a árvore de \textbf{Máxima A Posteriori} (MAP) --- a estimativa Bayesiana.
 
 Aqui está a conexão importante: quando todas as prioris de árvore são \textbf{iguais} (uma priori flat, não-informativa), a árvore MAP é idêntica à árvore MVI. Como Wheeler nota, ``o uso de prioris de árvore não-uniformes (tais como empíricas ou Yule) quebra esta identidade'' \parencite{wheeler2012}.
 
@@ -83,17 +133,68 @@ Um resultado notável: a árvore que maximiza VCE \textbf{é precisamente a árv
 
 \subsection{Teorema de Bayes e Inferência Posterior}
 
-A inferência bayesiana em filogenética reformula inferência de árvore usando o Teorema de Bayes. A probabilidade posterior de uma topologia $T$ dado dados $D$, parâmetros de substituição $\theta$, e pesos de ramo $t_T$ é:
+A inferência Bayesiana em filogenética reformula inferência de árvore usando o Teorema de Bayes. A probabilidade posterior de uma topologia $T$ dado dados $D$, parâmetros de substituição $\theta$, e pesos de ramo $t_T$ é:
 
 $$p(T|D, \theta, t_T) = \frac{p(T) \cdot p(D|T, \theta, t_T)}{\sum_{T_j \in \tau} p(T_j) \cdot p(D|T_j, \theta, t_T)}$$
+
+\textbf{Assim leríamos esta equação, passo-a-passo:}
+
+\begin{itemize}
+    \item \textbf{Lado Esquerdo:} ``A probabilidade pê ($p$) de tê ($T$) dado dê ($D$), teta ($\theta$) e tê sub-tê ($t_T$) é igual a...''
+    \item \textbf{Numerador:} ``A probabilidade \textit{a priori} de tê ($T$) vezes a verossimilhança de dê ($D$) dado tê ($T$), teta ($\theta$) e tê sub-tê ($t_T$)...''
+    \item \textbf{Denominador:} ``...dividido pelo somatório, para toda topologia tê-j ($T_j$) pertencente ao conjunto tau ($\tau$), da probabilidade de tê-sub-j ($T_j$) vezes a verossimilhança de dê ($D$) dado tê-sub-j ($T_j$), teta ($\theta$) e tê sub-tê ($t_T$).''
+    \item \textbf{Leitura Fluida:} ``A posterior da árvore $T$ é o produto da sua priori pela sua verossimilhança, normalizado pelo somatório das probabilidades de todas as topologias possíveis no espaço das árvores $\tau$.''
+\end{itemize}
+
+\vspace{0.5cm}
+
+\textbf{Algumas observações de pronúncia e contexto:}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabular}{lp{10cm}}
+\hline
+\textbf{Símbolo} & \textbf{Descrição e Pronúncia} \\ \hline
+$p(T)$ & Frequentemente chamada de \textbf{``priori''} da topologia. \\
+$t_T$ & Lido como \textbf{``tê sub-tê''}, representa os comprimentos dos ramos da árvore $T$. \\
+$\sum_{T_j \in \tau}$ & Lido como \textbf{``somatório para cada tê-j pertencente a tau''}. \\
+$\tau$ & Letra grega \textbf{``tau''}, aqui representando o conjunto de todas as topologias possíveis. \\
+$\frac{A}{B}$ & Em voz alta, dizemos o numerador e usamos a expressão \textbf{``sobre''} ou \textbf{``dividido por''} para o denominador (neste caso, $A$ sobre $B$ ou $A$ dividido por $B$). \\ \hline
+\end{tabular}
+\end{center}
 
 Integração sobre parâmetros de incômodo remove a condicionalidade sobre eles:
 
 $$p(T|D) = \frac{\iint p(\theta), p(T|\theta), p(t_T|\theta, T), p(D|\theta, T, t_T)\; dt_T, d\theta}{\sum_{T_j \in \tau} \iint p(\theta), p(T_j|\theta), p(t_{T_j}|\theta, T_j), p(D|\theta, T_j, t_{T_j})\; dt_{T_j}, d\theta}$$
 
+\textbf{Assim leríamos esta equação, passo-a-passo:}
+
+\begin{itemize}
+    \item \textbf{Lado Esquerdo:} ``A probabilidade posterior da árvore ($T$) dados apenas os dados ($D$).''
+    \item \textbf{Numerador:} ``A integral dupla sobre os parâmetros teta ($\theta$) e pesos de ramo ($t_T$) da probabilidade conjunta de todos os componentes do modelo.''
+    \item \textbf{Denominador:} ``O somatório, para todas as árvores possíveis ($T_j$), da mesma integral dupla realizada no numerador.''
+    \item \textbf{Leitura Fluida:} ``A probabilidade da topologia $T$ é a sua verossimilhança marginalizada sobre todos os possíveis valores de parâmetros e comprimentos de ramo, normalizada pela soma das verossimilhanças marginais de todas as outras topologias.''
+\end{itemize}
+
+\vspace{0.5cm}
+
+\textbf{Algumas observações de pronúncia e contexto:}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabular}{lp{10cm}}
+\hline
+\textbf{Símbolo} & \textbf{Descrição e Pronúncia} \\ \hline
+$\iint$ & Lido como \textbf{``Integral dupla''}. Representa a integração sobre múltiplos parâmetros simultaneamente. \\
+$dt_T, d\theta$ & Indicam as variáveis de integração. Lemos como \textbf{``em relação a tê-sub-tê e teta''}. \\
+Marginalização & O processo de usar integrais para ``remover'' parâmetros de incômodo ($\theta, t_T$) e focar apenas no que interessa ($T$). \\
+$p(T|D)$ & Note que $\theta$ e $t_T$ sumiram do lado esquerdo; isso ocorre porque foram \textbf{``integrados''} para fora da equação. \\ \hline
+\end{tabular}
+\end{center}
+
 \subsection{Convergência Bayesiana e o Teorema de Bernstein-von Mises}
 
-Uma garantia teórica fundamental frequentemente citada em análise bayesiana é que, dados dados suficientes, a distribuição posterior convergerá à ``verdade''. Isto é formalizado pelo \textbf{Teorema de Bernstein-von Mises} (BvM). O Teorema BvM afirma que sob condições de regularidade específicas, conforme a quantidade de dados (em filogenética, o comprimento de sequência $n$) aproxima-se do infinito, a distribuição posterior converge para uma distribuição normal multivariada centrada nos valores de parâmetros verdadeiros (ou no estimador de máxima verossimilhança), com variância encolhendo a zero \parencite{vandervaart1998}.
+Uma garantia teórica fundamental frequentemente citada em análise Bayesiana é que, dados dados suficientes, a distribuição posterior convergerá à ``verdade''. Isto é formalizado pelo \textbf{Teorema de Bernstein-von Mises} (BvM). O Teorema BvM afirma que sob condições de regularidade específicas, conforme a quantidade de dados (em filogenética, o comprimento de sequência $n$) aproxima-se do infinito, a distribuição posterior converge para uma distribuição normal multivariada centrada nos valores de parâmetros verdadeiros (ou no estimador de máxima verossimilhança), com variância encolhendo a zero \parencite{vandervaart1998}.
 
 Porém, é crítico reconhecer que esta garantia de convergência é tanto \textbf{assintótica} quanto \textbf{condicional}:
 
@@ -108,17 +209,66 @@ Uma sutileza adicional frequentemente negligenciada: o Teorema BvM clássico apl
 
 O Teorema BvM pode ser aplicado aos parâmetros contínuos (comprimentos de ramo, parâmetros do modelo de substituição) \textit{condicional em uma topologia fixada}, mas a convergência de probabilidade posterior sobre topologias é um problema separado e mais difícil. Para a topologia discreta em si, o comportamento de convergência depende de condições adicionais, incluindo se a topologia verdadeira é identificável sob o modelo assumido, e se os dados fornecem sinal suficiente para distinguir entre topologias concorrentes.
 
+\begin{tcolorbox}[
+    colback=green!5!white, 
+    colframe=green!50!black, 
+    title=\textbf{Explicando de forma simples: O Problema das Árvores},
+    arc=2mm, % Arredondamento dos cantos
+    boxrule=0.5pt
+]
+Imagine que você está tentando mapear o caminho de uma estrada. Em uma geometria comum, você pode se mover suavemente para qualquer lado. Mas, na filogenética, mudar a estrutura de uma árvore (a "topologia") é como pular de um universo para outro. 
+
+Cada árvore possível é como uma sala separada. Você pode caminhar livremente dentro da sala (ajustando o tamanho dos ramos), mas para mudar quem é "parente" de quem, você precisa atravessar uma porta estreita que conecta essas salas. O \textbf{Espaço BHV} é o nome matemático para esse "labirinto de salas" coladas umas às outras. O desafio é que as regras normais de probabilidade funcionam bem dentro de cada sala, mas ficam muito mais complicadas quando tentamos decidir em qual sala os dados realmente deveriam estar.
+\end{tcolorbox}
+
+\begin{tcolorbox}[
+    colback=red!5!white, 
+    colframe=red!75!black, 
+    title=\textbf{Consequências Práticas para a Pesquisa},
+    arc=2mm
+]
+\begin{itemize}
+    \item \textbf{O Problema da Convergência (MCMC):} Como o espaço das árvores é um ``labirinto de salas'', os algoritmos (como os do MrBayes ou BEAST) muitas vezes ficam ``presos'' em uma sala (uma topologia) que parece boa, mas não conseguem encontrar a porta para uma sala ainda melhor. É por isso que exigimos milhões de gerações e o uso de múltiplas cadeias frias e quentes (MCMCMC).
+    \item \textbf{Incerteza não-Euclidiana:} Você não pode simplesmente tirar a ``média'' de duas árvores diferentes para obter uma árvore média. Na prática, usamos o \textit{Consenso de Maioria} ou \textit{Árvores de Máxima Credibilidade de Clado} porque a média aritmética não faz sentido em espaços discretos.
+    \item \textbf{Sinal Filogenético vs. Ruído:} Se a ``verdade'' estiver exatamente na fronteira entre duas salas (ex: uma radiação muito rápida onde o ramo interno é quase zero), o modelo pode oscilar infinitamente entre topologias, gerando suporte baixo (valores de posterior baixos) não por erro, mas pela própria geometria do espaço.
+\end{itemize}
+\end{tcolorbox}
+
 \section{Especificação Incorreta de Modelo}
 
-\subsection{Convergência para a Resposta Melhor Errada}
+\subsection{Convergência para a Melhor Resposta Errada}
 
-Em filogenética, podemos afirmar com confiança que o modelo é \textit{sempre} especificado incorretamente em algum grau. Evolução de sequência biológica é um processo profundamente complexo impulsionado por taxas de mutação heterogêneas, seleção natural operando em múltiplos níveis, assortimento incompleto de linhagens, transferência horizontal de genes, dinâmica populacional mutável, e processos de substituição dependentes de contexto. Modelos Markov padrão de evolução de sequência (e.g., GTR+$\Gamma$) são abstrações matematicamente tratáveis.
+Em filogenética, podemos afirmar com confiança que o modelo é \textit{sempre} especificado incorretamente em algum grau. Evolução de sequência biológica é um processo profundamente complexo impulsionado por taxas de mutação heterogêneas, seleção natural operando em múltiplos níveis, assortimento incompleto de linhagens, transferência horizontal de genes, dinâmica populacional mutável, e processos de substituição dependentes de contexto. Modelos Markov padrão de evolução de sequência (\textit{e.g.}, GTR+$\Gamma$) são abstrações matematicamente tratáveis.
 
-Quando o modelo é especificado incorretamente ($M_{\text{verdadeiro}} \notin \mathcal{M}$), devemos perguntar: a que a distribuição posterior bayesiana converge conforme o comprimento de sequência aumenta?
+Quando o modelo é especificado incorretamente ($M_{\text{verdadeiro}} \notin \mathcal{M}$), devemos perguntar: a que a distribuição posterior Bayesiana converge conforme o comprimento de sequência aumenta?
 
 Sob especificação incorreta de modelo, a distribuição posterior não converge para a verdade absoluta. Ao invés, conforme $n \to \infty$, a probabilidade posterior concentra-se nos valores de parâmetros dentro do espaço de modelos explorado que minimizam a divergência de Kullback-Leibler (KL) da distribuição verdadeira geradora de dados. Formalmente, convergência é para:
 
 $$M^* = \arg\min_{M \in \mathcal{M}} D_{KL}(P_{\text{verdadeiro}} | P_M)$$
+
+\textbf{Assim leríamos esta equação, passo-a-passo:}
+
+\begin{itemize}
+    \item \textbf{Lado Esquerdo:} ``M-estrela ($M^*$) é igual ao argumento do mínimo...''
+    \item \textbf{Lado Direito:} ``...sobre o conjunto de modelos M ($\mathcal{M}$), da Divergência de Kullback-Leibler ($D_{KL}$) entre a distribuição verdadeira ($P_{\text{verdadeiro}}$) e a distribuição do modelo ($P_M$).''
+    \item \textbf{Leitura Fluida:} ``O modelo ideal $M^*$ é aquele, dentro do nosso conjunto de modelos possíveis, que minimiza a perda de informação (Divergência KL) em relação à realidade dos dados.''
+\end{itemize}
+
+\vspace{0.5cm}
+
+\textbf{Algumas observações de pronúncia e contexto:}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabular}{lp{10cm}}
+\hline
+\textbf{Símbolo} & \textbf{Descrição e Pronúncia} \\ \hline
+$M^*$ & O asterisco indica o valor \textbf{ótimo} ou a solução do problema. \\
+$\arg\min$ & Não queremos o valor mínimo da distância, mas sim \textbf{qual modelo} gera esse mínimo. \\
+$\mathcal{M}$ & Letra caligráfica representando o \textbf{espaço de busca} (todos os modelos que você está testando). \\
+$D_{KL}(P|Q)$ & A \textbf{Divergência de Kullback-Leibler}. Mede a ``distância'' (ou surpresa extra) entre duas distribuições. \\ \hline
+\end{tabular}
+\end{center}
 
 Este $M^*$ é às vezes chamado o valor de parâmetro ``pseudo-verdadeiro'': a melhor aproximação à verdade disponível dentro da família de modelo errada.
 
@@ -126,17 +276,73 @@ Este $M^*$ é às vezes chamado o valor de parâmetro ``pseudo-verdadeiro'': a m
 
 Para parâmetros \textbf{contínuos} (comprimentos de ramo, taxas de substituição), convergência para o minimizador KL pode produzir valores que são ``próximos o suficiente'' para ser biologicamente úteis, mesmo que não exatamente corretos. Mas para topologia de árvore (um parâmetro \textbf{discreto}), as consequências de especificação incorreta são mais proeminentes.
 
-Um modelo especificado incorretamente pode fazer a posterior concentrar-se em uma topologia que \textbf{não é a árvore verdadeira}, e esta concentração pode ocorrer com probabilidade posterior arbitrariamente alta conforme $n \to \infty$. Isto é o mecanismo subjacente ao fenômeno bem-documentado de inflação de probabilidade posterior: posteriores bayesianas podem atribuir probabilidade aproximando-se a 1.0 a clados incorretos quando o modelo está errado \parencite{suzuki2002,cummings2003,yang2007}.
+Um modelo especificado incorretamente pode fazer a posterior concentrar-se em uma topologia que \textbf{não é a árvore verdadeira}, e esta concentração pode ocorrer com probabilidade posterior arbitrariamente alta conforme $n \to \infty$. Isto é o mecanismo subjacente ao fenômeno bem-documentado de inflação de probabilidade posterior: posteriores Bayesianas podem atribuir probabilidade aproximando-se a 1.0 a clados incorretos quando o modelo está errado \parencite{suzuki2002,cummings2003,yang2007}.
 
 Em filogenômica, onde conjuntos de dados massivos produzem superfícies de verossimilhança íngremes, este modo de falha torna-se especialmente perigoso: mais dados não corrige o erro mas ao invés aumenta a certeza com qual a resposta errada é entregue \parencite{kumar2012}.
 
-\section{Dados Finitos e a Priori Inescapável}
+\section{Dados Finitos e \textit{a priori} Inescapável}
 
 Embora teoremas assintóticos sejam valiosos para compreender propriedades teóricas de estimadores, \textbf{sistemática empírica lida exclusivamente com dados finitos}. O comprimento de sequência $n$ de qualquer alinhamento físico é sempre um inteiro finito.
 
-Porque \textbf{operamos permanentemente em um regime de dados finitos}, o estado assintótico onde a verossimilhança perfeita domina a priori nunca é estritamente atingido. Retornando à proporcionalidade do Teorema de Bayes:
+Porque \textbf{operamos permanentemente em um regime de dados finitos}, o estado assintótico onde a verossimilhança perfeita domina \textit{a priori} nunca é estritamente atingido.
+
+Esta equação explica este estado assintótido do qual falamos acima:
+
+\begin{equation*}
+    \lim_{t \to \infty} P_t = \pi
+\end{equation*}
+
+\textbf{Assim leríamos esta definição, passo-a-passo:}
+
+\begin{itemize}
+    \item \textbf{Expressão:} ``O limite de pê-sub-tê ($P_t$), quando o tempo tê ($t$) tende ao infinito, é igual a pi ($\pi$).''
+    \item \textbf{Significado Técnico:} ``A distribuição do sistema converge para o seu estado estacionário (ou assintótico) $\pi$, independentemente de onde o sistema começou.''
+    \item \textbf{Leitura Fluida:} ``Conforme o tempo passa indefinidamente, a configuração do sistema se estabiliza em uma distribuição de equilíbrio estável.''
+\end{itemize}
+
+\vspace{0.5cm}
+
+\textbf{Algumas observações de pronúncia e contexto:}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabular}{lp{10cm}}
+\hline
+\textbf{Símbolo} & \textbf{Descrição e Pronúncia} \\ \hline
+$\lim_{t \to \infty}$ & Lido como \textbf{``Limite com tê tendendo ao infinito''}. Representa o comportamento de longo prazo. \\
+$P_t$ & A distribuição de probabilidade no instante $t$. \\
+$\pi$ & Em filogenética, representa as \textbf{frequências de equilíbrio} das bases (A, C, G, T) ou aminoácidos. \\
+$\to$ & A seta é lida como \textbf{``tende a''} ou \textbf{``vai para''}. \\ \hline
+\end{tabular}
+\end{center}
+
+Agora, explicado o estado assintórico ao que nos referimos anteriornemte, podemos retornar à proporcionalidade do Teorema de Bayes:
 
 $$P(\tau, \theta|X) \propto P(X|\tau, \theta) \, P(\tau, \theta)$$
+
+\textbf{Assim leríamos esta equação, passo-a-passo:}
+
+\begin{itemize}
+    \item \textbf{Lado Esquerdo:} ``A probabilidade posterior de tau ($\tau$) e teta ($\theta$) dado xis ($X$) é proporcional a...''
+    \item \textbf{Lado Direito:} ``...a verossimilhança de xis ($X$) dado tau ($\tau$) e teta ($\theta$), vezes a probabilidade a priori de tau ($\tau$) e teta ($\theta$).''
+    \item \textbf{Leitura Fluida:} ``A posterior é proporcional ao produto da verossimilhança pela priori.''
+\end{itemize}
+
+\vspace{0.5cm}
+
+\textbf{Algumas observações de pronúncia e contexto:}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabular}{lp{10cm}}
+\hline
+\textbf{Símbolo} & \textbf{Descrição e Pronúncia} \\ \hline
+$\propto$ & Lido como \textbf{``proporcional a''}. Substitui o sinal de igual quando omitimos o denominador. \\
+$\tau$ & Letra grega \textbf{``tau''}. Em filogenética, quase sempre representa a \textbf{topologia da árvore}. \\
+$\theta$ & Letra grega \textbf{``teta''}. Representa os \textbf{parâmetros do modelo} (como taxas de substituição). \\
+$X$ & Representa os \textbf{dados observados} (as sequências de DNA ou aminoácidos). \\ \hline
+\end{tabular}
+\end{center}
 
 O posterior é sempre um compromisso matemático entre a informação contida nos dados (a verossimilhança) e a informação especificada antes dos dados serem observados (a priori). Conforme $n$ cresce, a superfície de verossimilhança torna-se mais acentuada e exerce muito mais alavancagem, aplanando o impacto relativo da priori. Porém, porque $n$ é finito, a verossimilhança nunca atinge precisão infinita.
 
@@ -144,16 +350,16 @@ Consequentemente, \textbf{a distribuição priori é estritamente \textit{sempre
 
 \subsection{Influência Persistente da Priori}
 
-A influência da priori não é uniforme através de todos os parâmetros. Para parâmetros do modelo de substituição (e.g., entradas da matriz de taxa e frequências de base), quantidades moderadas de dados típicamente dominam prioris razoáveis, e o efeito prático da priori torna-se negligenciável. Estes são parâmetros para os quais os dados são altamente informativos, o espaço de parâmetros é baixo-dimensional, e diferentes prioris razoáveis convergem em posteriores similares.
+A influência da priori (ou ``\textit{prior}'') não é uniforme através de todos os parâmetros. Para parâmetros do modelo de substituição (\textit{e.g.}, entradas da matriz de taxa e frequências de base), quantidades moderadas de dados típicamente dominam prioris razoáveis, e o efeito prático da priori torna-se negligenciável. Estes são parâmetros para os quais os dados são altamente informativos, o espaço de parâmetros é baixo-dimensional, e diferentes prioris razoáveis convergem em posteriores similares.
 
-Porém, para outros parâmetros listados abaixo, a priori pode persistir tenazmente:
+Porém, para outros parâmetros listados abaixo, \textit{a priori} pode persistir tenazmente:
 
 \begin{itemize}
-    \item \textbf{Topologia de árvore.} A priori sobre topologias é uma distribuição de probabilidade sobre um espaço discreto combinatoriamente vasto. Para $n = 50$ táxons, há aproximadamente $2.8 \times 10^{76}$ árvores bifurcadas não-enraizadas. Uma priori uniforme atribui probabilidade infinitesimal a cada topologia, e diferentes prioris estruturais (uniforme vs. Yule vs. nascimento-morte) atribuem diferentes probabilidades a formas de árvore diferentes. Em regiões da árvore onde os dados carecem de sinal forte --- radiações rápidas, internós curtos, substituições saturadas --- a posterior sobre topologias concorrentes dependerá fortemente de qualquer priori foi especificada.
+    \item \textbf{Topologia de árvore.} \textit{a priori} sobre topologias é uma distribuição de probabilidade sobre um espaço discreto combinatoriamente vasto. Para $n = 50$ táxons, há aproximadamente $2.8 \times 10^{76}$ árvores bifurcadas não-enraizadas. Uma priori uniforme atribui probabilidade infinitesimal a cada topologia, e diferentes prioris estruturais (uniforme vs. Yule vs. nascimento-morte) atribuem diferentes probabilidades a formas de árvore diferentes. Em regiões da árvore onde os dados carecem de sinal forte --- radiações rápidas, internós curtos, substituições saturadas --- a posterior sobre topologias concorrentes dependerá fortemente de qualquer priori que foi especificada.
 
-    \item \textbf{Comprimentos de ramo próximos a zero.} Internós curtos, que caracterizam radiações rápidas e a ``zona de anomalia'' filogenômica, são precisamente os ramos onde os dados fornecem o mínimo de sinal e a priori tem a máxima influência. Brown et al. (2010) demonstraram que a priori exponencial de comprimento de ramo padrão em MrBayes pode produzir probabilidades posteriores inflacionadas e estimativas de comprimento de ramo não-confiáveis, não por um bug de software, mas porque a priori era inadvertidamente informativa de formas que interagiam mal com os dados. Rannala et al. (2012) confirmaram que prioris de comprimento de ramo podem ter efeitos substanciais em probabilidades posteriores de árvore mesmo com conjuntos de dados moderadamente grandes.
+    \item \textbf{Comprimentos de ramo próximos a zero.} Internós curtos, que caracterizam radiações rápidas e a ``zona de anomalia'' filogenômica, são precisamente os ramos onde os dados fornecem o mínimo de sinal e prioris tem a máxima influência. Brown \textit{et al}. (2010) demonstraram que a priori exponencial de comprimento de ramo padrão em MrBayes pode produzir probabilidades posteriores inflacionadas e estimativas de comprimento de ramo não-confiáveis, não por um bug de software, mas porque a priori era inadvertidamente informativa de formas que interagiam mal com os dados. Rannala \textit{et al}. (2012) confirmaram que prioris de comprimento de ramo podem ter efeitos substanciais em probabilidades posteriores de árvore mesmo com conjuntos de dados moderadamente grandes.
 
-    \item \textbf{Tempos de divergência.} Em análises de relógio molecular, a priori em taxas de ramo (e.g., log-normal, exponencial, ou uniforme) pode deslocar datas de divergência estimadas por dezenas de milhões de anos. Wheeler (2012) sugere que ``dada nossa falta de conhecimento, amostragem, linhagem, ambiental, e locus específicos (entre uma miríade de outros conhecidos e desconhecidos) efeitos, a distribuição uniforme pareceria tão apropriada quanto log-normal ou exponencial''. Porém, uma priori uniforme em taxas é ela própria uma afirmação forte, atribuindo probabilidade priori igual a taxas biologicamente absurdas quanto a plausíveis. Toda priori diz \textit{algo}, e ``não sei'' não é uma distribuição de probabilidade.
+    \item \textbf{Tempos de divergência.} Em análises de relógio molecular, \textit{a priori} em taxas de ramo (\textit{e.g.}, log-normal, exponencial, ou uniforme) pode deslocar datas de divergência estimadas por dezenas de milhões de anos. Wheeler (2012) sugere que ``dada nossa falta de conhecimento, amostragem, linhagem, ambiental, e locus específicos (entre uma miríade de outros conhecidos e desconhecidos) efeitos, a distribuição uniforme pareceria tão apropriada quanto log-normal ou exponencial''. Porém, uma priori uniforme em taxas é ela própria uma afirmação forte, atribuindo probabilidade priori igual a taxas biologicamente absurdas quanto a plausíveis. Toda priori diz \textit{algo}, e ``não sei'' não é uma distribuição de probabilidade.
 \end{itemize}
 
 \section{Práticas Responsáveis para Trabalhar com Prioris e Modelos}
@@ -168,19 +374,44 @@ A resposta prática mais importante é variar ambas as prioris e modelos e exami
 
 Ao invés de assumir que o modelo escolhido é ``próximo o suficiente'', pesquisadores devem explicitamente testar se o modelo ajusta-se aos dados, usando ferramentas tais como simulações preditivas posteriores e avaliações de adequação de modelo. Se o modelo falha seu próprio teste de qualidade de ajuste, o posterior que produz é condicional em uma assunção inadequada, e nenhuma quantidade de dados a resgatará.
 
+\begin{tcolorbox}[
+    colback=red!5!white, 
+    colframe=red!75!black, 
+    title=\textbf{O Problema da Adequação do Modelo (\textit{Model Adequacy})},
+    arc=2mm
+]
+\begin{itemize}
+    \item \textbf{Seleção vs. Adequação:} Selecionar um modelo é como escolher o sapato que melhor serve entre três opções pequenas. Adequação é medir se o seu pé realmente cabe em algum deles. Se todos forem pequenos, o ``melhor'' ainda machucará seu pé.
+    \item \textbf{Simulações Preditivas Posteriores (PPS):} É um teste de ``sanidade''. O software usa os resultados da sua análise para gerar dados sintéticos (fictícios). Se os dados simulados pelo modelo forem completamente diferentes dos seus dados reais de DNA, o modelo não ``entendeu'' o processo biológico.
+    \item \textbf{O Perigo da Quantidade de Dados:} Existe um mito de que ter muitos dados (filogenômica) corrige modelos ruins. Muito pelo contrário! Se o modelo está errado, mais dados apenas darão a ele mais confiança para chegar na \textbf{resposta errada} com alta probabilidade posterior.
+\end{itemize}
+\end{tcolorbox}
+
 \subsection{Relatório Honesto de Incerteza}
 
 Uma probabilidade posterior de 1.0 para um clado significa ``este clado é esmagadoramente apoiado \textbf{dado} o modelo e as prioris.'' Não significa que ``este clado é certamente correto.'' Relatando suporte de clado juntamente com fatores de concordância que quantificam quanta proporção do genoma realmente apoia um clado dado fornecerá uma figura mais honesta da evidência que probabilidades posteriores sozinhas.
+
+\begin{tcolorbox}[
+    colback=green!5!white, 
+    colframe=green!50!black, 
+    title=\textbf{Posterior 1.0 vs. Realidade Biológica},
+    arc=2mm
+]
+\begin{itemize}
+    \item \textbf{A Ilusão do 1.0:} Em grandes conjuntos de dados (filogenômica), a probabilidade posterior frequentemente ``infla'' para 1.0. Isso ocorre porque o modelo Bayesiano acumula tanta evidência matemática que ele se torna ``matematicamente certo'', mesmo que o modelo em si esteja simplificando demais a biologia.
+    \item \textbf{Sinal Conflitante:} O genoma não é uma unidade única. Diferentes genes podem ter histórias diferentes (devido a triagem incompleta de linhagens ou hibridização). Um posterior de 1.0 pode esconder o fato de que, por exemplo, 40\% dos dados dos seus genes apoiam uma árvore diferente.
+    \item \textbf{Fatores de Concordância (CF):} Ao contrário do posterior, os CFs (como o \textit{Gene Concordance Factor}) dizem: ``De todos os genes que olhamos, quantos realmente mostram esse clado?''. Se o posterior é 1.0 mas o CF é 0.2, você sabe que o suporte é forte matematicamente, mas há um conflito biológico massivo subjacente.
+\end{itemize}
+\end{tcolorbox}
 
 \section{Conclusão}
 
 Inferência filogenética probabilística é uma ferramenta matematicamente rigorosa e praticamente poderosa, mas seus resultados devem ser interpretados com uma compreensão clara de seus limites matemáticos. A convergência de posteriores à ``verdade'' é uma garantia assintótica aplicável a parâmetros contínuos condicional na assunção não-realista de especificação de modelo perfeita. Esta garantia não se estende diretamente a topologias de árvore discretas. Em realidade biológica, modelos são sempre aproximações, significando que sob especificação incorreta, inferência converge para a melhor aproximação disponível dentro da família de modelo errada. No caso da topologia de árvore, isto pode significar convergência a uma árvore incorreta com alta confiança.
 
-Além disso, a natureza finita de dados genômicos garante que assunções prioris permanentemente continuem um ingrediente ativo nas distribuições posteriores que calculamos, com sua influência persistindo mais fortemente precisamente onde precisamos de confiabilidade: em ramos curtos, em radiações rápidas, e em estimativas de tempo de divergência. Como nossa compreensão coletiva de métodos bayesianos evolui com o tempo, eles podem ou não permanecer populares e considerados uma ferramenta flexível e informativa. Porém, devem ser usados com a honestidade intelectual que exigem: testando adequação de modelo, conduzindo análises de sensibilidade, e relatando incerteza de forma que distinga o que os dados dizem do que as assunções contribuem.
+Além disso, a natureza finita de quaisquer dados genômicos garante que assunções prioris continuem permanentemente um ingrediente ativo nas distribuições posteriores que calculamos, com sua influência persistindo mais fortemente precisamente onde precisamos de confiabilidade: em ramos curtos, em radiações rápidas, e em estimativas de tempo de divergência. Como nossa compreensão coletiva de métodos Bayesianos evolui com o tempo, eles podem ou não permanecer populares e considerados uma ferramenta flexível e informativa. Porém, devem ser usados com a honestidade intelectual que exigem: testando adequação de modelo, conduzindo análises de sensibilidade, e relatando incerteza de forma que distinga o que os dados dizem do que as assunções contribuem.
 
 \clearpage
-\begin{destaque}
-\textbf{Roteiro de Revisão --- Capítulo 2}
+\begin{revise}
 \begin{enumerate}
     \item Verossimilhança: $l(T|D) \propto \Pr(D|T)$; parâmetros de incômodo $\theta$: modelo de substituição, comprimentos de ramo, distribuição de taxas \parencite{edwards1972,wheeler2012}.
     \item Quatro formas de verossimilhança (Wheeler, 2012): \textbf{MVM} (soma sobre estados ancestrais --- o ``MV'' padrão), \textbf{MVP} (otimiza estados nos nós), \textbf{VCE} (Farris, 1973 --- especifica caminho evolutivo completo; $\text{VCE}_{\max} \equiv$ parcimônia) e \textbf{MVI} (integra sobre $\theta$; = MAP com priori plana).
@@ -192,7 +423,7 @@ Além disso, a natureza finita de dados genômicos garante que assunções prior
     \item Priori exponencial padrão de comprimento de ramo em MrBayes pode inflacionar posteriores (Brown et al., 2010; Rannala et al., 2012).
     \item Práticas responsáveis: análise de sensibilidade (variar prioris e modelos), teste de adequação de modelo (simulações preditivas posteriores), relatório honesto de incerteza (fatores de concordância).
 \end{enumerate}
-\end{destaque}
+\end{revise}
 
 \clearpage
 

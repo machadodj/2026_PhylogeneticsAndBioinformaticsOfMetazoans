@@ -6,7 +6,7 @@
 % Licença: CC-BY-NC v4.0
 % ============================================================
 
-\documentclass[12pt,a4paper,openright,twoside]{book}
+\documentclass[11pt,a4paper,openright,twoside]{book}
 
 % ---- Codificação e idioma ----
 % Compilar com XeLaTeX no Overleaf (Menu -> Compiler -> XeLaTeX)
@@ -50,7 +50,7 @@
 \usepackage{hologo}
 
 % ---- Layout ----
-\usepackage[top=2.5cm,bottom=2.5cm,left=3cm,right=2.5cm,headheight=28pt]{geometry}
+\usepackage[top=2cm,bottom=2cm,left=2.5cm,right=2cm,headheight=24pt]{geometry}
 \usepackage{setspace}
 \onehalfspacing
 \usepackage{fancyhdr}
@@ -99,11 +99,11 @@
 
 % ---- Blocos de destaque ----
 \usepackage[most]{tcolorbox}
-\newtcolorbox{destaque}{
+\newtcolorbox{revise}{
   colback=blue!5!white,
   colframe=blue!50!black,
   fonttitle=\bfseries,
-  title=Nota,
+  title=Roteiro de Revisão do Capítulo,
   sharp corners,
   boxrule=0.5pt
 }
@@ -129,13 +129,13 @@
 \begin{titlepage}
 \centering
 \vspace*{3cm}
-{\Huge\bfseries Tópicos de Estudo em Filogenômica e Bioinformática de Metazoários\par}
+{\Huge\bfseries Tópicos de Estudo em Filogenômica e Bioinformática de Metazoários (Rascunho em Desenvolvimento)\par}
 \vspace{1.5cm}
 {\Large Denis Jacob Machado\par}
 \vspace{0.5cm}
 {\scriptsize
-    Laboratório de Filoinformática (\url{https://phyloinformwatics.com}), and\\
-    Departamento de Bioinformática e Genômica $\cdot$ Colégio de Computação e Informática, and\\
+    Laboratório de Filoinformática (\url{https://phyloinformatics.com}), e\\
+    Departamento de Bioinformática e Genômica $\cdot$ Colégio de Computação e Informática, e\\
     Centro de Computação Inteligente para Prevenção de Ricos para Saúde e Meio Ambiente (CIPHER).\\
     \textbf{Universidade da Carolina do Norte em Charlotte, Charlotte, Carolina do Norte, E.U.A.}\\
     ORCiD: \href{https://orcid.org/0000-0001-9858-4515}{0000-0001-9858-4515}.\\
@@ -162,11 +162,11 @@ Atribuição-NãoComercial 4.0 Internacional (CC-BY-NC 4.0).\\[0.5em]
 % Prefácio
 \chapter{Prefácio}
 
-    Este livro reúne material de estudo sobre filogenômica e bioinformática de metazoários, abrangendo desde os fundamentos teórico-filosóficos da sistemática filogenética até questões contemporâneas de inteligência artificial, legislação brasileira e infraestrutura computacional. A obra é organizada em onze capítulos que cobrem os principais tópicos necessários para a compreensão e a prática da reconstrução filogenômica em larga escala. Estes capítulos correspondem aos 11 itens listados no edital EDITAL IB/AAcad/19/2025 sobre ``Filogenômica eBioinformática de Metazoários,'' publicado na Edição de 4 de julho de 2025 do Diário Oficial do Estado de São Paulo.
+    Este livro reúne material de estudo sobre filogenômica e bioinformática de metazoários, abrangendo desde os fundamentos teórico-filosóficos da sistemática filogenética até questões contemporâneas de inteligência artificial, legislação brasileira e infraestrutura computacional. A obra é organizada em onze capítulos que cobrem os principais tópicos necessários para a compreensão e a prática da reconstrução filogenômica em larga escala. Estes capítulos correspondem aos 11 itens listados no edital EDITAL IB/AAcad/19/2025 sobre ``Filogenômica e Bioinformática de Metazoários'', publicado na Edição de 4 de julho de 2025 do Diário Oficial do Estado de São Paulo.
 
-    O texto enfatiza tanto os princípios teóricos quanto os aspectos práticos de implementação, incluindo a formulação matemática dos métodos probabilísticos, a diversidade de dados moleculares disponíveis, as estratégias de sequenciamento, os desafios impostos por elementos repetitivos, e os requisitos de infraestrutura computacional. Os capítulos finais abordam o papel emergente da inteligência artificial na ciência biomédica e os aspectos legais e éticos do uso de dados genômicos, com ênfase na legislação brasileira e nos marcos internacionais.
+    O texto enfatiza tanto os princípios teóricos quanto os aspectos práticos de implementação, incluindo a formulação matemática dos métodos probabilísticos, a diversidade de dados moleculares disponíveis, as estratégias de sequenciamento, os desafios impostos por elementos repetitivos e os requisitos de infraestrutura computacional. Os capítulos finais abordam o papel emergente da inteligência artificial na ciência biomédica e os aspectos legais e éticos do uso de dados genômicos, com ênfase na legislação brasileira e nos marcos internacionais.
 
-    Cada capítulo contém suas próprias referências bibliográficas, permitindo consulta independente. A ordem dos capítulos segue uma progressão lógica dos fundamentos para as aplicações, mas os capítulos foram escritos para serem razoavelmente autocontidos. Um guia de estudo é apresentado ao final de cada capítulo para facilitar o estudo.
+    Cada capítulo contém suas próprias referências bibliográficas, o que permite consultas independentes. A ordem dos capítulos segue uma progressão lógica dos fundamentos para as aplicações, mas cada capítulo foi escrito de forma razoavelmente autocontida. Um guia de estudo é apresentado ao final de cada capítulo.
 
 \vspace{1cm}
 \begin{flushright}
@@ -194,6 +194,6 @@ Charlotte, Carolina do Norte, E.U.A., 2026
 
 \chapter{Agradecimentos}
 
-    Este livro usou inteligência artificial (IA) para traduzir as anotações originais do inglês para o português, para revisão gramatical e para produzir o código do projeto em \hologo{LaTeX} (Claude--Opus 4.6, Anthropic, \href{https://claude.ai/chats}{https://claude.ai/chats}). O projeto foi compilado no Overleaf (\href{https://www.overleaf.com/}{https://www.overleaf.com/}).
+    Este livro usou inteligência artificial (IA) para traduzir anotações originais do inglês para o português, para revisão gramatical e para produzir o código do projeto em \hologo{LaTeX} (Claude--Opus 4.6, Anthropic, \href{https://claude.ai/chats}{https://claude.ai/chats}). O projeto foi compilado no Overleaf (\href{https://www.overleaf.com}{https://www.overleaf.com}).
 
 \end{document}

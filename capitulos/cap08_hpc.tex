@@ -7,7 +7,7 @@ Análises filogenômicas modernas envolvem centenas a milhares de loci extraído
 
 \section{Introdução}
 
-Uma análise única de IQ-TREE em um alinhamento particionado de várias centenas de loci pode consumir dezenas de milhares de horas de CPU. Análises bayesianas com BEAST ou MrBayes adicionam ordens de magnitude adicionais quando convergência MCMC requer comprimentos de cadeia estendidos. Além disso, questões sobre se métricas padrão de suporte de clado (bootstrap, SH-aLRT, aBayes) são calibradas com respeito a sensibilidade de alinhamento --- uma questão ativamente sendo investigada --- demandam replicação em larga escala através de alinhamentos alternativos e configurações de parâmetros. Tais estudos são computacionalmente inviáveis sem recursos HPC dedicados.
+Uma análise única de IQ-TREE em um alinhamento particionado de várias centenas de loci pode consumir dezenas de milhares de horas de CPU. Análises Bayesianas com BEAST ou MrBayes adicionam ordens de magnitude adicionais quando convergência MCMC requer comprimentos de cadeia estendidos. Além disso, questões sobre se métricas padrão de suporte de clado (bootstrap, SH-aLRT, aBayes) são calibradas com respeito a sensibilidade de alinhamento --- uma questão ativamente sendo investigada --- demandam replicação em larga escala através de alinhamentos alternativos e configurações de parâmetros. Tais estudos são computacionalmente inviáveis sem recursos HPC dedicados.
 
 Clusters de pesquisa gerais da universidade, enquanto valiosos, frequentemente têm políticas de agendamento otimizadas para justiça em escala de campus e não para as características específicas de workloads filogenômicos. Um cluster departamental dedicado permite otimização de heterogeneidade de hardware, topologia de armazenamento, e políticas de agendamento especificamente para filogenômica.
 
@@ -23,7 +23,7 @@ Ferramentas como \textit{fastp} \parencite{chen2018} e Trimmomatic \parencite{bo
 
 \subsection{Fase 2: Montagem, Mapeamento e Extração de Locus}
 
-Dependendo do design do estudo, leituras podem ser montadas \textit{de novo} (e.g., SPAdes, Trinity) ou mapeadas para uma referência (e.g., BWA-MEM2, HybPiper para dados de captura de alvo). Montagem \textit{de novo}, particularmente com Trinity para dados de transcriptômica, é ambos CPU-intensiva e memory-hungry, com pico de uso de RAM frequentemente excedendo 100 GB para datasets de tamanho moderado. Abordagens baseadas em referência são mais modestas mas ainda se beneficiam de armazenamento rápido para I/O de arquivo BAM.
+Dependendo do design do estudo, leituras podem ser montadas \textit{de novo} (\textit{e.g.}, SPAdes, Trinity) ou mapeadas para uma referência (\textit{e.g.}, BWA-MEM2, HybPiper para dados de captura de alvo). Montagem \textit{de novo}, particularmente com Trinity para dados de transcriptômica, é ambos CPU-intensiva e memory-hungry, com pico de uso de RAM frequentemente excedendo 100 GB para datasets de tamanho moderado. Abordagens baseadas em referência são mais modestas mas ainda se beneficiam de armazenamento rápido para I/O de arquivo BAM.
 
 \textbf{Perfil de Recurso:} CPU- e memory-intensivo; 16--32 núcleos; 64--256 GB de RAM; armazenamento de scratch rápido.
 
@@ -53,7 +53,7 @@ Inferência de árvore de máxima verossimilhança com IQ-TREE \parencite{minh20
 
 \subsection{Fase 7: Estimação de Árvore de Gene (Bayesiana)}
 
-Inferência bayesiana com MrBayes \parencite{ronquist2012} ou BEAST/BEAST2 \parencite{bouckaert2019} é substancialmente mais cara do que inferência ML devido a requisitos de amostragem MCMC. A biblioteca BEAGLE \parencite{ayres2019} fornece computação de verossimilhança acelerada por GPU, atingindo speedups de até 100$\times$ para datasets grandes em GPUs NVIDIA. BEAGLE 3 inclui implementações OpenCL e CPU-threaded, mas a implementação baseada em CUDA em hardware NVIDIA moderno permanece como líder de desempenho. Memória de GPU é a restrição primária: análises nucleotídicas de dupla-precisão com quatro categorias de taxa requerem aproximadamente 2 GB de memória de GPU por 1.000 OTUs e 10.000 padrões de sites únicos.
+Inferência Bayesiana com MrBayes \parencite{ronquist2012} ou BEAST/BEAST2 \parencite{bouckaert2019} é substancialmente mais cara do que inferência ML devido a requisitos de amostragem MCMC. A biblioteca BEAGLE \parencite{ayres2019} fornece computação de verossimilhança acelerada por GPU, atingindo speedups de até 100$\times$ para datasets grandes em GPUs NVIDIA. BEAGLE 3 inclui implementações OpenCL e CPU-threaded, mas a implementação baseada em CUDA em hardware NVIDIA moderno permanece como líder de desempenho. Memória de GPU é a restrição primária: análises nucleotídicas de dupla-precisão com quatro categorias de taxa requerem aproximadamente 2 GB de memória de GPU por 1.000 OTUs e 10.000 padrões de sites únicos.
 
 \textbf{Perfil de Recurso:} GPU-acelerado via BEAGLE/CUDA; 24--48 GB de memória de GPU recomendada; CPU moderado para caminhos de código não-BEAGLE.
 
@@ -99,7 +99,7 @@ O AMD EPYC 9554 (64 núcleos, 3.75 GHz boost, 256 MB cache L3) fornece excelente
 
 \subsection{Rationale de Seleção de GPU}
 
-O NVIDIA RTX A6000 fornece 48 GB de memória GDDR6 por card, o que é crítico para análises bayesianas aceleradas por BEAGLE. Memória de GPU é a restrição vinculante para BEAGLE: uma análise nucleotídica com 500 OTUs e 50.000 padrões de sites únicos em dupla precisão requer aproximadamente 10 GB de memória de GPU. Dois cards RTX A6000 permitem análise simultânea de múltiplas partições ou cadeias MCMC independentes, e BEAST pode particionar datasets através de múltiplas instâncias de BEAGLE, uma por GPU.
+O NVIDIA RTX A6000 fornece 48 GB de memória GDDR6 por card, o que é crítico para análises Bayesianas aceleradas por BEAGLE. Memória de GPU é a restrição vinculante para BEAGLE: uma análise nucleotídica com 500 OTUs e 50.000 padrões de sites únicos em dupla precisão requer aproximadamente 10 GB de memória de GPU. Dois cards RTX A6000 permitem análise simultânea de múltiplas partições ou cadeias MCMC independentes, e BEAST pode particionar datasets através de múltiplas instâncias de BEAGLE, uma por GPU.
 
 \subsection{Arquitetura de Armazenamento}
 
@@ -115,7 +115,7 @@ A arquitetura de armazenamento proposta segue um design de três tiers:
 
 \subsection{Fabric de Rede}
 
-Para um cluster multi-nó, se seu workflow paraleliza \textit{através} de nós (e.g., análises MPI baseadas como ExaBayes; \textcite{aberer2014}), você necessita interconnect de baixa latência. InfiniBand (HDR, 200 Gb/s) é o padrão ouro. Se jobs MPI cross-nó são raros, 25 GbE ou mesmo 10 GbE é suficiente e muito mais barato.
+Para um cluster multi-nó, se seu workflow paraleliza \textit{através} de nós (\textit{e.g.}, análises MPI baseadas como ExaBayes; \textcite{aberer2014}), você necessita interconnect de baixa latência. InfiniBand (HDR, 200 Gb/s) é o padrão ouro. Se jobs MPI cross-nó são raros, 25 GbE ou mesmo 10 GbE é suficiente e muito mais barato.
 
 Para a maioria de labs filogenômicos, InfiniBand pode ser completamente evitado. O padrão paralelo dominante é ``muitos jobs independentes através de loci,'' o qual requer um agendador de job --- não MPI.
 
@@ -200,7 +200,7 @@ quick & Todos Tipo A & 4 horas & QC, aparagem, ASTRAL, testes \\
 
 \subsection{Agendamento Fair-Share}
 
-O algoritmo de agendamento fair-share de SLURM será configurado com contas hierárquicas correspondendo a grupos de pesquisa. Cada PI receberá uma alocação base (e.g., 40\% de capacidade de cluster para grupo de filogenômica primária, com restante dividido entre grupos colaboradores). Fair-share decay garantirá que grupos que consumiram recentemente recursos desproporcionais são desprioritizados na fila, prevenindo qualquer projeto único de monopolizar o cluster.
+O algoritmo de agendamento fair-share de SLURM será configurado com contas hierárquicas correspondendo a grupos de pesquisa. Cada PI receberá uma alocação base (\textit{e.g.}, 40\% de capacidade de cluster para grupo de filogenômica primária, com restante dividido entre grupos colaboradores). Fair-share decay garantirá que grupos que consumiram recentemente recursos desproporcionais são desprioritizados na fila, prevenindo qualquer projeto único de monopolizar o cluster.
 
 \subsection{Limites de Recurso e Accountability}
 
@@ -280,10 +280,9 @@ A maioria de labs não pode (e não deve) construir um cluster completo no dia u
 Sistemas HPC bem-designados para filogenômica amplificam capacidade analítica de grupos de pesquisa por órdãos de magnitude. O investimento --- capital inicial, eletricidade, staff --- é significante, mas retornam-se rapidamente em forma de mais análises por pesquisador, mais estudantes habilitados, e publicações de maior qualidade. Para laboratórios operando em instituições com suporte de HPC central limitado, um cluster departamental dedicado é frequentemente o caminho mais pragmático para produtividade analítica sustentada.
 
 \clearpage
-\begin{destaque}
-\textbf{Roteiro de Revisão --- Capítulo 8}
+\begin{revise}
 \begin{enumerate}
-    \item 8 fases do workflow: (1) QC/pré-proc.\ (I/O, fastp 4--8 cores), (2) montagem/mapeamento (CPU+RAM, Trinity $>$100\,GB), (3) ortologia (OrthoFinder, DIAMOND paralelo), (4) alinhamento (MAFFT, arrays SLURM), (5) aparagem (trimAl/BMGE, leve), (6) árvore de gene ML (IQ-TREE/RAxML-NG, AVX-512, 4--8 cores/locus), (7) árvore de gene bayesiana (BEAST+BEAGLE/GPU, 24--48\,GB VRAM), (8) árvore de espécies (ASTRAL leve; concatenação pesada).
+    \item 8 fases do workflow: (1) QC/pré-proc.\ (I/O, fastp 4--8 cores), (2) montagem/mapeamento (CPU+RAM, Trinity $>$100\,GB), (3) ortologia (OrthoFinder, DIAMOND paralelo), (4) alinhamento (MAFFT, arrays SLURM), (5) aparagem (trimAl/BMGE, leve), (6) árvore de gene ML (IQ-TREE/RAxML-NG, AVX-512, 4--8 cores/locus), (7) árvore de gene Bayesiana (BEAST+BEAGLE/GPU, 24--48\,GB VRAM), (8) árvore de espécies (ASTRAL leve; concatenação pesada).
     \item Design heterogêneo: 3 tipos de nó. Tipo A (4 nós): 2$\times$EPYC 9554 (128 cores), 512\,GB DDR5. Tipo B (1 nó): 1,5\,TB RAM (montagem). Tipo C (1 nó): 2$\times$RTX A6000 (48\,GB VRAM cada).
     \item CPU: EPYC 9554 --- 64 cores, 3,75\,GHz boost, 256\,MB L3, AVX-512 nativo (Zen 4).
     \item GPU: RTX A6000 para BEAGLE/CUDA; $\sim$10\,GB VRAM para 500 OTUs $\times$ 50\,000 padrões em dupla precisão.
@@ -294,7 +293,7 @@ Sistemas HPC bem-designados para filogenômica amplificam capacidade analítica 
     \item Software: Rocky Linux 9, Apptainer (Singularity) para containers, Snakemake/Nextflow para pipelines, Lmod para módulos.
     \item Roadmap de escalabilidade: Fase 1 (workstation única + SLURM) $\to$ Fase 2 (2º nó, NFS) $\to$ Fase 3 (NAS dedicado) $\to$ Fase 4 (cluster heterogêneo) $\to$ cloud bursting contínuo.
 \end{enumerate}
-\end{destaque}
+\end{revise}
 
 \clearpage
 

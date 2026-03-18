@@ -38,10 +38,10 @@ Os Princípios Orientadores FAIR foram formalizados por \textcite{wilkinson2016}
 Dados devem ser descobertos por ambos humanos e máquinas.
 
 \begin{itemize}
-\item F1: (Meta)dados são designados identificadores globalmente únicos e persistentes (e.g., DOIs, números de acesso).
+\item F1: (Meta)dados são designados identificadores globalmente únicos e persistentes (\textit{e.g.}, DOIs, números de acesso).
 \item F2: Dados são descritos com metadados ricos.
 \item F3: Metadados explicitamente incluem identificador dos dados que descrevem.
-\item F4: (Meta)dados são registrados ou indexados em recurso pesquisável (e.g., NCBI, ENA, Zenodo).
+\item F4: (Meta)dados são registrados ou indexados em recurso pesquisável (\textit{e.g.}, NCBI, ENA, Zenodo).
 \end{itemize}
 
 \subsubsection{Acessível (A)}
@@ -49,7 +49,7 @@ Dados devem ser descobertos por ambos humanos e máquinas.
 Uma vez encontrados, dados devem ser recuperáveis sob condições claras.
 
 \begin{itemize}
-\item A1: (Meta)dados são recuperáveis pelo seu identificador usando protocolo de comunicação padronizado (e.g., HTTP, FTP).
+\item A1: (Meta)dados são recuperáveis pelo seu identificador usando protocolo de comunicação padronizado (\textit{e.g.}, HTTP, FTP).
 \item A1.1: O protocolo é aberto, grátis, e implementável universalmente.
 \item A1.2: O protocolo permite para autenticação e autorização onde necessário.
 \item A2: Metadados permanecem acessíveis mesmo quando os dados mesmos não estão mais disponíveis. Isto é crítico para manutenção científica de longo-prazo.
@@ -60,7 +60,7 @@ Uma vez encontrados, dados devem ser recuperáveis sob condições claras.
 Dados devem ser integráveis com outros dados e compatíveis com aplicações e workflows.
 
 \begin{itemize}
-\item I1: (Meta)dados usam linguagem formal, acessível, compartilhada, e broadly aplicável para representação de conhecimento (e.g., RDF, OWL, ontologias padronizadas).
+\item I1: (Meta)dados usam linguagem formal, acessível, compartilhada, e broadly aplicável para representação de conhecimento (\textit{e.g.}, RDF, OWL, ontologias padronizadas).
 \item I2: (Meta)dados usam vocabulários que eles mesmos seguem os princípios FAIR.
 \item I3: (Meta)dados incluem referências qualificadas para outros (meta)dados, habilitando construção de grafos de conhecimento.
 \end{itemize}
@@ -71,9 +71,9 @@ Dados devem ser bem-descritos assim que possam ser replicados e combinados em di
 
 \begin{itemize}
 \item R1: (Meta)dados são ricamente descritos com pluralidade de atributos acurados e relevantes.
-\item R1.1: (Meta)dados são lançados com licença de uso de dados clara e acessível (e.g., CC-BY, CC0).
+\item R1.1: (Meta)dados são lançados com licença de uso de dados clara e acessível (\textit{e.g.}, CC-BY, CC0).
 \item R1.2: (Meta)dados são associados com proveniência detalhada (quem gerou dados, como, quando, com que parâmetros).
-\item R1.3: (Meta)dados encontram padrões comunitários relevantes de domínio (e.g., MIGS/MIMS para genômica, ISA-Tab para multi-ômicas).
+\item R1.3: (Meta)dados encontram padrões comunitários relevantes de domínio (\textit{e.g.}, MIGS/MIMS para genômica, ISA-Tab para multi-ômicas).
 \end{itemize}
 
 \subsection{FAIR Aplica-se a Três Entidades}
@@ -116,7 +116,7 @@ Metadados ricos são o elo crítico de FAIR, ainda assim permanece aspecto mais 
 
 \begin{itemize}
 \item Versões exatas de software e parâmetros de linha de comando para cada passo de pipeline.
-\item Critérios de mascaramento de alinhamento ou filtragem (e.g., configurações de Gblocks, limites de trimAl).
+\item Critérios de mascaramento de alinhamento ou filtragem (\textit{e.g.}, configurações de Gblocks, limites de trimAl).
 \item Resultados de seleção de modelo (qual modelo de substituição foi escolhido por locus, e por qual critério).
 \item Descrição de ambiente computacional (sistema operacional, versões de biblioteca, hash de imagem de container).
 \item Vínculo de proveniência entre dados brutos, produtos intermediários, e resultados finais.
@@ -157,7 +157,7 @@ Resultados computacionais em bioinformática não são sempre idênticos bit-a-b
 \begin{itemize}
 \item \textbf{Aritmética de ponto flutuante:} Diferentes arquiteturas de CPU (Intel vs. AMD, diferentes conjuntos de instruções SIMD como AVX2 vs. AVX-512) podem produzir resultados de ponto flutuante ligeiramente diferentes, que podem propagar através cálculos de verossimilhança em inferência filogenética. \textcite{powers2022} demonstraram que Genomics Kernel Library (GKL) em GATK usa instruções AVX-512 para kernels de PairHMM e Smith-Waterman, reduzindo runtime de HaplotypeCaller de 35 horas para menos de 1 hora --- mas esta aceleração é dependente de arquitetura.
 
-\item \textbf{Não-determinismo de ordem de thread:} Programas multi-threaded que reduzem resultados através threads (e.g., somando log-verossimilhanças) podem acumular valores de ponto flutuante em ordens diferentes dependendo de agendamento de thread, produzindo somas ligeiramente diferentes. IQ-TREE, RAxML-NG, e BEAST todos exibem este comportamento em graus variados.
+\item \textbf{Não-determinismo de ordem de thread:} Programas multi-threaded que reduzem resultados através threads (\textit{e.g.}, somando log-verossimilhanças) podem acumular valores de ponto flutuante em ordens diferentes dependendo de agendamento de thread, produzindo somas ligeiramente diferentes. IQ-TREE, RAxML-NG, e BEAST todos exibem este comportamento em graus variados.
 
 \item \textbf{Sensibilidade de seed aleatória:} Algoritmos de busca em árvore heurísticos dependem de árvores iniciais geradas de seeds aleatórias. Relatando e fixando a seed aleatória é essencial para reproducibilidade.
 \end{itemize}
@@ -188,7 +188,7 @@ A checklist seguinte traduz princípios FAIR em ações concretas para estudo fi
 \subsection{Antes de Análise}
 
 \begin{itemize}
-\item [ ] Registre seu projeto em um repositório (e.g., OSF, Zenodo) e obtenha DOI.
+\item [ ] Registre seu projeto em um repositório (\textit{e.g.}, OSF, Zenodo) e obtenha DOI.
 \item [ ] Deposite leituras sequenciadas brutas em NCBI SRA ou ENA antes de começar análise.
 \item [ ] Defina seu ambiente computacional em um container (Singularity/Docker) ou arquivo Conda \texttt{environment.yml}.
 \item [ ] Escreva seu pipeline em gerenciador de workflow (Snakemake ou Nextflow) ao invés de série de scripts shell ad hoc.
@@ -232,7 +232,7 @@ Agências de financiamento (NIH, NSF, ERC, UKRI) cada vez mais requerem DMPs que
 
 \subsection{Distinção Entre Aberto e FAIR}
 
-FAIR não requer dados serem abertos ou grátis. Princípio A1.2 explicitamente permite para autenticação e autorização. Dados sensíveis (e.g., dados genômicos humanos sob restrições de IRB/ética) podem ser FAIR --- encontráveis e descritos com metadados ricos --- enquanto permanecem access-controlados. Metadados devem ser sempre abertos (A2), mesmo se dados mesmos são restritos.
+FAIR não requer dados serem abertos ou grátis. Princípio A1.2 explicitamente permite para autenticação e autorização. Dados sensíveis (\textit{e.g.}, dados genômicos humanos sob restrições de IRB/ética) podem ser FAIR --- encontráveis e descritos com metadados ricos --- enquanto permanecem access-controlados. Metadados devem ser sempre abertos (A2), mesmo se dados mesmos são restritos.
 
 \subsection{Padrões de Proveniência Computacional}
 
@@ -265,9 +265,8 @@ Reproducibilidade em pesquisa ômicas não é exercício puramente teórico. Tem
 Para filogenômica especificamente, adoção de práticas FAIR --- desde deposição de leituras brutas através depósito de alinhamentos e árvores finais --- transforma estudo individual em contribuição reutilizável para ciência filogenética coletiva. Cada análise cuidadosamente documentada e deposited torna-se ponto de partida para futuro pesquisa, comparação, ou validação. Este é o futuro de filogenômica --- não estudos in-vacuo, mas síntese de conhecimento acumulado, viabilizado por gestão rigorosa de dados.
 
 \clearpage
-\begin{destaque}
-\textbf{Roteiro de Revisão --- Capítulo 9}
-\begin{enumerate}\small
+\begin{revise}
+\begin{enumerate}
     \item Problema de reproducibilidade: opacidade de software, sensibilidade de parâmetro/configuração (Powers et al., 2022), negligência em gestão de dados, perda de histórico quando estudantes se graduam.
     \item FAIR (Wilkinson et al., 2016): Encontrável, Acessível, Interoperável, Reutilizável; ênfase em \textbf{acionabilidade por máquina}; aplica-se a dados, metadados \textit{e} infraestrutura.
     \item 15 sub-princípios: F1 (IDs persistentes: DOIs), F2 (metadados ricos), F3 (ID nos metadados), F4 (indexado/pesquisável); A1 (protocolo padronizado), A1.1 (aberto), A1.2 (autenticação), A2 (metadados persistem sem dados); I1 (linguagem formal: RDF/OWL), I2 (vocabulários FAIR), I3 (referências qualificadas); R1 (atributos ricos), R1.1 (licença clara: CC-BY/CC0), R1.2 (proveniência), R1.3 (padrões comunitários: MIGS/MIMS).
@@ -280,7 +279,7 @@ Para filogenômica especificamente, adoção de práticas FAIR --- desde deposi�
     \item Paradoxo de nuvem: elasticidade mas tipos de instância mudam, spot pode ser terminado, custos de saída, ambientes efêmeros; solução = abordagem híbrida \parencite{langmead2018}.
     \item Ontologias chave: GO (função gênica), SO (características de sequência), ENVO (ambientes), EDAM (operações bioinformáticas). Proveniência: W3C PROV, RO-Crate, CWLProv.
 \end{enumerate}
-\end{destaque}
+\end{revise}
 
 \clearpage
 
