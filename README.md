@@ -1,4 +1,4 @@
-_Português (Brasil)_
+_English (U.S.A.)_
 
 # Study Topics in Metazoan Phylogenomics and Bioinformatics
 
@@ -26,7 +26,7 @@ This work is licensed under a [Creative Commons Attribution-NonCommercial 4.0 In
 
 ---
 
-_English (U.S.A.)_
+_Português (Brasil)_
 
 # Tópicos de Estudo em Filogenômica e Bioinformática de Metazoários
 
