@@ -433,8 +433,8 @@ Inferência filogenética probabilística é uma ferramenta matematicamente rigo
 Além disso, a natureza finita de quaisquer dados genômicos garante que assunções prioris continuem permanentemente um ingrediente ativo nas distribuições posteriores que calculamos, com sua influência persistindo mais fortemente precisamente onde precisamos de confiabilidade: em ramos curtos, em radiações rápidas, e em estimativas de tempo de divergência. Como nossa compreensão coletiva de métodos Bayesianos evolui com o tempo, eles podem ou não permanecer populares e considerados uma ferramenta flexível e informativa. Porém, devem ser usados com a honestidade intelectual que exigem: testando adequação de modelo, conduzindo análises de sensibilidade, e relatando incerteza de forma que distinga o que os dados dizem do que as assunções contribuem.
 
 \clearpage
-\begin{revise}
-\begin{enumerate}
+\begin{revise}\small
+\begin{enumerate}[itemsep=0pt, topsep=0pt, parsep=0pt]
     \item Verossimilhança: $l(T|D) \propto \Pr(D|T)$; parâmetros de incômodo $\theta$: modelo de substituição, comprimentos de ramo, distribuição de taxas \parencite{edwards1972,wheeler2012}.
     \item Quatro formas de verossimilhança (Wheeler, 2012): \textbf{MVM} (soma sobre estados ancestrais --- o ``MV'' padrão), \textbf{MVP} (otimiza estados nos nós), \textbf{VCE} (Farris, 1973 --- especifica caminho evolutivo completo; $\text{VCE}_{\max} \equiv$ parcimônia) e \textbf{MVI} (integra sobre $\theta$; = MAP com priori plana).
     \item Paradoxo Felsenstein--Farris: resolvido reconhecendo que a ``MV'' de Felsenstein = MVM (média sobre estados ancestrais), a ``MV'' de Farris = VCE (maximização de caminhos evolutivos completos); são critérios de otimização diferentes.

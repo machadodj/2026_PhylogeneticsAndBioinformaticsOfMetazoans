@@ -187,8 +187,8 @@ Computational phylogenetics emerged from synthesis between evolutionary biology 
 Obstacles remain unresolved, particularly NP-hardness of tree search and incomputability of universal optimal criteria. These are not deficiencies of particular software or current hardware, but fundamental mathematical limitations. Future progress will probably come from synthesis of approaches --- combining brute-force computational power (better hardware) with refined algorithms (better heuristics) and, potentially, machine learning as an acceleration tool, while always maintaining statistical rigor and interpretability.
 
 \clearpage
-\begin{revise}
-\begin{enumerate}
+\begin{revise}\small
+\begin{enumerate}[itemsep=0pt, topsep=0pt, parsep=0pt]
     \item Software chronology: PHYLIP (Felsenstein, 1973, FORTRAN$\to$C) $\to$ HENNIG86/TNT (Farris/Goloboff, parsimony) $\to$ PAUP* (Swofford, parsimony+ML, commercial) $\to$ POY (Wheeler, dynamic alignment) $\to$ MrBayes (Ronquist \& Huelsenbeck, Bayesian MCMC) $\to$ RAxML (Stamatakis, 2006, MPI) $\to$ BEAST (Drummond, 2007, hierarchical MCMC) $\to$ IQ-TREE (Minh, UFBoot, SIMD) $\to$ RAxML-NG $\to$ BEAST 2 (BEAGLE/GPU) $\to$ PhyG (Wheeler, graphs).
     \item Parsimony: Fitch algorithm $O(n\cdot m)$; search NP-hard; TNT = fastest searcher ($>$500 taxa).
     \item ML: Felsenstein algorithm $O(n\cdot m)$ per evaluation; constant factor much larger than parsimony; requires parallelization/GPU.

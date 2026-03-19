@@ -312,8 +312,8 @@ The interpretive limitations are substantial. Posterior clade probabilities are 
 Recent advances focus on more realistic and comprehensive probabilistic models: HMMs for sequence alignment, birth-death indel models, extensions to genomic rearrangement and phylogenetic networks, and applications of machine learning and language models for model selection and distance estimation. These developments expand the scope of model-based inference while simultaneously increasing computational demands. The fundamental tension between biological realism and computational tractability remains the defining challenge of the field.
 
 \clearpage
-\begin{revise}
-\begin{enumerate}
+\begin{revise}\small
+\begin{enumerate}[itemsep=0pt, topsep=0pt, parsep=0pt]
     \item Tavaré rate matrix (1986) $Q$: $Q_{ij}=R_{ij}\pi_j$ ($i\neq j$); $P_{ij}(t)$ via eigenvalue decomposition of $Q$ \parencite{tavare1986,yang1994}.
     \item Model hierarchy: JC69 (0 free parameters) $\to$ K2P (transition/transversion) $\to$ HKY85 (unequal $\pi$) $\to$ GTR (6 rates, 4 freq.) \parencite{swofford1996}.
     \item Rate variation: invariable sites ($I$) + discrete Gamma ($\alpha$, mean $=1$); GTR$+I+\Gamma$ is standard empirical model.

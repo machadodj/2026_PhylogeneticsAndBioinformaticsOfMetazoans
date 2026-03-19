@@ -279,8 +279,8 @@ Most labs cannot (and should not) build a complete cluster on day one. A sensibl
 Well-designed HPC systems for phylogenomics amplify the analytical capacity of research groups by orders of magnitude. The investment --- initial capital, electricity, staff --- is significant, but returns quickly in the form of more analyses per researcher, more trained students, and higher-quality publications. For laboratories operating in institutions with limited central HPC support, a dedicated departmental cluster is often the most pragmatic path to sustained analytical productivity.
 
 \clearpage
-\begin{revise}
-\begin{enumerate}
+\begin{revise}\small
+\begin{enumerate}[itemsep=0pt, topsep=0pt, parsep=0pt]
     \item 8 workflow phases: (1) QC/pre-proc.\ (I/O, fastp 4--8 cores), (2) assembly/mapping (CPU+RAM, Trinity >100\,GB), (3) orthology (OrthoFinder, parallel DIAMOND), (4) alignment (MAFFT, SLURM arrays), (5) trimming (trimAl/BMGE, lightweight), (6) ML gene tree (IQ-TREE/RAxML-NG, AVX-512, 4--8 cores/locus), (7) Bayesian gene tree (BEAST+BEAGLE/GPU, 24--48\,GB VRAM), (8) species tree (lightweight ASTRAL; heavy concatenation).
     \item Heterogeneous design: 3 node types. Type A (4 nodes): 2$\times$EPYC 9554 (128 cores), 512\,GB DDR5. Type B (1 node): 1.5\,TB RAM (assembly). Type C (1 node): 2$\times$RTX A6000 (48\,GB VRAM each).
     \item CPU: EPYC 9554 --- 64 cores, 3.75\,GHz boost, 256\,MB L3, native AVX-512 (Zen 4).

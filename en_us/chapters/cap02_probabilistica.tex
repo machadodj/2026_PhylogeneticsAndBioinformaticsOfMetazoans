@@ -432,8 +432,8 @@ Probabilistic phylogenetic inference is a mathematically rigorous and practicall
 Furthermore, the finite nature of any genomic data ensures that prior assumptions remain permanently an active ingredient in the posterior distributions we calculate, with their influence persisting most strongly precisely where we need reliability: on short branches, in rapid radiations, and in divergence time estimates. As our collective understanding of Bayesian methods evolves over time, they may or may not remain popular and considered a flexible and informative tool. However, they must be used with the intellectual honesty they demand: testing model adequacy, conducting sensitivity analyses, and reporting uncertainty in ways that distinguish what the data say from what the assumptions contribute.
 
 \clearpage
-\begin{revise}
-\begin{enumerate}
+\begin{revise}\small
+\begin{enumerate}[itemsep=0pt, topsep=0pt, parsep=0pt]
     \item Likelihood: $l(T|D) \propto \Pr(D|T)$; nuisance parameters $\theta$: substitution model, branch lengths, rate distribution \parencite{edwards1972,wheeler2012}.
     \item Four forms of likelihood (Wheeler, 2012): \textbf{AML} (sum over ancestral states---the standard ``ML''), \textbf{MPL} (optimize states at nodes), \textbf{EPL} (Farris, 1973---specifies complete evolutionary path; $\text{EPL}_{\max} \equiv$ parsimony) and \textbf{IML} (integrates over $\theta$; = MAP with flat prior).
     \item Felsenstein--Farris paradox: resolved by recognizing Felsenstein's ``ML'' = AML (averaging over ancestral states), Farris's ``ML'' = EPL (maximizing complete evolutionary paths); these are different optimization criteria.

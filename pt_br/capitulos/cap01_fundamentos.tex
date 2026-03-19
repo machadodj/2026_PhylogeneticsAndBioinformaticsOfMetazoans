@@ -42,7 +42,11 @@ Em uma árvore binária, \textbf{grupos-irmãos} (\textit{sister-groups}) são d
 Dois formatos de arquivo são amplamente utilizados para representar árvores em notação parentética:
 
 \begin{description}
-    \item[Newick] Adotado por programas como GARLI, MrBayes, PAUP*, PHYLIP, PROTML e TREE-PUZZLE. Terminais são separados por vírgulas e as relações de grupo-irmão por parênteses aninhados. Suporta comprimentos de ramo e rótulos de nós internos: \texttt{((A:5,B:7)Ancestral:10,C:3);}
+    \item[Newick] Adotado por programas como GARLI, MrBayes, PAUP*, PHYLIP, PROTML e TREE-PUZZLE. Terminais são separados por vírgulas e as relações de grupo-irmão por parênteses aninhados. Suporta comprimentos de ramo e rótulos de nós internos:
+
+    \begin{center}
+        \texttt{((A:5,B:7)Ancestral:10,C:3);}\\
+    \end{center}
 
     \item[TREAD (Hennig86)] Representa árvores precedidas pelo cabeçalho \texttt{tread}. Múltiplas árvores são separadas por asteriscos, e a última termina com ponto e vírgula. É comum incluir \texttt{proc-;} ao final do arquivo para uso em TNT \parencite{goloboff2008}.
 \end{description}
@@ -335,8 +339,8 @@ A comparação com grupo externo, a polaridade de caráter e o enraizamento são
 O sequenciamento de alto rendimento não alterou os fundamentos conceituais da filogenética; amplificou as consequências de como esses fundamentos são implementados. O tratamento de InDels como dados ausentes é uma fonte empiricamente demonstrada de erro topológico imprevisível e inflação de escore \parencite{jacobmachado2021c}. O arcabouço de homologia dinâmica, ao integrar o alinhamento de sequências e a busca em árvores em um único problema de otimização, fornece a abordagem mais coerente teoricamente. O PMDL \parencite{wheelervaron2025} fornece um critério unificado que pode dissolver a tripartição parcimônia-verossimilhança-Bayesiana expressando todas as formas de inferência filogenética em uma linguagem comum da teoria da informação.
 
 \clearpage
-\begin{revise}
-\begin{enumerate}
+\begin{revise}\small
+\begin{enumerate}[itemsep=0pt, topsep=0pt, parsep=0pt]
     \item Caracteres são \textbf{indivíduos históricos} carregados de teoria (séries de transformação; Hennig 1966); filogenética = ciência \textbf{ideográfica}, não nomotética \parencite{grant2004ts,popper1959}.
     \item Cinco tipos de caráter: aditivo \parencite{farris1970}, não-aditivo \parencite{fitch1971}, Sankoff \parencite{sankoff1975}, sequência e cromossômico \parencite{wheeleretal2006}; fenotípicos \textit{vs.} genotípicos; evidência total \parencite{kluge1989}.
     \item Homologia $\neq$ sinapomorfia \parencite{nixon2012}; homologia = hipótese nula na construção de grupos; relação histórica de identidade \parencite{grant2004ts}.

@@ -188,8 +188,8 @@ Filogenética computacional nasceu de síntese entre biologia evolutiva e ciênc
 Obstáculos permanecem não resolvidos, particularmente NP-dureza de busca em árvores e a incomputabilidade de critérios ótimos universais. Esses não são deficiências de software particular ou hardware corrente, mas limitações matemáticas fundamentais. Progresso futuro provavelmente virá de síntese de abordagens --- combinando força computacional bruta (hardware melhor) com algoritmos refinados (heurísticas melhores) e, potencialmente, aprendizado de máquina como ferramenta de aceleração, mantendo sempre rigor estatístico e interpretabilidade.
 
 \clearpage
-\begin{revise}
-\begin{enumerate}
+\begin{revise}\small
+\begin{enumerate}[itemsep=0pt, topsep=0pt, parsep=0pt]
     \item Cronologia de software: PHYLIP (Felsenstein, 1973, FORTRAN$\to$C) $\to$ HENNIG86/TNT (Farris/Goloboff, parcimônia) $\to$ PAUP* (Swofford, parcimônia+MV, comercial) $\to$ POY (Wheeler, alinhamento dinâmico) $\to$ MrBayes (Ronquist \& Huelsenbeck, MCMC bayesiano) $\to$ RAxML (Stamatakis, 2006, MPI) $\to$ BEAST (Drummond, 2007, MCMC hierárquico) $\to$ IQ-TREE (Minh, UFBoot, SIMD) $\to$ RAxML-NG $\to$ BEAST 2 (BEAGLE/GPU) $\to$ PhyG (Wheeler, grafos).
     \item Parcimônia: algoritmo de Fitch $O(n\cdot m)$; busca NP-dura; TNT = buscador mais rápido ($>$500 táxons).
     \item MV: algoritmo de Felsenstein $O(n\cdot m)$ por avaliação; fator constante muito maior que parcimônia; requer paralelização/GPU.

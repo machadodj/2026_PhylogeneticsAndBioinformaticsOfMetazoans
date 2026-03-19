@@ -280,8 +280,8 @@ A maioria de labs não pode (e não deve) construir um cluster completo no dia u
 Sistemas HPC bem-designados para filogenômica amplificam capacidade analítica de grupos de pesquisa por órdãos de magnitude. O investimento --- capital inicial, eletricidade, staff --- é significante, mas retornam-se rapidamente em forma de mais análises por pesquisador, mais estudantes habilitados, e publicações de maior qualidade. Para laboratórios operando em instituições com suporte de HPC central limitado, um cluster departamental dedicado é frequentemente o caminho mais pragmático para produtividade analítica sustentada.
 
 \clearpage
-\begin{revise}
-\begin{enumerate}
+\begin{revise}\small
+\begin{enumerate}[itemsep=0pt, topsep=0pt, parsep=0pt]
     \item 8 fases do workflow: (1) QC/pré-proc.\ (I/O, fastp 4--8 cores), (2) montagem/mapeamento (CPU+RAM, Trinity $>$100\,GB), (3) ortologia (OrthoFinder, DIAMOND paralelo), (4) alinhamento (MAFFT, arrays SLURM), (5) aparagem (trimAl/BMGE, leve), (6) árvore de gene ML (IQ-TREE/RAxML-NG, AVX-512, 4--8 cores/locus), (7) árvore de gene Bayesiana (BEAST+BEAGLE/GPU, 24--48\,GB VRAM), (8) árvore de espécies (ASTRAL leve; concatenação pesada).
     \item Design heterogêneo: 3 tipos de nó. Tipo A (4 nós): 2$\times$EPYC 9554 (128 cores), 512\,GB DDR5. Tipo B (1 nó): 1,5\,TB RAM (montagem). Tipo C (1 nó): 2$\times$RTX A6000 (48\,GB VRAM cada).
     \item CPU: EPYC 9554 --- 64 cores, 3,75\,GHz boost, 256\,MB L3, AVX-512 nativo (Zen 4).
