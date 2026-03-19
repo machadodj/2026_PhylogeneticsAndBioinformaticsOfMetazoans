@@ -134,6 +134,18 @@ Protein evolution is more complex than nucleotide evolution. Empirical amino aci
 
 More realistic are structurally constrained substitution (SCS) models, which account for the physical constraints imposed by protein folding on the rates of amino acid substitutions. SCS models frequently incorporate site-dependent evolution, meaning that the rate matrix at one site depends on the states of neighboring sites or structural contacts. This feature dramatically increases biological realism but renders the standard likelihood function intractable because ML-based phylogenetic methods compute likelihoods under the assumption of site independence.
 
+\subsection{Mixture Models and Site-Dependent Evolution}
+
+Mixture models such as CAT and related variants incorporate variable substitution processes among protein regions by combining simpler models \parencite{lartillot2004}. These approaches allow different sites to use different substitution matrices, partially accounting for the structural and functional heterogeneity of real proteins. PhyloBayes implements site-dependent models through a Dirichlet process mixture, in which the number of substitution classes is inferred from the data rather than specified \textit{a priori}.
+
+Regarding model selection, the approach depends critically on whether models assume site-independent or site-dependent evolution. Site-independent empirical models (e.g., WAG, LG, JTT) can be compared using standard likelihood-based criteria: likelihood ratio tests, AIC, and BIC. These criteria are implemented in software such as ModelTest-NG, ProtTest3, ModelFinder (within IQ-TREE2), and PartitionFinder. Site-dependent models, however, cannot be evaluated using these traditional criteria because evolutionary dependence among sites is incompatible with standard phylogenetic likelihood functions, which compute site likelihoods independently. Del Amparo and Arenas (2022) developed ProteinModelerABC, an approach based on approximate Bayesian computation (ABC) that performs model selection among SCS models using summary statistics related to protein structural and thermodynamic properties \parencite{delamparo2022}.
+
+\subsection{Advanced Structurally Constrained Models}
+
+Advanced SCS models adapt statistical physics to molecular evolution. They evaluate amino acid mutations using the fixation probability from a Moran birth-death process and fitness via a Boltzmann distribution based on protein-folding free energy \parencite{ferreiro2026}. These models dramatically increase biological realism: mutations are accepted or rejected based on their effect on protein thermodynamic stability rather than on a fixed empirical exchangeability matrix. However, site-dependent SCS models cannot provide site-independent exchangeability matrices and are therefore incompatible with standard likelihood-based phylogenetic inference. They are currently more useful for simulation and for understanding evolutionary constraints than for direct use in tree reconstruction.
+
+A critical practical limitation is that most existing SCS model implementations are not available in standard, freely available phylogenetic frameworks such as IQ-TREE2, RAxML-NG, or BEAST2. Implementing these models in accessible software would facilitate empirical comparisons and promote their adoption in phylogenomic analyses.
+
 \section{Model Selection}
 
 \subsection{Classical Model Selection Criteria}
@@ -263,6 +275,20 @@ An alternative to summary statistics is to encode alignments directly as numeric
 
 Mo et al. (2024) note that Phyloformer (Nesterenko et al., 2022), which uses self-attention mechanisms, accommodates variable input sizes through careful network design. This approach offers a path for networks that can accept alignments of arbitrary length and taxon number while preserving the representational richness of direct alignment encoding.
 
+\subsection{Likelihood-Free Inference for Intractable Models}
+
+The most compelling application of ML to substitution models concerns models whose likelihoods are intractable. SCS models that incorporate site-dependent evolution cannot be incorporated into standard likelihood functions because current phylogenetic methods compute site likelihoods independently \parencite{yang2006}. Simulation-based inference (SBI) offers a principled alternative: model parameters are inferred by matching observed summary statistics to statistics computed from simulations \parencite{cranmer2020}. Deep learning methods have substantially improved SBI through neural posterior estimation (NPE), which uses neural networks to learn the posterior distribution directly from simulated data. These methods are directly applicable to substitution models for which a generative simulator exists but no tractable likelihood function does.
+
+A related direction involves extending CTMC substitution models to capture richer substitution dynamics. Magee et al. (2024) introduced random-effects substitution models that extend standard CTMCs and developed scalable gradient approximations to enable Hamiltonian Monte Carlo sampling from the posterior under these richer models \parencite{magee2024}. Although primarily Bayesian rather than ML-based, this work illustrates the general direction toward models with greater capacity to capture heterogeneous substitution dynamics.
+
+\subsection{Training Data Design and Generalization}
+
+Supervised ML for substitution model selection requires labeled training data, which in phylogenetics means simulated alignments for which the true generative substitution model is known. The quality of training data determines the generalization capacity of the model. The training-versus-empirical mismatch is a central concern: training data generated under one substitution model may not generalize to empirical datasets that evolved under a different model \parencite{mo2024}. Strategies to improve generalization include generating training data across a broad range of model parameters, standard regularization techniques (dropout, weight decay, ensemble methods), adding noise to alignments during training, and domain adaptation methods that promote the extraction of domain-invariant features \parencite{mosiepel2024}.
+
+\subsection{Limitations of ML-Based Model Selection}
+
+The most fundamental limitation of supervised ML in phylogenetics is the gap between simulated training data and empirical data. A traditional model selection criterion that selects a misspecified model will still compute a well-defined AIC or BIC score, making the error transparent in principle. An ML model trained on misspecified simulations may confidently output an incorrect recommendation without any signal of failure. Additionally, ML models for substitution model selection are generally black-box predictors that do not provide an explanation of why a particular model was selected. Leuchtenberger and von Haeseler (2024) showed that simplifying complex neural network classifiers into more interpretable forms can yield theoretical insights, suggesting interpretability is not inherently incompatible with ML approaches \parencite{leuchtenberger2024}. Most ML models for model selection have been trained and evaluated on four-taxon trees or small alignments; the scalability to the hundreds or thousands of taxa routinely analyzed in phylogenomics has not been established.
+
 \section{Protein Neural Networks and Language Models}
 
 \subsection{Protein Language Models}
@@ -299,6 +325,10 @@ Recent advances focus on more realistic and comprehensive probabilistic models: 
     \item Felsenstein zone: parsimony inconsistent when $p^2\geq q(1-q)$ (long-branch attraction).
     \item Clade prior bias: uniform prior over topologies $\neq$ uniform prior over clades; prior probability ratio between clades of sizes 2 and 25 can reach $10^{13}$ (Steel \& Pickett, 2006).
     \item Recent advances: HMMs (Viterbi, Forward-Backward, Baum-Welch), likelihood-based alignment (dominant vs.\ total), protein language models (ESM-2, Phyloformer).
+    \item Mixture models: CAT (PhyloBayes) models site-dependent substitution via Dirichlet process; SCS models use protein-folding free energy (Boltzmann distribution) and fixation probability (Moran process) but render standard ML intractable.
+    \item ML model selection: ModelTeller (random forest, 50+ summary statistics), ModelRevelator (deep neural networks, no likelihood computation); Phyloformer (self-attention for variable-size inputs).
+    \item Likelihood-free inference: simulation-based inference (SBI) and neural posterior estimation (NPE) enable evaluation of intractable SCS models; ABC for protein model selection (ProteinModelerABC).
+    \item Limitations of ML approaches: simulation-to-empirical gap, black-box predictions, scalability to large datasets; domain adaptation and interpretability methods as mitigation strategies.
 \end{enumerate}
 \end{revise}
 

@@ -135,6 +135,18 @@ A evolução proteica é mais complexa que evolução de nucleotídeos. Matrizes
 
 Mais realistas são modelos de substituição estruturalmente restritos (SCS, do inglês \textit{structurally constrained substitution}), que contabilizam as restrições físicas impostas pelo enovelamento de proteínas nas taxas de substituições de aminoácidos. Modelos SCS frequentemente incorporam evolução dependente de sítio, significando que a matriz de taxa em um sítio depende dos estados de sítios vizinhos ou contatos estruturais. Esta característica dramaticamente aumenta o realismo biológico mas torna a função de verossimilhança padrão intratável porque métodos filogenéticos baseados em MV calculam verossimilhanças sob a assunção de independência de sítios.
 
+\subsection{Modelos de Mistura e Evolução Dependente de Sítio}
+
+Modelos de mistura como CAT e variantes relacionadas incorporam processos de substituição variáveis entre regiões de proteínas combinando modelos mais simples \parencite{lartillot2004}. Estas abordagens permitem que diferentes sítios usem diferentes matrizes de substituição, contabilizando parcialmente a heterogeneidade estrutural e funcional de proteínas reais. PhyloBayes implementa modelos dependentes de sítio através de uma mistura de processos de Dirichlet, em que o número de classes de substituição é inferido a partir dos dados ao invés de especificado \textit{a priori}.
+
+Quanto à seleção de modelo, a abordagem depende criticamente de se os modelos assumem evolução independente ou dependente de sítio. Modelos empíricos independentes de sítio (e.g., WAG, LG, JTT) podem ser comparados usando critérios baseados em verossimilhança padrão: testes de razão de verossimilhança, AIC e BIC. Estes critérios são implementados em software como ModelTest-NG, ProtTest3, ModelFinder (dentro de IQ-TREE2) e PartitionFinder. Modelos dependentes de sítio, porém, não podem ser avaliados usando estes critérios tradicionais porque a dependência evolutiva entre sítios é incompatível com funções de verossimilhança filogenética padrão, que calculam verossimilhanças de sítio independentemente. Del Amparo e Arenas (2022) desenvolveram ProteinModelerABC, uma abordagem baseada em computação Bayesiana aproximada (ABC) que realiza seleção de modelo entre modelos SCS usando estatísticas sumárias relacionadas a propriedades estruturais e termodinâmicas de proteínas \parencite{delamparo2022}.
+
+\subsection{Modelos Avançados Estruturalmente Restritos}
+
+Modelos SCS avançados adaptam física estatística à evolução molecular. Eles avaliam mutações de aminoácidos usando a probabilidade de fixação de um processo nascimento-morte de Moran e aptidão via distribuição de Boltzmann baseada em energia livre de enovelamento de proteínas \parencite{ferreiro2026}. Estes modelos aumentam dramaticamente o realismo biológico: mutações são aceitas ou rejeitadas com base em seu efeito na estabilidade termodinâmica da proteína ao invés de em uma matriz de intercambiabilidade empírica fixa. Porém, modelos SCS dependentes de sítio não podem fornecer matrizes de intercambiabilidade independentes de sítio e são portanto incompatíveis com inferência filogenética padrão baseada em verossimilhança. São atualmente mais úteis para simulação e para compreender restrições evolutivas do que para uso direto em reconstrução de árvores.
+
+Uma limitação prática crítica é que a maioria das implementações de modelos SCS existentes não está disponível em marcos filogenéticos padrão e livremente acessíveis como IQ-TREE2, RAxML-NG ou BEAST2. Implementar estes modelos em software acessível facilitaria comparações empíricas e promoveria sua adoção em análises filogenômicas.
+
 \section{Seleção de Modelo}
 
 \subsection{Critérios Clássicos de Seleção de Modelo}
@@ -264,6 +276,20 @@ Uma alternativa a estatísticas sumárias é codificar alinhamentos diretamente 
 
 Mo et al. (2024) notam que Phyloformer (Nesterenko et al., 2022), que usa mecanismos de atenção própria, acomoda tamanhos de entrada variáveis através de design de rede cuidadoso. Esta abordagem oferece um caminho para redes que podem aceitar alinhamentos de comprimento e número de táxons arbitrários enquanto preservam a riqueza representacional de codificação de alinhamento direto.
 
+\subsection{Inferência Livre de Verossimilhança para Modelos Intratáveis}
+
+A aplicação mais convincente de AM a modelos de substituição concerne modelos cujas verossimilhanças são intratáveis. Modelos SCS que incorporam evolução dependente de sítio não podem ser incorporados em funções de verossimilhança padrão porque métodos filogenéticos correntes calculam verossimilhanças de sítio independentemente \parencite{yang2006}. Inferência baseada em simulação (IBS) oferece uma alternativa principiada: parâmetros do modelo são inferidos combinando estatísticas sumárias observadas com estatísticas computadas de simulações \parencite{cranmer2020}. Métodos de aprendizado profundo melhoraram substancialmente IBS através de estimação posterior neural (EPN), que usa redes neurais para aprender a distribuição posterior diretamente de dados simulados. Estes métodos são diretamente aplicáveis a modelos de substituição para os quais um simulador generativo existe mas nenhuma função de verossimilhança tratável.
+
+Uma direção relacionada envolve estender modelos de substituição CTMC para capturar dinâmicas de substituição mais ricas. Magee et al. (2024) introduziram modelos de substituição de efeitos aleatórios que estendem CTMCs padrão e desenvolveram aproximações de gradiente escaláveis para habilitar amostragem Monte Carlo Hamiltoniana do posterior sob estes modelos mais ricos \parencite{magee2024}. Embora primariamente Bayesiano ao invés de baseado em AM, este trabalho ilustra a direção geral em direção a modelos com maior capacidade de capturar dinâmicas de substituição heterogêneas.
+
+\subsection{Design de Dados de Treinamento e Generalização}
+
+AM supervisionada para seleção de modelo de substituição requer dados de treinamento rotulados, que em filogenética significa alinhamentos simulados para os quais o modelo de substituição generativo verdadeiro é conhecido. A qualidade dos dados de treinamento determina a capacidade de generalização do modelo. A discrepância treinamento-versus-empírico é uma preocupação central: dados de treinamento gerados sob um modelo de substituição podem não generalizar para conjuntos de dados empíricos que evoluíram sob um modelo diferente \parencite{mo2024}. Estratégias para melhorar generalização incluem gerar dados de treinamento sobre uma ampla gama de parâmetros de modelo, técnicas de regularização padrão (dropout, decaimento de peso, métodos de ensemble), adição de ruído a alinhamentos durante treinamento, e métodos de adaptação de domínio que promovem extração de características invariantes de domínio \parencite{mosiepel2024}.
+
+\subsection{Limitações da Seleção de Modelo Baseada em AM}
+
+A limitação mais fundamental de AM supervisionada em filogenética é a lacuna entre dados de treinamento simulados e dados empíricos. Um critério de seleção de modelo tradicional que seleciona um modelo especificado incorretamente ainda computará uma pontuação AIC ou BIC bem-definida, tornando o erro transparente em princípio. Um modelo de AM treinado em simulações especificadas incorretamente pode confiantemente produzir uma recomendação incorreta sem nenhum sinal de falha. Adicionalmente, modelos de AM para seleção de modelo de substituição são geralmente preditores de caixa-preta que não fornecem explicação de por que um modelo particular foi selecionado. Leuchtenberger e von Haeseler (2024) mostraram que simplificar classificadores de redes neurais complexos em formas mais interpretáveis pode produzir \textit{insights} teóricos, sugerindo que interpretabilidade não é inerentemente incompatível com abordagens de AM \parencite{leuchtenberger2024}. A maioria dos modelos de AM para seleção de modelo foi treinada e avaliada em árvores de quatro táxons ou alinhamentos pequenos; a escalabilidade para centenas ou milhares de táxons rotineiramente analisados em filogenômica não foi estabelecida.
+
 \section{Redes Neurais de Proteína e Modelos de Linguagem}
 
 \subsection{Modelos de Linguagem de Proteína}
@@ -300,6 +326,10 @@ Avanços recentes centram em modelos probabilísticos mais realistas e abrangent
     \item Zona de Felsenstein: parcimônia inconsistente quando $p^2\geq q(1-q)$ (ramos longos atraindo).
     \item Viés anterior de clado: priori uniforme sobre topologias $\neq$ priori uniforme sobre clados; razão priori entre clados de tamanhos 2 e 25 pode atingir $10^{13}$ (Steel \& Pickett, 2006).
     \item Avanços recentes: MOMs (Viterbi, Forward-Backward, Baum-Welch), alinhamento baseado em verossimilhança (dominante vs.\ total), modelos de linguagem de proteína (ESM-2, Phyloformer).
+    \item Modelos de mistura: CAT (PhyloBayes) modela substituição dependente de sítio via processo de Dirichlet; modelos SCS usam energia livre de enovelamento (distribuição de Boltzmann) e probabilidade de fixação (processo de Moran) mas tornam MV padrão intratável.
+    \item Seleção de modelo via AM: ModelTeller (floresta aleatória, 50+ estatísticas sumárias), ModelRevelator (redes neurais profundas, sem cálculo de verossimilhança); Phyloformer (atenção para entradas de tamanho variável).
+    \item Inferência livre de verossimilhança: inferência baseada em simulação (IBS) e estimação posterior neural (EPN) habilitam avaliação de modelos SCS intratáveis; ABC para seleção de modelo de proteína (ProteinModelerABC).
+    \item Limitações de abordagens de AM: lacuna simulação-empírico, predições de caixa-preta, escalabilidade para conjuntos grandes; adaptação de domínio e métodos de interpretabilidade como estratégias de mitigação.
 \end{enumerate}
 \end{revise}
 

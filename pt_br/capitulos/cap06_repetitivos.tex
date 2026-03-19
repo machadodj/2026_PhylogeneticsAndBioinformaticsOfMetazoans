@@ -5,6 +5,8 @@
 
 Sequências repetitivas constituem uma fração substancial e frequentemente subestimada de genomas eucarióticos. No genoma humano, aproximadamente 50\% da sequência é composta por elementos repetitivos \parencite{lander2001,dekonig2011}, com proporções consideralmente mais altas em muitos organismos de plantas e insetos. Estes elementos---incluindo elementos transponíveis, DNA satélite, e segmentações duplicadas---apresentam desafios únicos e oportunidades para estudos filogenômicos. Este capítulo sintetiza definições, origens evolutivas, obstáculos que colocam para análises genômicas, e estratégias sequenciamento e bioinformática para lidar com eles.
 
+O reconhecimento de que genomas eucarióticos são dominados por sequências repetitivas remonta aos experimentos de cinética de reassociação de \textcite{britten1968}, que demonstraram que uma grande fração do DNA animal consiste de sequências reiteradas. Desde então, o sequenciamento de genomas inteiros confirmou que elementos repetitivos compõem proporções substanciais do tamanho do genoma ao longo da árvore da vida.
+
 \section{Definições de Conceitos Genômicos Chave}
 
 \subsection{Elementos Repetitivos}
@@ -19,7 +21,7 @@ Funcionalmente, alguns elementos repetitivos são essenciais para manutenção d
 
 Elementos transponíveis (TEs) são um subconjunto de elementos repetitivos definido por sua capacidade de mudar posição genômica, ou "transpor". \textcite{mcclintock1950} primeiramente identificou estes elementos em milho, e agora TEs são reconhecidos como componentes quase ubíquos de genomas eucarióticos e entre as sequências codificantes mais abundantes na natureza \parencite{hayward2022,wells2020}.
 
-A classificação mais fundamental distingue duas classes maiores baseadas em intermediários de transposição \parencite{wicker2007}. Elementos de Classe I, ou retrotransposons, replicam através de um intermediário de RNA que é reverse-transcrito de volta para DNA antes da integração---um mecanismo de "cópia-e-cola". Elementos de Classe II, ou DNA transposons, movem-se diretamente como DNA através de mecanismo de "corte-e-cola" mediado pela enzima transposase.
+A classificação mais fundamental distingue duas classes maiores baseadas em intermediários de transposição \parencite{wicker2007}. Elementos de Classe I, ou retrotransposons, replicam através de um intermediário de RNA que é reverse-transcrito de volta para DNA antes da integração---um mecanismo de "cópia-e-cola". Elementos de Classe II, ou DNA transposons, movem-se diretamente como DNA através de mecanismo de "corte-e-cola" mediado pela enzima transposase, embora algumas subclasses (e.g., Helitrons, Polintons/Mavericks) empreguem estratégias replicativas alternativas \parencite{kapitonov2006,feschotte2007}.
 
 Retrotransposons de Classe I são ainda subdivididos em retrotransposons de repetição terminal longa (LTR), que são estruturalmente relacionados a retrovírus, e elementos não-LTR, que incluem elementos nucleares interspersados longos (LINEs) e elementos nucleares interspersados curtos (SINEs). No genoma humano, a família L1 de LINEs constitui aproximadamente 17\% da sequência genômica \parencite{finnegan1989}, enquanto elementos Alu---os SINEs mais abundantes---representam aproximadamente 10--13\% \parencite{batzer2002,dewannieux2003}.
 
@@ -67,6 +69,8 @@ Elementos nucleares interspersados longos (LINEs) são retrotransposons não-LTR
 
 Elementos nucleares interspersados curtos (SINEs) são retrotransposons não-autônomos que dependem de enzimas codificadas por LINE para sua mobilização \parencite{dewannieux2003}. SINEs são tipicamente derivados de genes de RNA estrutural pequena. A maioria de SINEs mamíferos derivam de tRNAs, com exceção notável de elementos Alu, que originaram do gene 7SL RNA que codifica o componente RNA da partícula de reconhecimento de sinal. Elementos Alu são restritos a primatas e surgiram aproximadamente 65 milhões de anos atrás através de fusão de dois precursores monoméricos \parencite{batzer2002}.
 
+Retrotransposons LTR são estruturalmente relacionados a retrovírus; de fato, retrovírus endógenos (ERVs) são considerados uma subclasse de retrotransposons LTR que provavelmente originaram-se de infecções retrovirais ancestrais de linhagem germinativa \parencite{jern2008}. Retrotransposons não-LTR integram-se via transcrição reversa iniciada no alvo (TPRT, do inglês \textit{target-primed reverse transcription}), um mecanismo em que a endonuclease do elemento cliva o DNA alvo e usa o 3$'$ hidroxila exposto como primer para transcrição reversa \textit{in situ} \parencite{luan1993}. Adicionalmente, retrotransposons YR representam uma terceira categoria que compartilha homologia de transcriptase reversa com retrotransposons LTR mas possui um domínio de tirosina recombinase mais proximamente relacionado àqueles encontrados em certos transposons de DNA \parencite{goodwin2003}, ilustrando a natureza modular e quimérica da evolução de ETs.
+
 \subsection{DNA Transposons}
 
 DNA transposons constituem aproximadamente 3\% do genoma humano, com superfamílias hAT e Mariner/Tc1 predominando \parencite{cordaux2009}. Embora sua transposição seja não-replicativa, DNA transposons acumularam grandes números de cópias através de transposição durante replicação de DNA e através de reparo mediado por recombinação homóloga de rupturas de fita dupla em locais de excisão. No genoma humano, todas as famílias conhecidas de DNA transposon são consideradas fósseis moleculares, com nenhum elemento atualmente ativo.
@@ -84,6 +88,12 @@ DNA satélite sofre evolução concertada \parencite{dover1982}, por meio da qua
 Microssatélites (também conhecidos como repetições de sequência simples ou repetições em tandem curtas) consistem de motivos de 1--6 bp repetidos em tandem, tipicamente abrangendo alguns poucos centos de pares de bases \parencite{ellegren2004}. Eles são abundantes em genomas eucarióticos, compreendendo aproximadamente 3\% do genoma humano. O mecanismo primário gerando variação de comprimento de microssatélite é deslizamento de replicação (também chamado de desalinhamento de fita deslizada), em que polimerase de DNA dissocia transientemente durante replicação de molde repetitivo e reacondiciona fora de quadro, levando à inserção ou deleção de uma ou mais unidades de repetição.
 
 Minissatélites (repetições de número variável em tandem, VNTRs) têm unidades de repetição maiores de 10--100 bp e frequentemente são enriquecidos perto de telômeros. Sua expansão é dirigida primariamente por crossing over desigual e conversão de gene em vez de deslizamento de replicação, refletindo comprimento de unidade maior que favorece mecanismos baseados em recombinação.
+
+\subsection{Interação Entre Classes de Repetições}
+
+A classificação tradicional de repetições em classes intercaladas e em tandem oculta interações recíprocas extensas entre estes compartimentos. Elementos transponíveis podem servir como substratos para a emergência \textit{de novo} de famílias de DNA satélite: quando cópias de ETs estão agrupadas, crossing-over desigual e amplificação baseada em recombinação podem expandi-las em arranjos em tandem, efetivamente convertendo repetições intercaladas em DNA satélite \parencite{mestrovic2015}. Reciprocamente, ETs acumulam-se preferencialmente dentro de regiões heterocromáticas ricas em satélite, onde podem ser silenciados mas contribuem para a dinâmica da heterocromatina.
+
+O ciclo de vida de uma linhagem de ET pode ser descrito em quatro fases: invasão (transferência horizontal ou ativação de um elemento previamente dormente), amplificação (proliferação ao longo do genoma hospedeiro), maturação e silenciamento (mecanismos de defesa do hospedeiro como metilação de DNA e vias de piRNA suprimem transposição), e morte ou degeneração (acúmulo de mutações torna o elemento não-funcional). Este modelo de quatro fases aplica-se através de superfamílias de ET diversas e linhagens hospedeiras, embora a duração e intensidade de cada fase variem consideravelmente \parencite{kidwell2002}.
 
 \section{Obstáculos que Repetições Genômicas Colocam para Estudos Genômicos}
 
@@ -131,6 +141,8 @@ RepeatModeler complementa RepeatMasker permitindo identificação de novo de fam
 
 Para genotipagem de repetição em tandem de dados de leitura longa, várias ferramentas especializadas foram desenvolvidas. TRGT (Tandem Repeat Genotyping Tool) foi especificamente projetado para dados PacBio HiFi e fornece genotipagem robusta e visualização de repetições em tandem em escala genômica \parencite{dolzhenko2024}. LongTR usa estratégia de agrupamento combinada com alinhamento de ordem parcial e modelos Markov ocultos para inferir haplótipos consenso.
 
+MotifScope representa uma abordagem algorítmica mais recente para caracterização e visualização de motivos de repetições em tandem, identificando mais motivos e representando mais precisamente sequências repetitivas subjacentes do que métodos anteriores \parencite{zhang2025}.
+
 \subsection{Estratégias de Montagem para Genomas Ricos em Repetição}
 
 Montagem de genomas ricos em repetição foi revolucionada pela combinação de sequenciamento de leitura longa com algoritmos de montagem modernos. O insight fundamental é que sequência repetitiva pode ser resolvida quando leituras são mais longas que unidade de repetição. Montadores estado-da-arte atual, incluindo hifiasm \parencite{cheng2021}, Verkko \parencite{rautiainen2023}, e LJA, todos incorporam estratégias para manejar estruturas complexas de repetição dentro de gráficos de montagem.
@@ -145,6 +157,8 @@ Um único genoma de referência linear não pode capturar espectro completo de v
 
 Gráficos de pangenoma são particularmente poderosos para resolução de repetições de número variável em tandem (VNTRs), que têm número de repetição hipervariável e composição. A estrutura de dados gráfico-pangenoma de repetição (RPGG) foi desenvolvida para codificar tanto diversidade populacional quanto estrutura interna de repetição de loci VNTR de montagens multi-haplotípicas resolvidas, permitindo estimativa de composição VNTR precisa até mesmo de dados de leitura curta.
 
+Análises iniciais demonstraram melhorias substanciais na descoberta de variantes, com uma redução de 34\% em erros de variantes pequenas e um aumento de 104\% na detecção de variantes estruturais por haplótipo comparado a fluxos de trabalho baseados em GRCh38 \parencite{liao2023}. A mais recente liberação de dados incorpora haplótipos faseados de 232 indivíduos, selecionados para representar ancestralidades diversas, com o objetivo de expandir para mais de 700 genomas haploides \parencite{wang2022}. Esta abordagem em nível populacional produziu uma média de mais de 29.000 variantes estruturais por indivíduo, comparado a menos de 16.000 quando usando uma referência linear sozinha \parencite{groza2024}.
+
 \subsection{Combinação de Estratégias}
 
 Dado complexidade de lidando com repetições, estratégia crescentemente adotada envolve combinação de múltiplas tecnologias de sequenciamento e ferramentas bioinformáticas. Por exemplo:
@@ -157,6 +171,14 @@ Dado complexidade de lidando com repetições, estratégia crescentemente adotad
 \item Ferramentas de genotipagem como TRGT para caracterização de tandem repetido
 \item Construção de pangenoma para capturar variação nível-populacional
 \end{enumerate}
+
+\section{Desafios Emergentes e Direções Futuras}
+
+Apesar dos avanços transformadores em sequenciamento de leitura longa e construção de pangenoma, vários desafios permanecem. O custo e complexidade de gerar múltiplos tipos de dados complementares (PacBio HiFi, ONT ultra-longo, Strand-seq) para um único genoma permanecem proibitivos para muitos organismos não-modelo. Recursos computacionais requeridos para construção de grafos de pangenoma e chamada de variantes em escala populacional são substanciais. VNTRs multialélicas apresentam dificuldades particulares para grafos de pangenoma, pois sua complexidade combinatória pode tornar representações de grafo intratáveis.
+
+No nível de célula única, a convergência de sequenciamento de leitura longa com ômica de célula única está abrindo novas avenidas para compreender a dinâmica de elementos repetitivos, incluindo retrotransposição somática e expressão alelo-específica de elementos regulatórios derivados de ETs. O desenvolvimento de ferramentas como RAmbler, que resolve repetições complexas em cromossomos humanos específicos \parencite{chakravarty2025}, e melhorias em métodos de sequenciamento de RNA de leitura longa estendem ainda mais o kit de ferramentas analíticas para biologia de repetições.
+
+A adoção da montagem T2T-CHM13v2.0 como referência padrão, juntamente com a maturação do pangenoma HPRC, fornecerá uma fundação mais completa para compreender a biologia de repetições e suas implicações para evolução genômica, regulação gênica e doença humana.
 
 \section{Implicações para Filogenômica}
 
@@ -178,6 +200,8 @@ Estrutura, número de cópia, e sequência de repetições evoluem sob pressões
     \item Soluções de leitura longa: PacBio HiFi (15--20\,kb, $>$99,9\% precisão, chamada de variante) + ONT ultra-longo ($>$100\,kb, contigüidade); montagem T2T-CHM13 \parencite{nurk2022}.
     \item Ferramentas: RepeatMasker (Dfam HMMs), RepeatModeler (de novo), EDTA (LTR\_retriever integrado), TRGT (genotipagem de tandem, PacBio HiFi).
     \item Pangenoma: referência baseada em grafo (HPRC) captura variação populacional em repetições; RPGG para VNTRs.
+    \item Interação entre classes de repetições: ETs servem como substratos para emergência \textit{de novo} de DNA satélite via crossing-over desigual; ciclo de vida de ET em quatro fases (invasão, amplificação, silenciamento, degeneração).
+    \item Desafios emergentes: custo de sequenciamento multi-tecnologia, requisitos computacionais de pangenoma, complexidade de VNTRs multialélicas; abordagens de leitura longa em célula única para dinâmica somática de ETs; T2T-CHM13v2.0 como referência padrão.
 \end{enumerate}
 \end{revise}
 

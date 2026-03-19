@@ -4,6 +4,8 @@
 
 Repetitive sequences constitute a substantial and frequently underestimated fraction of eukaryotic genomes. In the human genome, approximately 50\% of the sequence is composed of repetitive elements \parencite{lander2001,dekonig2011}, with considerably higher proportions in many plant and insect organisms. These elements---including transposable elements, satellite DNA, and segmental duplications---present unique challenges and opportunities for phylogenomic studies. This chapter synthesizes definitions, evolutionary origins, obstacles posed for genomic analyses, and sequencing and bioinformatics strategies for dealing with them.
 
+The recognition that eukaryotic genomes are dominated by repetitive sequences dates to the reassociation kinetics experiments of \textcite{britten1968}, who demonstrated that a large fraction of animal DNA consists of reiterated sequences. Since then, whole-genome sequencing has confirmed that repetitive elements account for substantial proportions of genome size across the tree of life.
+
 \section{Definitions of Key Genomic Concepts}
 
 \subsection{Repetitive Elements}
@@ -18,9 +20,11 @@ Functionally, some repetitive elements are essential for genome maintenance. Tel
 
 Transposable elements (TEs) are a subset of repetitive elements defined by their capacity to change genomic position, or ``transpose.'' \textcite{mcclintock1950} first identified these elements in maize, and now TEs are recognized as nearly ubiquitous components of eukaryotic genomes and among the most abundant encoding sequences in nature \parencite{hayward2022,wells2020}.
 
-The most fundamental classification distinguishes two major classes based on transposition intermediates \parencite{wicker2007}. Class I elements, or retrotransposons, replicate through an RNA intermediate that is reverse-transcribed back to DNA before integration---a ``copy-and-paste'' mechanism. Class II elements, or DNA transposons, move directly as DNA through a ``cut-and-paste'' mechanism mediated by the enzyme transposase.
+The most fundamental classification distinguishes two major classes based on transposition intermediates \parencite{wicker2007}. Class I elements, or retrotransposons, replicate through an RNA intermediate that is reverse-transcribed back to DNA before integration---a ``copy-and-paste'' mechanism. Class II elements, or DNA transposons, move directly as DNA through a ``cut-and-paste'' mechanism mediated by the enzyme transposase, though some subclasses (e.g., Helitrons, Polintons/Mavericks) employ alternative replicative strategies \parencite{kapitonov2006,feschotte2007}.
 
 Class I retrotransposons are further subdivided into long terminal repeat (LTR) retrotransposons, which are structurally related to retroviruses, and non-LTR elements, which include long interspersed nuclear elements (LINEs) and short interspersed nuclear elements (SINEs). In the human genome, the L1 family of LINEs constitutes approximately 17\% of the genomic sequence \parencite{finnegan1989}, while Alu elements---the most abundant SINEs---represent approximately 10--13\% \parencite{batzer2002,dewannieux2003}.
+
+LTR retrotransposons are structurally related to retroviruses; indeed, endogenous retroviruses (ERVs) are considered a subclass of LTR retrotransposons that likely originated from ancestral germline retroviral infections \parencite{jern2008}. Non-LTR retrotransposons integrate via target-primed reverse transcription (TPRT), a mechanism in which the element's endonuclease nicks the target DNA and uses the exposed 3$'$ hydroxyl as a primer for reverse transcription \textit{in situ} \parencite{luan1993}. Additionally, YR retrotransposons represent a third category that shares reverse transcriptase homology with LTR retrotransposons but possesses a tyrosine recombinase domain more closely related to those found in certain DNA transposons \parencite{goodwin2003}, illustrating the modular and chimeric nature of TE evolution.
 
 TEs can be classified as autonomous, encoding their own transposition machinery, or non-autonomous, dependent on enzymatic products of other TEs for mobilization. SINEs, for example, do not encode their own reverse transcriptase and are mobilized in trans by L1 machinery.
 
@@ -84,6 +88,12 @@ Microsatellites (also known as simple sequence repeats or short tandem repeats) 
 
 Minisatellites (variable number tandem repeats, VNTRs) have larger repetition units of 10--100 bp and are frequently enriched near telomeres. Their expansion is driven primarily by unequal crossing over and gene conversion rather than replication slippage, reflecting the larger unit length that favors recombination-based mechanisms.
 
+\subsection{Interplay Between Repeat Classes}
+
+The traditional classification of repeats into interspersed and tandem classes belies extensive reciprocal interactions between these compartments. Transposable elements can serve as substrates for the \textit{de novo} emergence of satellite DNA families: when TE copies are clustered, unequal crossing over and recombination-based amplification can expand them into tandem arrays, effectively converting interspersed repeats into satellite DNA \parencite{mestrovic2015}. Conversely, TEs accumulate preferentially within satellite-rich heterochromatic regions, where they may be silenced but contribute to heterochromatin dynamics.
+
+The life cycle of a TE lineage can be described in four phases: invasion (horizontal transfer or activation of a previously dormant element), amplification (proliferation throughout the host genome), maturation and silencing (host defense mechanisms such as DNA methylation and piRNA pathways suppress transposition), and death or degeneration (accumulation of mutations renders the element non-functional). This four-phase model applies across diverse TE superfamilies and host lineages, though the duration and intensity of each phase vary considerably \parencite{kidwell2002}.
+
 \section{Obstacles Posed by Genomic Repetitions for Genomic Studies}
 
 \subsection{Ambiguity and Multi-Mapping}
@@ -130,6 +140,8 @@ RepeatModeler complements RepeatMasker by enabling de novo identification of rep
 
 For tandem repetition genotyping from long-read data, several specialized tools have been developed. TRGT (Tandem Repeat Genotyping Tool) was specifically designed for PacBio HiFi data and provides robust genotyping and visualization of tandem repeats at genome-wide scale \parencite{dolzhenko2024}. LongTR uses a clustering strategy combined with partial-order alignment and hidden Markov models to infer consensus haplotypes.
 
+MotifScope represents a newer algorithmic approach for characterization and visualization of tandem repeat motifs, identifying more motifs and more accurately representing underlying repeat sequences than previous methods \parencite{zhang2025}.
+
 \subsection{Assembly Strategies for Repetition-Rich Genomes}
 
 Assembly of repetition-rich genomes has been revolutionized by the combination of long-read sequencing with modern assembly algorithms. The fundamental insight is that repetitive sequence can be resolved when reads are longer than the repetition unit. Current state-of-the-art assemblers, including hifiasm \parencite{cheng2021}, Verkko \parencite{rautiainen2023}, and LJA, all incorporate strategies for handling complex repetition structures within assembly graphs.
@@ -144,6 +156,8 @@ A single linear reference genome cannot capture the full spectrum of repetition 
 
 Pangenome graphs are particularly powerful for resolution of variable number tandem repeats (VNTRs), which have hypervariable repeat number and composition. The Repetition-Pangenome-Graph (RPGG) data structure was developed to encode both population diversity and internal repetition structure of VNTR loci from multi-haplotype-resolved assemblies, enabling accurate VNTR composition estimation even from short-read data.
 
+Initial analyses have demonstrated substantial improvements in variant discovery, with a 34\% reduction in small variant errors and a 104\% increase in the detection of structural variants per haplotype compared to GRCh38-based workflows \parencite{liao2023}. The most recent data release incorporates phased haplotypes from 232 individuals, selected to represent diverse ancestries, with the goal of expanding to over 700 haploid genomes \parencite{wang2022}. This population-level approach has yielded an average of over 29,000 structural variants per individual, compared to fewer than 16,000 when using a linear reference alone \parencite{groza2024}.
+
 \subsection{Combination of Strategies}
 
 Given the complexity of dealing with repetitions, an increasingly adopted strategy involves combining multiple sequencing technologies and bioinformatics tools. For example:
@@ -156,6 +170,14 @@ Given the complexity of dealing with repetitions, an increasingly adopted strate
 \item Genotyping tools such as TRGT for tandem repeat characterization
 \item Pangenome construction to capture population-level variation
 \end{enumerate}
+
+\section{Emerging Challenges and Future Directions}
+
+Despite the transformative advances in long-read sequencing and pangenome construction, several challenges remain. The cost and complexity of generating multiple complementary data types (PacBio HiFi, ONT ultra-long, Strand-seq) for a single genome remain prohibitive for many non-model organisms. Computational resources required for pangenome graph construction and variant calling at population scale are substantial. Multiallelic VNTRs present particular difficulties for pangenome graphs, as their combinatorial complexity can make graph representations intractable.
+
+At the single-cell level, the convergence of long-read sequencing with single-cell omics is opening new avenues for understanding repeat element dynamics, including somatic retrotransposition and allele-specific expression of TE-derived regulatory elements. The development of tools like RAmbler, which resolves complex repeats in specific human chromosomes \parencite{chakravarty2025}, and improvements in long-read RNA sequencing methods further extend the analytical toolkit for repeat biology.
+
+The adoption of the T2T-CHM13v2.0 assembly as the standard reference, together with the maturation of the HPRC pangenome, will provide a more complete foundation for understanding repeat biology and its implications for genome evolution, gene regulation, and human disease.
 
 \section{Implications for Phylogenomics}
 
@@ -177,6 +199,8 @@ The structure, copy number, and sequence of repetitions evolve under complex sel
     \item Long-read solutions: PacBio HiFi (15--20\,kb, $>$99.9\% accuracy, variant calling) + ONT ultra-long ($>$100\,kb, contiguity); T2T-CHM13 assembly \parencite{nurk2022}.
     \item Tools: RepeatMasker (Dfam HMMs), RepeatModeler (de novo), EDTA (integrated LTR\_retriever), TRGT (tandem genotyping, PacBio HiFi).
     \item Pangenome: graph-based reference (HPRC) captures population variation in repetitions; RPGG for VNTRs.
+    \item Interplay between repeat classes: TEs serve as substrates for \textit{de novo} satellite DNA emergence via unequal crossing over; four-phase TE life cycle (invasion, amplification, silencing, degeneration).
+    \item Emerging challenges: cost of multi-technology sequencing, pangenome computational requirements, multiallelic VNTR complexity; single-cell long-read approaches for somatic TE dynamics; T2T-CHM13v2.0 as standard reference.
 \end{enumerate}
 \end{revise}
 
