@@ -10,7 +10,7 @@ _English (U.S.A.)_
 
 ## About
 
-This book compiles study materials on metazoan phylogenomics and bioinformatics, ranging from the theoretical-philosophical foundations of phylogenetic systematics to contemporary issues in artificial intelligence, Brazilian legislation, and computational infrastructure. The work is organized into eleven chapters covering the core topics necessary for understanding and practicing large-scale phylogenomic reconstruction. These chapters correspond to the 11 items listed in the public notice EDITAL IB/AAcad/19/2025 regarding "Metazoan Phylogenomics and Bioinformatics," published in the July 4, 2025 edition of the Official Gazette of the State of São Paulo (Diário Oficial do Estado de São Paulo).
+This book compiles study materials on metazoan phylogenomics and bioinformatics, ranging from the theoretical-philosophical foundations of phylogenetic systematics to contemporary issues in artificial intelligence, Brazilian legislation, and computational infrastructure. The work is organized into eleven chapters covering the core topics necessary for understanding and practicing large-scale phylogenomic reconstruction.
 
 ## Main Topics
 
@@ -38,7 +38,7 @@ _Português (Brasil)_
 
 ## Sobre
 
-Este livro reúne material de estudo sobre filogenômica e bioinformática de metazoários, abrangendo desde os fundamentos teórico-filosóficos da sistemática filogenética até questões contemporâneas de inteligência artificial, legislação brasileira e infraestrutura computacional. A obra é organizada em onze capítulos que cobrem os principais tópicos necessários para a compreensão e a prática da reconstrução filogenômica em larga escala. Estes capítulos correspondem aos 11 itens listados no edital EDITAL IB/AAcad/19/2025 sobre ``Filogenômica e Bioinformática de Metazoários'', publicado na Edição de 4 de julho de 2025 do Diário Oficial do Estado de São Paulo.
+Este livro reúne material de estudo sobre filogenômica e bioinformática de metazoários, abrangendo desde os fundamentos teórico-filosóficos da sistemática filogenética até questões contemporâneas de inteligência artificial, legislação brasileira e infraestrutura computacional. A obra é organizada em onze capítulos que cobrem os principais tópicos necessários para a compreensão e a prática da reconstrução filogenômica em larga escala.
 
 ## Tópicos Principais
 
